@@ -3,8 +3,8 @@
 import { useRef, type ReactNode } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
-  Building2, Cpu, Zap, Globe, Heart, Briefcase,
-  Headphones, BarChart3,
+  StickyNote, Highlighter, PenTool, Sparkles,
+  Volume2, Map as MapIcon, Share2, LayoutDashboard,
 } from 'lucide-react'
 
 function BentoParallaxSection({
@@ -31,17 +31,17 @@ function BentoParallaxSection({
   )
 }
 
-/* ─── Social Proof Strip ─── */
+/* ─── Capability Strip ─── */
 
-const LOGOS =[
-  { icon: Building2, name: 'BH' },
-  { icon: Cpu,       name: 'Canon' },
-  { icon: Headphones, name: 'logitech' },
-  { icon: Globe,     name: 'Visma' },
-  { icon: BarChart3, name: 'BambooHR' },
-  { icon: Briefcase, name: 'Karbon' },
-  { icon: Heart,     name: 'neo' },
-  { icon: Zap,       name: 'Acme' },
+const CAPABILITIES = [
+  { icon: StickyNote,     name: 'Sticky notes' },
+  { icon: Highlighter,    name: 'Highlights' },
+  { icon: PenTool,        name: 'Drawings' },
+  { icon: Sparkles,       name: 'AI rewrite' },
+  { icon: Volume2,        name: 'Read aloud' },
+  { icon: LayoutDashboard,name: 'Dashboards' },
+  { icon: MapIcon,        name: 'Spatial map' },
+  { icon: Share2,         name: 'Knowledge graph' },
 ]
 
 function SocialProofStrip() {
@@ -49,15 +49,20 @@ function SocialProofStrip() {
     <BentoParallaxSection className="py-20 px-6 bg-[#FDFBF7]" yRange={[18, -18]}>
       <div className="max-w-5xl mx-auto text-center">
         <p className="text-sm text-stone-500 mb-10 font-medium">
-          3,000+ leading companies trust Inline as their single source of truth.
+          Everything you need to think, capture, and connect the open web.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-          {LOGOS.map(logo => {
-            const Icon = logo.icon
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
+          {CAPABILITIES.map(cap => {
+            const Icon = cap.icon
             return (
-              <div key={logo.name} className="flex items-center gap-2 text-stone-300 hover:text-stone-400 transition-colors">
-                <Icon className="w-5 h-5" />
-                <span className="text-sm font-semibold tracking-wide">{logo.name}</span>
+              <div
+                key={cap.name}
+                className="flex items-center gap-2 text-stone-500 hover:text-[#1C1E26] transition-colors"
+              >
+                <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-stone-200 bg-white">
+                  <Icon className="w-4 h-4" strokeWidth={1.75} aria-hidden />
+                </span>
+                <span className="text-sm font-medium tracking-tight">{cap.name}</span>
               </div>
             )
           })}
@@ -71,25 +76,25 @@ function SocialProofStrip() {
 
 const FEATURES =[
   {
-    eyebrow: 'Knowledge Management',
-    headline: "Knowledge bases get messy.\nInline doesn't.",
+    eyebrow: 'Capture on any page',
+    headline: "Annotate the web\nlike it's your notebook.",
     points:[
-      'Document verification system with automated reminders',
-      'Knowledge Management for bulk operations',
-      'AI-suggested actions to maintain quality',
-      'Ownership transfer when team members leave',
+      'Sticky notes, highlights, drawings, and handwriting that persist across reloads',
+      'Auto-complete shapes — rough strokes become clean lines, rectangles, and arrows',
+      'Every capture syncs to your workspace History, Graph, and Map',
+      'Works on any site you can open, from Wikipedia to your own docs',
     ],
     visual: 'knowledge' as const,
     reverse: false,
   },
   {
-    eyebrow: 'Docs that work for everyone',
-    headline: 'Centralized, Always-Current Playbooks',
+    eyebrow: 'Powered by Gemini & ElevenLabs',
+    headline: 'One selection away from\nAI rewrite, summary, or voice.',
     points:[
-      'Inline keeps every workflow, policy, and operational detail up-to-date',
-      'One search away so hand-offs are simple',
-      'Confident Audits and Handovers',
-      "Everything's organized, accessible, and ready for compliance reviews",
+      'Rephrase, shorten, summarize, or rewrite any selection in a single click',
+      'Inserted text stays highlighted so you can always see what was edited',
+      'Read aloud with ElevenLabs voices, triggered only when you ask for it',
+      'Every page you visit earns an auto-regenerating recap document',
     ],
     visual: 'docs' as const,
     reverse: true,
@@ -164,16 +169,16 @@ function KnowledgeVisual() {
 
   return (
     <div className="flex justify-center w-full">
-      <div className="w-full max-w-[500px] rounded-[25px]  bg-[#EBBAC7] pl-6 pt-6 sm:pl-10 sm:pt-10 overflow-hidden shadow-sm">
+      <div className="w-full max-w-[500px] rounded-[25px] bg-[#EBBAC7] pl-6 pt-6 sm:pl-10 sm:pt-10 overflow-hidden">
         <div className="bg-white rounded-tl-[24px] border-t border-l border-[#222]  w-full h-full p-6 sm:p-8 sm:pb-10 flex flex-col relative">
-          <h4 className="text-[24px] font-bold text-[#2B2B2B] mb-8 tracking-tight">Knowledge Management</h4>
+          <h4 className="text-[24px] font-bold text-[#2B2B2B] mb-8 tracking-tight">Captures on this page</h4>
           
           <div className="flex flex-col gap-4">
             {/* Group 1 */}
             <div className="-mx-3 bg-[#FAFAFA] rounded-[16px] p-3 flex flex-col gap-4">
               <Row 
                 checked 
-                text="Research plan" 
+                text="Sticky note" 
                 icon={
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 3h6" />
@@ -185,7 +190,7 @@ function KnowledgeVisual() {
               />
               <Row 
                 checked 
-                text="Organization chart" 
+                text="Highlight — cable-stayed" 
                 icon={
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="8" y="3" width="8" height="6" rx="1" />
@@ -203,7 +208,7 @@ function KnowledgeVisual() {
               />
               <Row 
                 checked 
-                text="Time off policies" 
+                text="Drawing — Arrow · 18 pts" 
                 icon={
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
@@ -231,7 +236,7 @@ function KnowledgeVisual() {
             <div className="-mx-3 bg-[#FAFAFA] rounded-[16px] p-3">
               <Row 
                 checked 
-                text="HR Handbook" 
+                text="AI summary" 
                 icon={
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 21a9 9 0 0 0 9-9c0-5-4-9-9-9s-9 4-9 9c0 2 .5 4 1.5 5.5L12 21z" />
@@ -260,14 +265,13 @@ function KnowledgeVisual() {
 
           {/* Action Bar */}
           <div className="mt-10 bg-[#F9F9FA] rounded-[12px] p-3 sm:px-4 flex items-center justify-between border border-[#F2F2F2] relative">
-            <span className="text-[14.5px] text-[#7A7A7A] font-medium">4 selected docs</span>
-            <button className="bg-[#EBEBEB] text-[#555] text-[14px] font-medium px-3 py-1.5 rounded-[6px] flex items-center shadow-sm">
+            <span className="text-[14.5px] text-[#7A7A7A] font-medium">5 captures · 1 page</span>
+            <button className="bg-[#EBEBEB] text-[#555] text-[14px] font-medium px-3 py-1.5 rounded-[6px] flex items-center">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5 text-[#555]">
-                <rect width="20" height="5" x="2" y="4" rx="1" />
-                <path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9" />
-                <path d="M10 13h4" />
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
               </svg>
-              Archive
+              Open recap
             </button>
             {/* Pointer Hand Cursor */}
             <svg 
@@ -292,20 +296,17 @@ function KnowledgeVisual() {
 function DocsVisual() {
   return (
     <div className="flex justify-center w-full">
-      <div className="w-full max-w-[500px] rounded-[25px] b bg-[#C4D7D1] pl-6 pt-6 sm:pl-10 sm:pt-10 overflow-hidden shadow-sm">
+      <div className="w-full max-w-[500px] rounded-[25px] bg-[#C4D7D1] pl-6 pt-6 sm:pl-10 sm:pt-10 overflow-hidden">
         <div className="bg-white rounded-tl-[24px] border-t border-l border-[#222] w-full h-full p-6 sm:p-8 sm:pb-10 flex flex-col relative">
           
-          <h4 className="text-[24px] font-bold text-[#2B2B2B] mb-8 tracking-tight">Playbook Library</h4>
+          <h4 className="text-[24px] font-bold text-[#2B2B2B] mb-8 tracking-tight">Auto-generated recap</h4>
           
           <div className="relative w-full mb-4">
-            {/* Stacked offset background cards to create depth */}
             <div className="absolute inset-0 bg-[#F5F5F5] border border-[#222] rounded-[16px] translate-y-3 translate-x-3 z-0"></div>
             <div className="absolute inset-0 bg-[#FAFAFA] border border-[#222] rounded-[16px] translate-y-1.5 translate-x-1.5 z-10"></div>
             
-            {/* Main Document Card */}
             <div className="bg-white border border-[#222] rounded-[16px] overflow-hidden relative z-20 flex flex-col w-full">
                
-               {/* Browser/Editor Window Header */}
                <div className="bg-[#1C1E26] p-3.5 flex items-center justify-between border-b border-[#222]">
                   <div className="flex gap-1.5">
                      <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] border border-[#E0443E]"></div>
@@ -318,41 +319,39 @@ function DocsVisual() {
                   </div>
                </div>
                
-               {/* Document Body */}
                <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <span className="bg-[#E9F5ED] text-[#4C9E62] border border-[#CDEAE5] text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-                        Verified
+                        Auto-generated
                       </span>
-                      <span className="bg-[#F0F4F8] text-[#1877F2] border border-[#D1E4F9] text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Template</span>
+                      <span className="bg-[#F0F4F8] text-[#1877F2] border border-[#D1E4F9] text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">Recap</span>
                     </div>
                   </div>
 
-                  <h3 className="text-[20px] font-bold text-[#111] mb-2 leading-tight">Technical Documentation</h3>
+                  <h3 className="text-[20px] font-bold text-[#111] mb-2 leading-tight">Wikipedia — Bridge</h3>
                   <p className="text-[13px] text-[#666] leading-relaxed mb-6">
-                    Comprehensive template for engineering teams to document APIs, architecture, and processes.
+                    Captured 5 items on this page. 3 drawings, 2 highlights, 1 AI summary, 1 sticky note. Last updated 4 minutes ago.
                   </p>
 
-                  {/* Document structure preview rows */}
                   <div className="space-y-3">
                      <div className="p-3 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] flex items-center gap-3">
-                       <div className="bg-white border border-[#E0E0E0] shadow-sm text-[#1877F2] p-2 rounded-lg shrink-0">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                       <div className="bg-white border border-[#E0E0E0] text-[#1877F2] p-2 rounded-lg shrink-0">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
                        </div>
                        <div>
-                         <div className="text-[13px] font-semibold text-[#333]">API Reference</div>
-                         <div className="text-[11px] text-[#888] mt-0.5">Endpoints, payloads, auth</div>
+                         <div className="text-[13px] font-semibold text-[#333]">Overview</div>
+                         <div className="text-[11px] text-[#888] mt-0.5">Written from your captures — no invented content</div>
                        </div>
                      </div>
                      <div className="p-3 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] flex items-center gap-3">
-                       <div className="bg-white border border-[#E0E0E0] shadow-sm text-[#D96B27] p-2 rounded-lg shrink-0">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                       <div className="bg-white border border-[#E0E0E0] text-[#D96B27] p-2 rounded-lg shrink-0">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                        </div>
                        <div>
-                         <div className="text-[13px] font-semibold text-[#333]">System Architecture</div>
-                         <div className="text-[11px] text-[#888] mt-0.5">Diagrams and infrastructure</div>
+                         <div className="text-[13px] font-semibold text-[#333]">Key insights</div>
+                         <div className="text-[11px] text-[#888] mt-0.5">Grouped by capture type, ordered by recency</div>
                        </div>
                      </div>
                   </div>

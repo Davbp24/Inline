@@ -32,6 +32,7 @@ import {
   removeFolderSubtree,
   collectSubtreeFolderIds,
 } from '@/lib/workspace-folders'
+import ThemeToggle from '@/components/shell/ThemeToggle'
 
 // ---------------------------------------------------------------------------
 // Types & constants
@@ -89,7 +90,9 @@ function NavRow({ href, icon: Icon, label, collapsed, active, dotColor, onStar, 
           collapsed
             ? 'w-10 h-10 aspect-square rounded-md flex items-center justify-center transition-all cursor-pointer shrink-0'
             : 'flex flex-1 items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-sm transition-all cursor-pointer min-w-0',
-          active ? 'bg-[#F1F1EF] text-[#37352F] font-semibold' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100',
+          active
+            ? 'bg-[#F1F1EF] text-[#37352F] font-semibold dark:bg-[#1B326D] dark:text-white'
+            : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100 dark:text-[#9BBCE5] dark:hover:text-white dark:hover:bg-[#17296B]',
         )}
       >
         {dotColor ? (
@@ -97,7 +100,7 @@ function NavRow({ href, icon: Icon, label, collapsed, active, dotColor, onStar, 
             <Icon className="w-3 h-3 shrink-0" style={{ color: dotColor }} />
           </span>
         ) : (
-          <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-[#37352F]' : '')} />
+          <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-[#37352F] dark:text-white' : '')} />
         )}
         <span
           className="flex-1 overflow-hidden whitespace-nowrap truncate min-w-0 transition-[opacity,max-width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
@@ -136,11 +139,11 @@ function SectionLabel({ label, collapsed, expanded, onToggle, action }: {
   if (collapsed) return null
   return (
     <div className="flex items-center justify-between px-2.5 pt-4 pb-1">
-      <button onClick={onToggle} className="flex items-center gap-1 cursor-pointer hover:text-stone-700 transition-colors">
-        <span className="text-[10.5px] font-semibold uppercase tracking-wider text-stone-400 select-none">
+      <button onClick={onToggle} className="flex items-center gap-1 cursor-pointer hover:text-stone-700 transition-colors dark:hover:text-white">
+        <span className="text-[10.5px] font-semibold uppercase tracking-wider text-stone-400 select-none dark:text-[#9BBCE5]">
           {label}
         </span>
-        <ChevronDown className={cn('w-3 h-3 text-stone-300 transition-transform duration-200', !expanded && '-rotate-90')} />
+        <ChevronDown className={cn('w-3 h-3 text-stone-300 transition-transform duration-200 dark:text-[#9BBCE5]', !expanded && '-rotate-90')} />
       </button>
       {action}
     </div>
@@ -550,12 +553,12 @@ export default function Sidebar() {
         animate={{ width: collapsed ? 60 : 228 }}
         transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
         style={{ willChange: 'width' }}
-        className="relative h-screen flex flex-col bg-[#FDFBF7] border-r border-stone-200/60 overflow-hidden shrink-0 select-none"
+        className="relative h-screen flex flex-col bg-[#FDFBF7] border-r border-stone-200/60 overflow-hidden shrink-0 select-none dark:bg-[#0D1B3C] dark:border-[#263E7A]"
       >
         {/* ── Logo + sidebar collapse only (activity panel toggle lives on main content) ── */}
         <div
           className={cn(
-            'h-[52px] flex shrink-0 items-center border-b border-stone-200',
+            'h-[52px] flex shrink-0 items-center border-b border-stone-200 dark:border-[#263E7A]',
             collapsed ? 'justify-center px-0' : 'gap-2 px-3',
           )}
         >
@@ -565,7 +568,7 @@ export default function Sidebar() {
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1C1E26]">
                   <span className="block h-4 w-1 -rotate-12 rounded-full bg-white" />
                 </div>
-                <span className="whitespace-nowrap text-[18px] font-bold tracking-tight text-stone-800">
+                <span className="whitespace-nowrap text-[18px] font-bold tracking-tight text-stone-800 dark:text-white">
                   inline
                 </span>
               </Link>
@@ -574,7 +577,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
+            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-[#9BBCE5] dark:hover:bg-[#17296B] dark:hover:text-white"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <motion.div
@@ -600,11 +603,11 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('inline-open-cmd'))}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-stone-50 border border-stone-200/60 cursor-pointer hover:border-stone-200 transition-colors text-left"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-stone-50 border border-stone-200/60 cursor-pointer hover:border-stone-200 transition-colors text-left dark:bg-[#10214A] dark:border-[#263E7A] dark:hover:border-[#355199]"
             >
-              <Search className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-              <span className="flex-1 text-xs text-stone-400 select-none">Search…</span>
-              <kbd className="text-[9px] text-stone-300 bg-white border border-stone-200/60 rounded px-1 py-0.5 font-sans leading-none">/</kbd>
+              <Search className="w-3.5 h-3.5 text-stone-400 shrink-0 dark:text-[#9BBCE5]" />
+              <span className="flex-1 text-xs text-stone-400 select-none dark:text-[#9BBCE5]">Search…</span>
+              <kbd className="text-[9px] text-stone-300 bg-white border border-stone-200/60 rounded px-1 py-0.5 font-sans leading-none dark:bg-[#0A1430] dark:border-[#263E7A] dark:text-[#9BBCE5]">/</kbd>
             </button>
           )}
         </div>
@@ -797,13 +800,13 @@ export default function Sidebar() {
         </div>
 
         {/* ── Footer ── */}
-        <div className="border-t border-stone-200 px-2 pt-2 pb-2 shrink-0 space-y-0.5">
+        <div className="border-t border-stone-200 px-2 pt-2 pb-2 shrink-0 space-y-0.5 dark:border-[#263E7A]">
           <div
             className="overflow-hidden transition-[opacity,max-height] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
             style={{ maxHeight: collapsed ? 0 : 40, opacity: collapsed ? 0 : 1 }}
           >
             <button
-              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-xs text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-xs text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer dark:text-[#9BBCE5] dark:hover:text-white dark:hover:bg-[#17296B]"
               onClick={() => setInviteOpen(true)}
             >
               <UserPlus className="w-3.5 h-3.5 shrink-0" />
@@ -816,28 +819,29 @@ export default function Sidebar() {
               href="/app/account"
               title={collapsed ? `${userName}\n${userEmail}` : undefined}
               className={cn(
-                'flex items-center gap-2.5 flex-1 min-w-0 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer',
+                'flex items-center gap-2.5 flex-1 min-w-0 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer dark:hover:bg-[#17296B]',
                 collapsed ? 'justify-center' : 'py-0.5',
               )}
             >
-              <div className={cn('bg-[#F0EBE3] border border-stone-300 flex items-center justify-center text-[#37352F] text-[10px] font-bold shrink-0', collapsed ? 'w-10 h-10 aspect-square rounded-md' : 'w-6 h-6 rounded-full')}>
+              <div className={cn('bg-[#F0EBE3] border border-stone-300 flex items-center justify-center text-[#37352F] text-[10px] font-bold shrink-0 dark:bg-[#1B326D] dark:border-[#263E7A] dark:text-white', collapsed ? 'w-10 h-10 aspect-square rounded-md' : 'w-6 h-6 rounded-full')}>
                 {userInitial}
               </div>
               <div
                 className="flex-1 overflow-hidden min-w-0 transition-[opacity,max-width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
                 style={{ maxWidth: collapsed ? 0 : 120, opacity: collapsed ? 0 : 1 }}
               >
-                <p className="font-medium text-stone-700 text-xs truncate leading-tight">{userName}</p>
-                <p className="text-stone-400 truncate text-[10px] leading-tight">{userEmail}</p>
+                <p className="font-medium text-stone-700 text-xs truncate leading-tight dark:text-white">{userName}</p>
+                <p className="text-stone-400 truncate text-[10px] leading-tight dark:text-[#9BBCE5]">{userEmail}</p>
               </div>
             </Link>
             <div
-              className="transition-[opacity,max-width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)] overflow-hidden"
-              style={{ maxWidth: collapsed ? 0 : 32, opacity: collapsed ? 0 : 1 }}
+              className="flex items-center gap-0.5 transition-[opacity,max-width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)] overflow-hidden"
+              style={{ maxWidth: collapsed ? 0 : 64, opacity: collapsed ? 0 : 1 }}
             >
+              <ThemeToggle />
               <form action={signOut}>
                 <button type="submit"
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0 cursor-pointer"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors shrink-0 cursor-pointer dark:text-[#9BBCE5] dark:hover:text-white dark:hover:bg-[#17296B]"
                   title="Sign out">
                   <LogOut className="w-3.5 h-3.5" />
                 </button>

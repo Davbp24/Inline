@@ -13,7 +13,12 @@ import {
 } from '@/lib/dashboard-favorites'
 import { collaboratorIndexForId } from '@/lib/dashboard-mock-avatars'
 
-const PASTEL_BGS = ['bg-[#F5EDE3]', 'bg-[#FDECC8]', 'bg-[#F1F1EF]', 'bg-[#E7E5E4]']
+const PASTEL_BGS = [
+  'bg-[#F5EDE3] dark:bg-[#15285C]',
+  'bg-[#FDECC8] dark:bg-[#1B326D]',
+  'bg-[#F1F1EF] dark:bg-[#17296B]',
+  'bg-[#E7E5E4] dark:bg-[#1E3878]',
+]
 
 const MOCK_USERS = [
   { avatar: 'A', color: '#7c3aed' },
@@ -101,7 +106,7 @@ export default function LibraryDocumentsSection({ workspaceId }: { workspaceId: 
     return (
       <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center">
         <div className="mx-auto w-12 h-12 rounded-xl bg-[#EBF1F7] flex items-center justify-center mb-3">
-          <FileText className="h-6 w-6 text-stone-600" />
+          <FileText className="h-6 w-6 text-stone-600 dark:text-[#9BBCE5]" />
         </div>
         <p className="text-sm font-medium text-foreground">No documents yet</p>
         <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
@@ -197,7 +202,7 @@ function DocLibraryCard({
           aria-label="Document name"
           className="line-clamp-1 w-full truncate rounded-none border-0 bg-transparent px-0 py-0 pr-6 text-base font-semibold tracking-tight text-foreground focus:outline-none focus:ring-0"
         />
-        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+        <p className="text-xs text-slate-500 mt-1 line-clamp-2 dark:text-[#C9DAF0]/85">
           {preview}
         </p>
       </div>

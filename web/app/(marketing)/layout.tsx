@@ -16,7 +16,7 @@ export default function MarketingLayout({
   return (
     <div className={`${dmSans.variable} ${dmSans.className} bg-[#FDFBF7] text-[#1C1E26] min-h-screen antialiased`}>
       <MarketingNav />
-      <main className="pt-20 md:pt-24">{children}</main>
+      <main>{children}</main>
       <MarketingFooter />
     </div>
   )

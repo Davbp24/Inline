@@ -14,10 +14,10 @@ const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 function getIntensityClass(count: number, max: number) {
   if (count === 0) return 'bg-muted'
   const ratio = count / max
-  if (ratio < 0.25) return 'bg-[#EDE9E3]'
-  if (ratio < 0.5) return 'bg-[#d6d3d1]'
-  if (ratio < 0.75) return 'bg-[#78716c]'
-  return 'bg-[#1C1E26]'
+  if (ratio < 0.25) return 'bg-[#EDE9E3] dark:bg-[#1E3878]'
+  if (ratio < 0.5)  return 'bg-[#d6d3d1] dark:bg-[#3A5AA8]'
+  if (ratio < 0.75) return 'bg-[#78716c] dark:bg-[#6C8ED0]'
+  return 'bg-[#1C1E26] dark:bg-[#B5CDEF]'
 }
 
 export default function ActivityHeatmap({ data, linkHref }: ActivityHeatmapProps) {
@@ -51,7 +51,13 @@ export default function ActivityHeatmap({ data, linkHref }: ActivityHeatmapProps
         </div>
         <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
           <span>Less</span>
-          {['bg-muted', 'bg-[#EDE9E3]', 'bg-[#d6d3d1]', 'bg-[#78716c]', 'bg-[#1C1E26]'].map(cls => (
+          {[
+            'bg-muted',
+            'bg-[#EDE9E3] dark:bg-[#1E3878]',
+            'bg-[#d6d3d1] dark:bg-[#3A5AA8]',
+            'bg-[#78716c] dark:bg-[#6C8ED0]',
+            'bg-[#1C1E26] dark:bg-[#B5CDEF]',
+          ].map(cls => (
             <div key={cls} className={cn('w-3 h-3 rounded-sm', cls)} />
           ))}
           <span>More</span>

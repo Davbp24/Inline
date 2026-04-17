@@ -13,7 +13,12 @@ import {
 import { collaboratorIndexForId } from '@/lib/dashboard-mock-avatars'
 import { prettyNotePreviewTruncated } from '@/lib/note-preview'
 
-const PASTEL_BGS = ['bg-[#F5EDE3]', 'bg-[#F1F1EF]', 'bg-[#FDECC8]', 'bg-[#E7E5E4]']
+const PASTEL_BGS = [
+  'bg-[#F5EDE3] dark:bg-[#15285C]',
+  'bg-[#F1F1EF] dark:bg-[#17296B]',
+  'bg-[#FDECC8] dark:bg-[#1B326D]',
+  'bg-[#E7E5E4] dark:bg-[#1E3878]',
+]
 
 const MOCK_USERS = [
   { name: 'Wonpil',  avatar: 'W', color: '#D9730D' },
@@ -107,7 +112,7 @@ function NoteCaptureCard({
               </div>
             ))}
           </div>
-          <span className="text-[10px] text-slate-400">{time}</span>
+          <span className="text-[10px] text-slate-400 dark:text-[#9BBCE5]">{time}</span>
         </div>
       </Link>
     </div>

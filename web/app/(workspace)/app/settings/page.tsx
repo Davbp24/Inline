@@ -369,18 +369,26 @@ function AccountDangerTab() {
 function AppearanceTab() {
   const [textSize, setTextSize] = useState(14)
   const [saved, setSaved] = useState(false)
-  const [uiTheme, setUiTheme] = useState<'light' | 'dark' | 'cosmic'>('light')
+  const [uiTheme, setUiTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
     const sz = parseInt(localStorage.getItem('inline_text_size') || '14')
     setTextSize(sz)
     document.documentElement.style.setProperty('--font-size-base', `${sz}px`)
-    setUiTheme((localStorage.getItem('inline_ui_theme') as 'light' | 'dark' | 'cosmic') || 'light')
+
+    // Source of truth is the same `inline-theme` key the ThemeScript reads
+    // before first paint, so the picker stays in sync with the instant toggle.
+    const stored = (localStorage.getItem('inline-theme') as 'light' | 'dark' | null) ?? 'light'
+    setUiTheme(stored)
   }, [])
 
-  function pickTheme(id: 'light' | 'dark' | 'cosmic') {
+  function pickTheme(id: 'light' | 'dark') {
     setUiTheme(id)
-    localStorage.setItem('inline_ui_theme', id)
+    localStorage.setItem('inline-theme', id)
+    if (id === 'dark') document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+    // Notify other components (e.g. the sidebar toggle) listening for theme changes.
+    window.dispatchEvent(new CustomEvent('inline-theme-changed', { detail: id }))
     setSaved(true)
     setTimeout(() => setSaved(false), 1800)
   }
@@ -394,15 +402,14 @@ function AppearanceTab() {
   }
 
   const THEMES = [
-    { id: 'light' as const,  name: 'Light',       desc: 'Clean workspace',      cls: 'bg-slate-50 border-slate-200' },
-    { id: 'dark' as const,   name: 'Dark',         desc: 'Easier on the eyes',  cls: 'bg-[#191919] border-slate-700' },
-    { id: 'cosmic' as const, name: 'Cosmic blue',  desc: 'Soft blue highlights', cls: 'bg-sky-50 border-sky-200' },
+    { id: 'light' as const, name: 'Light', desc: 'Warm cream workspace', cls: 'bg-[#FDFBF7] border-stone-200' },
+    { id: 'dark' as const,  name: 'Dark',  desc: 'Deep navy, easier on the eyes', cls: 'bg-[#0B1735] border-[#1C3666]' },
   ]
 
   return (
     <div className="space-y-8">
-      <SectionCard title="Select theme" description="Applies accent surfaces across the dashboard." action={<SaveBadge saved={saved} />}>
-        <div className="grid grid-cols-3 gap-3">
+      <SectionCard title="Select theme" description="Switches the dashboard between warm-cream light and deep-navy dark." action={<SaveBadge saved={saved} />}>
+        <div className="grid grid-cols-2 gap-3">
           {THEMES.map(t => (
             <button key={t.id} type="button" onClick={() => pickTheme(t.id)}
               className={cn('flex flex-col rounded-xl border-2 p-3 text-left transition-all cursor-pointer',
@@ -616,21 +623,7 @@ function AIVoiceTab() {
 
   return (
     <div className="space-y-8">
-      <SectionCard title="API keys" description="Stored locally and synced to the extension. Never sent to Inline servers. Set NEXT_PUBLIC_CHROME_EXTENSION_ID in .env.local (extension ID from chrome://extensions) so Save also pushes voice settings to the extension when the dashboard is open in Chrome." action={<SaveBadge saved={saved} />}>
-        <Row label="OpenAI API key" hint="Used for AI Copilot features.">
-          <MaskedInput value={openaiKey} onChange={setOpenaiKey} placeholder="sk-…" />
-        </Row>
-        <Row label="ElevenLabs API key" hint="Used for AI voice read-aloud.">
-          <MaskedInput value={elevenKey} onChange={setElevenKey} placeholder="…" />
-        </Row>
-        <div className="flex justify-end">
-          <Button size="sm" onClick={handleSave} disabled={pending} className="cursor-pointer">
-            {pending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}Save keys
-          </Button>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Voice selection" description="The voice used for AI read-aloud across the dashboard and extension (ElevenLabs only — no browser voice).">
+      <SectionCard title="Voice selection" description="The voice used for AI read-aloud across the dashboard and extension." action={<SaveBadge saved={saved} />}>
         <div className="space-y-2">
           {INLINE_VOICE_PRESETS.map(v => (
             <button key={v.id} type="button" onClick={() => setVoiceId(v.id)}
@@ -846,7 +839,7 @@ const TAB_DESCRIPTIONS: Partial<Record<Tab, string>> = {
   notifications: 'Choose how Inline communicates with you.',
   appearance: 'Theme and text size for the dashboard.',
   integrations: 'Connect tools you already use.',
-  'ai-voice': 'API keys, voice, and copilot options.',
+  'ai-voice': 'Voice selection, tuning, and copilot options.',
   extension: 'Blocklist and extension preferences.',
   danger: 'Permanently delete your account and local data.',
 }

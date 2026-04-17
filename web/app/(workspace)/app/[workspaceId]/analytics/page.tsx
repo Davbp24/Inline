@@ -34,7 +34,7 @@ export default async function AnalyticsPage({
   const workspaceName   = getWorkspaceName(workspaceId)
 
   return (
-    <div className="min-h-full bg-white">
+    <div className="min-h-full bg-white dark:bg-[#0A1430]">
       <PageHeader
         crumbs={[
           { label: workspaceName, href: `/app/${workspaceId}/dashboard` },
