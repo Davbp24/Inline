@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { PANEL as C, FONT } from '../lib/extensionTheme'
+import { PANEL as C } from '../lib/extensionTheme'
+import { PanelShell, SectionLabel, Segmented } from './panelKit'
+import { ensureDrawCanvas, restoreDrawings, clearAllDrawings } from '../content/drawingsRestore'
 
 type Tool = 'pen' | 'marker' | 'arrow' | 'rectangle' | 'ellipse' | 'eraser' | 'lasso'
 
@@ -49,17 +51,6 @@ const ILasso = () => (
     <circle cx="7" cy="22" r="2"/>
   </svg>
 )
-const IDraw = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#1C1E26">
-    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zM13.5 6.207 9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5z"/>
-  </svg>
-)
-const IClose = () => (
-  <svg width="12" height="12" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-  </svg>
-)
-
 interface DrawProps {
   onClose: () => void
 }
@@ -69,6 +60,7 @@ export default function Draw({ onClose }: DrawProps) {
   const [color, setColor] = useState(COLORS[0])
   const [thickness, setThickness] = useState(3)
   const [eraserMode, setEraserMode] = useState<'object' | 'pixel'>('object')
+  const [confirmClear, setConfirmClear] = useState(false)
   const canvasRef = useRef<SVGSVGElement | null>(null)
   const drawing = useRef(false)
   const pathData = useRef('')
@@ -84,111 +76,20 @@ export default function Draw({ onClose }: DrawProps) {
   const groupTranslate = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const eraserDown = useRef(false)
 
-  /* ─── Create/remove SVG overlay on mount ─── */
+  /* ─── Reuse the shared SVG canvas owned by the content script ───
+   *
+   * The canvas is created once at content-script init (drawingsRestore.ts)
+   * so saved shapes are visible on every page load, independent of whether
+   * this panel has ever been mounted. We only *activate* pointer events
+   * while the panel is open and *deactivate* them on close — we never
+   * remove the element, because that would wipe the user's drawings.
+   */
   useEffect(() => {
-    const existing = document.getElementById('inline-draw-canvas')
-    if (existing) {
-      canvasRef.current = existing as unknown as SVGSVGElement
-      return
-    }
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.id = 'inline-draw-canvas'
-    svg.style.cssText =
-      'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483640;pointer-events:none;'
-    document.body.appendChild(svg)
-    canvasRef.current = svg
-    return () => { svg.remove(); canvasRef.current = null }
-  }, [])
-
-  /* ─── Restore saved draw paths from backend on mount ─── */
-  useEffect(() => {
-    try {
-      if (!chrome.runtime?.id) return
-      chrome.runtime.sendMessage(
-        { type: 'LOAD_ANNOTATIONS', payload: { pageUrl: window.location.href } },
-        (response) => {
-          if (chrome.runtime.lastError || !response?.ok) return
-          const paths = response.data?.elements?.drawPaths as Record<string, unknown>[] | undefined
-          if (!Array.isArray(paths) || paths.length === 0) return
-          const svg = canvasRef.current
-          if (!svg) return
-
-          for (const item of paths) {
-            const setInlineId = (el: Element) => {
-              if (typeof item.id === 'string' && item.id) el.setAttribute('data-inline-id', item.id)
-            }
-            if (item.type === 'path') {
-              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-              path.setAttribute('d', String(item.d))
-              path.setAttribute('stroke', String(item.stroke))
-              path.setAttribute('stroke-width', String(item.strokeWidth))
-              path.setAttribute('fill', String(item.fill ?? 'none'))
-              path.setAttribute('stroke-linecap', 'round')
-              path.setAttribute('stroke-linejoin', 'round')
-              if (item.opacity) path.setAttribute('opacity', String(item.opacity))
-              path.setAttribute('data-inline-draw', 'true')
-              setInlineId(path)
-              svg.appendChild(path)
-            } else if (item.type === 'rect') {
-              const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
-              rect.setAttribute('x', String(item.x))
-              rect.setAttribute('y', String(item.y))
-              rect.setAttribute('width', String(item.width))
-              rect.setAttribute('height', String(item.height))
-              rect.setAttribute('stroke', String(item.stroke))
-              rect.setAttribute('stroke-width', String(item.strokeWidth))
-              rect.setAttribute('fill', 'none')
-              rect.setAttribute('rx', '2')
-              rect.setAttribute('data-inline-draw', 'true')
-              setInlineId(rect)
-              svg.appendChild(rect)
-            } else if (item.type === 'ellipse') {
-              const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse')
-              ellipse.setAttribute('cx', String(item.cx))
-              ellipse.setAttribute('cy', String(item.cy))
-              ellipse.setAttribute('rx', String(item.rx))
-              ellipse.setAttribute('ry', String(item.ry))
-              ellipse.setAttribute('stroke', String(item.stroke))
-              ellipse.setAttribute('stroke-width', String(item.strokeWidth))
-              ellipse.setAttribute('fill', 'none')
-              ellipse.setAttribute('data-inline-draw', 'true')
-              setInlineId(ellipse)
-              svg.appendChild(ellipse)
-            } else if (item.type === 'arrow') {
-              const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-              g.setAttribute('data-inline-draw', 'true')
-              setInlineId(g)
-              const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-              line.setAttribute('x1', String(item.x1))
-              line.setAttribute('y1', String(item.y1))
-              line.setAttribute('x2', String(item.x2))
-              line.setAttribute('y2', String(item.y2))
-              line.setAttribute('stroke', String(item.stroke))
-              line.setAttribute('stroke-width', String(item.strokeWidth))
-              line.setAttribute('stroke-linecap', 'round')
-              const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-              head.setAttribute('fill', String(item.fill))
-              head.setAttribute('points', String(item.points))
-              g.appendChild(line)
-              g.appendChild(head)
-              svg.appendChild(g)
-            } else if (item.type === 'line') {
-              const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-              line.setAttribute('x1', String(item.x1))
-              line.setAttribute('y1', String(item.y1))
-              line.setAttribute('x2', String(item.x2))
-              line.setAttribute('y2', String(item.y2))
-              line.setAttribute('stroke', String(item.stroke))
-              line.setAttribute('stroke-width', String(item.strokeWidth))
-              line.setAttribute('stroke-linecap', 'round')
-              line.setAttribute('data-inline-draw', 'true')
-              setInlineId(line)
-              svg.appendChild(line)
-            }
-          }
-        },
-      )
-    } catch { /* extension context unavailable */ }
+    canvasRef.current = ensureDrawCanvas()
+    // If the user opened the panel before the async restore finished (or
+    // navigated between pages in a SPA), pull saved shapes again. It's a
+    // cheap idempotent call.
+    restoreDrawings()
   }, [])
 
   const activateCanvas = useCallback(() => {
@@ -340,6 +241,18 @@ export default function Draw({ onClose }: DrawProps) {
     }
 
     function start(e: PointerEvent) {
+      // If the user made a lasso selection and then switched to the eraser,
+      // treat the first eraser click as "delete the whole selection". This
+      // is the natural way to wipe a batch of drawings AND any text/content
+      // the user looped with the lasso (matches the user's mental model of
+      // "lasso → eraser → gone").
+      if (tool === 'eraser' && selectedGroup.current) {
+        selectedGroup.current.remove()
+        selectedGroup.current = null
+        persistDrawData()
+        return
+      }
+
       if (selectedGroup.current && tool !== 'lasso') deselectGroup()
 
       if (tool === 'eraser' && eraserMode === 'pixel') {
@@ -776,126 +689,140 @@ export default function Draw({ onClose }: DrawProps) {
     { id: 'eraser', icon: <IEraser />, label: 'Eraser' },
     { id: 'lasso', icon: <ILasso />, label: 'Lasso' },
   ]
+  const activeLabel = tools.find(t => t.id === tool)?.label ?? 'Pen'
 
   return (
-    <div style={{
-      width: 196, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <IDraw />
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Draw</span>
+    <PanelShell title="Draw" subtitle="Annotate directly on the page" chip={activeLabel} width={312} onClose={onClose}>
+      <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Tools */}
+        <div>
+          <SectionLabel>Tools</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 9 }}>
+            {tools.map(t => {
+              const on = tool === t.id
+              return (
+                <button key={t.id} type="button"
+                  onClick={() => setTool(t.id)}
+                  aria-label={t.label}
+                  aria-pressed={on}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    height: 46, borderRadius: 14,
+                    border: `1px solid ${on ? C.accent : C.border}`,
+                    background: on ? C.accent : C.surfaceBubble,
+                    color: on ? '#fff' : C.textMuted,
+                    cursor: 'pointer',
+                    boxShadow: on ? '0 5px 14px -5px rgba(11,23,53,0.5)' : C.shadowSoft,
+                    transition: 'background 0.14s, box-shadow 0.14s, border-color 0.14s, color 0.14s',
+                  }}
+                >{t.icon}</button>
+              )
+            })}
+          </div>
+          {/* Eraser sub-mode */}
+          {tool === 'eraser' && (
+            <div style={{ marginTop: 10 }}>
+              <Segmented
+                options={[{ value: 'object', label: 'Object' }, { value: 'pixel', label: 'Pixel' }]}
+                value={eraserMode}
+                onChange={setEraserMode}
+              />
+            </div>
+          )}
         </div>
-        <button type="button" onClick={onClose} style={btnIcon}><IClose /></button>
-      </div>
 
-      {/* Tool grid – 3x3 */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 10, padding: '14px 16px', justifyItems: 'center',
-      }}>
-        {tools.map(t => (
-          <button key={t.id} type="button"
-            onClick={() => setTool(t.id)}
-            title={t.label}
-            style={{
+        {/* Stroke */}
+        <div>
+          <SectionLabel>Stroke weight</SectionLabel>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+            border: `1px solid ${C.border}`, borderRadius: 16, background: C.surfaceBubble, boxShadow: C.shadowSoft,
+          }}>
+            <button type="button" onClick={() => setThickness(v => Math.max(1, v - 1))} aria-label="Thinner" style={sliderBtn}>−</button>
+            <input
+              type="range" min={1} max={12} value={thickness}
+              onChange={e => setThickness(Number(e.target.value))}
+              aria-label="Stroke weight"
+              style={{ flex: 1, accentColor: C.accent, height: 6, cursor: 'pointer' }}
+            />
+            <button type="button" onClick={() => setThickness(v => Math.min(12, v + 1))} aria-label="Thicker" style={sliderBtn}>+</button>
+            <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 42, height: 42, borderRadius: C.radiusMd,
-              border: `1.5px solid ${tool === t.id ? C.accent : C.border}`,
-              background: tool === t.id ? C.toneSelectedBg : C.surfaceBubble,
-              color: tool === t.id ? C.accent : C.textMuted,
-              cursor: 'pointer',
-              boxShadow: tool === t.id ? C.shadowSoft : 'none',
-              transition: 'background 0.15s, box-shadow 0.15s, border-color 0.15s',
-            }}
-          >{t.icon}</button>
-        ))}
-      </div>
-
-      {/* Eraser sub-mode pills */}
-      {tool === 'eraser' && (
-        <div style={{
-          display: 'flex', gap: 6, padding: '0 16px 10px',
-          justifyContent: 'center',
-        }}>
-          {(['object', 'pixel'] as const).map(mode => (
-            <button key={mode} type="button"
-              onClick={() => setEraserMode(mode)}
-              style={{
-                padding: '4px 14px', fontSize: 12, fontWeight: 500,
-                borderRadius: C.radiusPill, cursor: 'pointer',
-                border: `1.5px solid ${eraserMode === mode ? C.accent : C.border}`,
-                background: eraserMode === mode ? C.toneSelectedBg : C.surfaceBubble,
-                color: eraserMode === mode ? C.accent : C.textMuted,
-                transition: 'background 0.15s, border-color 0.15s',
-                letterSpacing: '-0.01em',
-              }}
-            >{mode.charAt(0).toUpperCase() + mode.slice(1)}</button>
-          ))}
+              minWidth: 26, height: 26, borderRadius: 8, background: C.surfaceSunken,
+              fontSize: 12, fontWeight: 700, color: C.text,
+            }}>{thickness}</span>
+          </div>
         </div>
-      )}
 
-      {/* Thickness slider */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '6px 16px 12px', justifyContent: 'center',
-      }}>
-        <button type="button" onClick={() => setThickness(v => Math.max(1, v - 1))} style={sliderBtn}>−</button>
-        <div style={{
-          flex: 1, height: 10, borderRadius: C.radiusPill,
-          background: C.surfaceMuted, padding: '0 4px', display: 'flex', alignItems: 'center',
-          boxShadow: 'none',
-        }}>
-          <input
-            type="range" min={1} max={12} value={thickness}
-            onChange={e => setThickness(Number(e.target.value))}
-            style={{ flex: 1, width: '100%', accentColor: C.accent, height: 6, cursor: 'pointer' }}
-          />
+        {/* Colour */}
+        <div>
+          <SectionLabel>Colour</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 11 }}>
+            {COLORS.map(c => {
+              const on = color === c
+              return (
+                <button
+                  key={c} type="button"
+                  onClick={() => setColor(c)}
+                  aria-label={`Colour ${c}`}
+                  aria-pressed={on}
+                  style={{
+                    height: 34, borderRadius: 12, background: c, cursor: 'pointer', padding: 0,
+                    border: on ? `2.5px solid ${C.accent}` : '1px solid rgba(17,19,33,0.08)',
+                    boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
+                    transform: on ? 'translateY(-2px)' : 'none',
+                    transition: 'transform 0.13s ease, box-shadow 0.13s',
+                  }}
+                />
+              )
+            })}
+          </div>
         </div>
-        <button type="button" onClick={() => setThickness(v => Math.min(12, v + 1))} style={sliderBtn}>+</button>
-      </div>
 
-      {/* Color grid */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: 10, padding: '8px 16px 18px',
-      }}>
-        {COLORS.map(c => (
+        {/* Clear all */}
+        {!confirmClear ? (
           <button
-            key={c} type="button"
-            onClick={() => setColor(c)}
+            type="button"
+            onClick={() => setConfirmClear(true)}
+            aria-label="Clear all drawings on this page"
             style={{
-              width: 30, height: 30, borderRadius: 10,
-              background: c, cursor: 'pointer',
-              border: color === c ? `3px solid ${C.accent}` : '2px solid rgba(255,255,255,0.85)',
-              boxShadow: color === c ? C.shadowSoft : 'none',
-              transition: 'transform 0.12s ease, box-shadow 0.12s',
-              transform: color === c ? 'scale(1.06)' : 'scale(1)',
+              padding: '11px 0', fontSize: 12.5, fontWeight: 700,
+              borderRadius: 14, cursor: 'pointer', width: '100%',
+              border: `1px solid rgba(220,38,38,0.28)`,
+              background: '#FEF2F2', color: '#DC2626',
+              transition: 'background 0.15s', letterSpacing: '-0.01em', fontFamily: 'inherit',
             }}
-          />
-        ))}
+          >Clear all drawings</button>
+        ) : (
+          <div role="alertdialog" aria-label="Clear all drawings?" style={{
+            background: C.surfaceBubble, border: `1px solid rgba(220,38,38,0.22)`,
+            borderRadius: 16, padding: 14, boxShadow: C.shadowCard,
+          }}>
+            <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: C.text }}>Clear all drawings?</p>
+            <p style={{ margin: '0 0 12px', fontSize: 11.5, lineHeight: 1.5, color: C.textMuted }}>
+              This removes every drawing on this page and can&apos;t be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setConfirmClear(false)} style={{
+                padding: '8px 14px', fontSize: 12, fontWeight: 600, borderRadius: C.radiusPill, cursor: 'pointer',
+                border: `1px solid ${C.border}`, background: C.surfaceBubble, color: C.text,
+              }}>Cancel</button>
+              <button type="button" onClick={() => { clearAllDrawings(); setConfirmClear(false) }} style={{
+                padding: '8px 16px', fontSize: 12, fontWeight: 700, borderRadius: C.radiusPill, cursor: 'pointer',
+                border: 'none', background: '#DC2626', color: '#fff',
+              }}>Clear all</button>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </PanelShell>
   )
-}
-
-const btnIcon: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, border: 'none', borderRadius: C.radiusSm,
-  background: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0,
 }
 
 const sliderBtn: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, borderRadius: C.radiusPill,
+  width: 30, height: 30, borderRadius: 10, flexShrink: 0,
   border: `1px solid ${C.border}`, background: C.surfaceBubble,
-  cursor: 'pointer', fontSize: 16, fontWeight: 500, color: C.textMuted,
+  cursor: 'pointer', fontSize: 16, fontWeight: 600, color: C.textMuted,
   boxShadow: C.shadowSoft,
 }

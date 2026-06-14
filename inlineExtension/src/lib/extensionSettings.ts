@@ -5,7 +5,6 @@ export type ExtensionSettings = {
   accessToken: string
   blockedDomains: string[]
   focusMode: boolean
-  elevenLabsKey: string
   voiceId: string
   screenReader: boolean
 }
@@ -17,7 +16,7 @@ export async function loadSettings(): Promise<ExtensionSettings> {
     chrome.storage.local.get(
       [
         'inlineApiBase', 'inlineAccessToken', 'inlineBlockedDomains', 'inlineFocusMode',
-        'inlineElevenLabsKey', 'inlineVoiceId', 'inlineScreenReader',
+        'inlineVoiceId', 'inlineScreenReader',
       ],
       r => {
         let blockedDomains: string[] = []
@@ -31,7 +30,6 @@ export async function loadSettings(): Promise<ExtensionSettings> {
           accessToken: typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : '',
           blockedDomains: Array.isArray(blockedDomains) ? blockedDomains : [],
           focusMode: r.inlineFocusMode === 'true' || r.inlineFocusMode === true,
-          elevenLabsKey: typeof r.inlineElevenLabsKey === 'string' ? r.inlineElevenLabsKey : '',
           voiceId: normalizeInlineVoiceId(
             typeof r.inlineVoiceId === 'string' ? r.inlineVoiceId : undefined,
           ),
@@ -48,8 +46,14 @@ export async function saveSettings(s: Partial<ExtensionSettings>): Promise<void>
   if (s.accessToken !== undefined) patch.inlineAccessToken = s.accessToken
   if (s.blockedDomains !== undefined) patch.inlineBlockedDomains = JSON.stringify(s.blockedDomains)
   if (s.focusMode !== undefined) patch.inlineFocusMode = String(s.focusMode)
-  if (s.elevenLabsKey !== undefined) patch.inlineElevenLabsKey = s.elevenLabsKey
   if (s.voiceId !== undefined) patch.inlineVoiceId = normalizeInlineVoiceId(s.voiceId)
   if (s.screenReader !== undefined) patch.inlineScreenReader = String(s.screenReader)
   await chrome.storage.local.set(patch)
+}
+
+/** One-time cleanup: remove the legacy user-pasted ElevenLabs key from storage. */
+export async function purgeLegacySecrets(): Promise<void> {
+  try {
+    await chrome.storage.local.remove(['inlineElevenLabsKey'])
+  } catch { /* ignore */ }
 }

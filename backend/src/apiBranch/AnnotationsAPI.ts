@@ -312,6 +312,13 @@ async function mirrorToNotes(
       headers,
       body: JSON.stringify({ workspaceId: workspaceId ?? '', pageUrl }),
     }).catch(() => { /* recap route may be absent — ignore */ });
+    // Embed the mirrored notes for semantic retrieval (RAG). Fire-and-forget,
+    // same debounce window as the recap call.
+    void fetch(`${NEXT_APP_URL}/api/ai/index`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ pageUrl, workspaceId: workspaceId ?? '' }),
+    }).catch(() => { /* index route may be absent — ignore */ });
   }
 }
 

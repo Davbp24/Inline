@@ -62,7 +62,6 @@ export default function ExtensionAuthSync() {
       process.env.NEXT_PUBLIC_INLINE_BACKEND_URL || 'http://localhost:3030'
 
     const supabase = createClient()
-    let unsub: (() => void) | undefined
 
     const push = (session: { access_token?: string; user?: { id?: string } } | null) => {
       const workspaceId = extractWorkspaceId(pathname)
@@ -78,9 +77,8 @@ export default function ExtensionAuthSync() {
     void supabase.auth.getSession().then(({ data }) => push(data.session))
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => push(session))
-    unsub = () => sub.subscription.unsubscribe()
 
-    return () => { if (unsub) unsub() }
+    return () => { sub.subscription.unsubscribe() }
   }, [pathname])
 
   return null

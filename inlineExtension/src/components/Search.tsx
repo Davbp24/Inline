@@ -1,16 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { PANEL as C, FONT } from '../lib/extensionTheme'
 import { loadSettings } from '../lib/extensionSettings'
+import { fetchViaBackground } from '../lib/backgroundFetch'
+import { PanelShell, PanelLoading, PanelEmpty, Segmented } from './panelKit'
 
-const IClose = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-  </svg>
-)
-
-const ISearch = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+const ISearchGlyph = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 )
 
@@ -31,7 +27,8 @@ export default function Search({ onClose }: SearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
-  const [searchAll, setSearchAll] = useState(false)
+  const [scope, setScope] = useState<'page' | 'all'>('page')
+  const [focus, setFocus] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -46,7 +43,7 @@ export default function Search({ onClose }: SearchProps) {
       const { apiBaseUrl, accessToken } = await loadSettings()
       const h: Record<string, string> = {}
       if (accessToken) h.Authorization = `Bearer ${accessToken}`
-      const res = await fetch(
+      const res = await fetchViaBackground(
         `${apiBaseUrl}/api/search?q=${encodeURIComponent(q)}`,
         { headers: h },
       )
@@ -63,7 +60,7 @@ export default function Search({ onClose }: SearchProps) {
     setLoading(true)
     try {
       const pageUrl = window.location.href
-      const response = await new Promise<{ ok: boolean; data?: any }>((resolve) => {
+      const response = await new Promise<{ ok: boolean; data?: unknown }>((resolve) => {
         if (!chrome.runtime?.id) { resolve({ ok: false }); return }
         chrome.runtime.sendMessage(
           { type: 'LOAD_ANNOTATIONS', payload: { pageUrl } },
@@ -71,10 +68,9 @@ export default function Search({ onClose }: SearchProps) {
         )
       })
       if (response.ok && response.data) {
-        const annotations = response.data as Record<string, any>
+        const annotations = response.data as Record<string, unknown>
         const matched: SearchResult[] = []
         const lowerQ = q.toLowerCase()
-
         for (const [key, value] of Object.entries(annotations)) {
           if (typeof value === 'object' && value !== null) {
             const str = JSON.stringify(value).toLowerCase()
@@ -96,22 +92,21 @@ export default function Search({ onClose }: SearchProps) {
     finally { setLoading(false) }
   }, [])
 
+  const runSearch = useCallback((value: string, useAll: boolean) => {
+    if (useAll) searchBackend(value)
+    else searchLocal(value)
+  }, [searchBackend, searchLocal])
+
   const handleInput = useCallback((value: string) => {
     setQuery(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      if (searchAll) searchBackend(value)
-      else searchLocal(value)
-    }, 300)
-  }, [searchAll, searchBackend, searchLocal])
+    debounceRef.current = setTimeout(() => runSearch(value, scope === 'all'), 300)
+  }, [scope, runSearch])
 
-  const handleToggle = useCallback((v: boolean) => {
-    setSearchAll(v)
-    if (query.trim()) {
-      if (v) searchBackend(query)
-      else searchLocal(query)
-    }
-  }, [query, searchBackend, searchLocal])
+  const handleScope = useCallback((v: 'page' | 'all') => {
+    setScope(v)
+    if (query.trim()) runSearch(query, v === 'all')
+  }, [query, runSearch])
 
   const snippet = (text: string) => {
     const max = 120
@@ -124,99 +119,77 @@ export default function Search({ onClose }: SearchProps) {
   }
 
   return (
-    <div style={{
-      width: 280, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none', display: 'flex', flexDirection: 'column',
-      maxHeight: 480,
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ISearch />
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Search</span>
-        </div>
-        <button type="button" onClick={onClose} style={btnIcon}><IClose /></button>
-      </div>
-
-      {/* Search input */}
-      <div style={{ padding: '14px 16px 10px' }}>
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={e => handleInput(e.target.value)}
-          placeholder="Search notes…"
-          style={{
-            width: '100%', boxSizing: 'border-box', padding: '10px 16px',
-            border: `1px solid ${C.border}`, borderRadius: C.radiusPill,
-            fontSize: 13, outline: 'none', color: C.text,
-            fontFamily: FONT, background: C.inputBg, boxShadow: C.shadowSoft,
-          }}
-        />
-        <label style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginTop: 10,
-          fontSize: 12, color: C.textMuted, cursor: 'pointer', fontWeight: 500,
+    <PanelShell title="Search" subtitle="Find your notes & annotations" width={360} onClose={onClose} style={{ height: 'min(540px, calc(100vh - 64px))' }}>
+      {/* Search input + scope */}
+      <div style={{ padding: '16px 18px 12px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '0 14px',
+          height: 44, borderRadius: 14, background: C.surfaceBubble,
+          border: `1.5px solid ${focus ? C.accent : C.border}`,
+          boxShadow: focus ? '0 0 0 4px rgba(11,23,53,0.07)' : C.shadowSoft,
+          transition: 'border-color 0.15s, box-shadow 0.15s',
         }}>
+          <span style={{ color: focus ? C.accent : C.textLight, display: 'inline-flex', flexShrink: 0 }}><ISearchGlyph /></span>
           <input
-            type="checkbox"
-            checked={searchAll}
-            onChange={e => handleToggle(e.target.checked)}
-            style={{ accentColor: C.accent }}
+            ref={inputRef}
+            value={query}
+            onChange={e => handleInput(e.target.value)}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+            placeholder="Search highlights, notes & clips…"
+            style={{
+              flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent',
+              fontSize: 13.5, color: C.text, fontFamily: FONT,
+            }}
           />
-          Search all pages
-        </label>
+        </div>
+        <Segmented
+          options={[{ value: 'page', label: 'This page' }, { value: 'all', label: 'All pages' }]}
+          value={scope}
+          onChange={handleScope}
+        />
       </div>
 
       {/* Results */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 14px' }}>
-        {loading && (
-          <p style={{ fontSize: 12, color: C.textMuted, fontStyle: 'italic', margin: '8px 0' }}>
-            Searching…
-          </p>
-        )}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '2px 16px 16px' }}>
+        {loading && <PanelLoading label="Searching…" />}
         {!loading && query.trim() && results.length === 0 && (
-          <p style={{ fontSize: 12, color: C.textMuted, margin: '8px 0' }}>
-            No results found.
-          </p>
+          <PanelEmpty icon={<ISearchGlyph />} title="No results found" hint="Try a different keyword, or switch to “All pages”." />
         )}
-        {results.map(r => (
-          <div key={r.id} style={{
-            padding: '10px 12px', marginBottom: 8,
-            border: `1px solid ${C.border}`, borderRadius: C.radiusMd,
-            background: C.surfaceBubble, boxShadow: C.shadowSoft,
-            cursor: 'pointer',
-          }}
-            onClick={() => {
-              if (r.page_url) window.open(r.page_url, '_blank')
+        {!loading && !query.trim() && results.length === 0 && (
+          <PanelEmpty icon={<ISearchGlyph />} title="Search your captures" hint="Type to find highlights, notes and clips you've saved." />
+        )}
+        {!loading && results.map(r => (
+          <button key={r.id} type="button"
+            onClick={() => { if (r.page_url) window.open(r.page_url, '_blank') }}
+            aria-label={r.page_title || 'Open result'}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              padding: '12px 14px', marginBottom: 9,
+              border: `1px solid ${C.border}`, borderRadius: 16,
+              background: C.surfaceBubble, boxShadow: C.shadowSoft, cursor: 'pointer', fontFamily: FONT,
+              transition: 'box-shadow 0.14s, border-color 0.14s',
             }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = C.shadowCard; e.currentTarget.style.borderColor = C.borderStrong }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = C.shadowSoft; e.currentTarget.style.borderColor = C.border }}
           >
-            <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: C.text, lineHeight: 1.4 }}>
+            <p style={{ margin: 0, fontSize: 12.5, fontWeight: 700, color: C.text, lineHeight: 1.4, letterSpacing: '-0.01em' }}>
               {r.page_title || 'Untitled'}
             </p>
             <p style={{
-              margin: '4px 0 0', fontSize: 11, color: C.textMuted, lineHeight: 1.5,
+              margin: '4px 0 0', fontSize: 11.5, color: C.textMuted, lineHeight: 1.55,
               whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             }}>
               {snippet(r.content)}
             </p>
             {r.page_url && (
-              <p style={{ margin: '4px 0 0', fontSize: 10, color: C.textLight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ margin: '6px 0 0', fontSize: 10.5, color: C.textLight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.page_url}
               </p>
             )}
-          </div>
+          </button>
         ))}
       </div>
-    </div>
+    </PanelShell>
   )
-}
-
-const btnIcon: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, border: 'none', borderRadius: 12,
-  background: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0,
 }

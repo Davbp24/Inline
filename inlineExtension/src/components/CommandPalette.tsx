@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PANEL as C, FONT } from '../lib/extensionTheme'
 
+type Category = 'action' | 'annotate' | 'app' | 'toolbar'
+
 interface Action {
   id: string
   label: string
+  hint?: string
   icon: React.ReactNode
+  category: Category
   shortcut?: string
 }
 
@@ -66,46 +70,60 @@ const IPause = () => (
     <rect x="14" y="4" width="4" height="16"/>
   </svg>
 )
+const ISearch = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+)
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  action: 'Actions',
+  annotate: 'Annotate',
+  app: 'Workspace',
+  toolbar: 'Toolbar',
+}
 
 const ACTIONS: Action[] = [
-  { id: 'rewrite', label: 'Rewrite', icon: <IRewrite /> },
-  { id: 'ai', label: 'Ask AI', icon: <IAi /> },
-  { id: 'notes', label: 'Notes', icon: <INotes /> },
-  { id: 'draw', label: 'Draw', icon: <IDraw /> },
-  { id: 'highlighter', label: 'Highlighter', icon: <IHighlight /> },
-  { id: 'settings', label: 'Settings', icon: <ISettings /> },
-  { id: 'collapse', label: 'Collapse Toolbar', icon: <ICollapse /> },
-  { id: 'pause', label: 'Pause Extension', icon: <IPause /> },
+  { id: 'ai', label: 'Ask AI', hint: 'Chat about the page or selection', icon: <IAi />, category: 'action', shortcut: 'A' },
+  { id: 'rewrite', label: 'Rewrite', hint: 'Rephrase, shorten, summarize', icon: <IRewrite />, category: 'action', shortcut: 'R' },
+  { id: 'highlighter', label: 'Highlighter', hint: 'Highlight passages', icon: <IHighlight />, category: 'annotate', shortcut: 'H' },
+  { id: 'notes', label: 'Sticky note', hint: 'Drop a note on the page', icon: <INotes />, category: 'annotate', shortcut: 'N' },
+  { id: 'draw', label: 'Draw', hint: 'Sketch over the page', icon: <IDraw />, category: 'annotate' },
+  { id: 'settings', label: 'Settings', hint: 'Preferences & blocked sites', icon: <ISettings />, category: 'app' },
+  { id: 'collapse', label: 'Toggle tools dock', hint: 'Show or hide the launcher dock', icon: <ICollapse />, category: 'toolbar' },
+  { id: 'pause', label: 'Hide Inline', hint: 'Tuck the launcher away on this page', icon: <IPause />, category: 'toolbar' },
+]
+
+const FILTERS: { id: 'all' | Category; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'action', label: 'Actions' },
+  { id: 'annotate', label: 'Annotate' },
+  { id: 'toolbar', label: 'Toolbar' },
 ]
 
 export default function CommandPalette({ onClose, onAction }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<'all' | Category>('all')
   const [selectedIdx, setSelectedIdx] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  const filtered = ACTIONS.filter((a) =>
-    a.label.toLowerCase().includes(query.toLowerCase()),
+  const filtered = ACTIONS.filter(
+    (a) =>
+      (filter === 'all' || a.category === filter) &&
+      (a.label.toLowerCase().includes(query.toLowerCase()) ||
+        (a.hint?.toLowerCase().includes(query.toLowerCase()) ?? false)),
   )
 
+  useEffect(() => { setSelectedIdx(0) }, [query, filter])
+  useEffect(() => { inputRef.current?.focus() }, [])
   useEffect(() => {
-    setSelectedIdx(0)
-  }, [query])
-
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  useEffect(() => {
-    const row = listRef.current?.children[selectedIdx] as HTMLElement | undefined
+    const row = listRef.current?.querySelector<HTMLElement>(`[data-cmd-idx="${selectedIdx}"]`)
     row?.scrollIntoView({ block: 'nearest' })
   }, [selectedIdx])
 
   const execute = useCallback(
-    (id: string) => {
-      onAction(id)
-      onClose()
-    },
+    (id: string) => { onAction(id); onClose() },
     [onAction, onClose],
   )
 
@@ -132,136 +150,151 @@ export default function CommandPalette({ onClose, onAction }: CommandPaletteProp
     <div
       onClick={onClose}
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 2147483647,
-        pointerEvents: 'auto',
-        background: 'rgba(0,0,0,0.18)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        paddingTop: '20vh',
-        fontFamily: FONT,
+        position: 'fixed', inset: 0, zIndex: 2147483647, pointerEvents: 'auto',
+        background: 'rgba(15,18,23,0.28)', backdropFilter: 'blur(2px)',
+        display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
+        paddingTop: '16vh', fontFamily: FONT,
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
         style={{
-          width: 320,
-          maxHeight: 400,
-          background: C.bg,
-          borderRadius: C.radius,
-          boxShadow: C.shadow,
+          width: 480, maxWidth: 'calc(100vw - 32px)', maxHeight: 460,
+          background: C.bg, borderRadius: C.radius, boxShadow: C.shadow,
           border: `1px solid ${C.border}`,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         {/* Search input */}
-        <div style={{ padding: '14px 14px 8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px 10px' }}>
+          <span style={{ color: C.textLight, display: 'flex' }}><ISearch /></span>
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a command…"
+            placeholder="Search for actions and tools…"
             style={{
-              width: '100%',
-              padding: '10px 16px',
-              border: `1px solid ${C.border}`,
-              borderRadius: C.radiusPill,
-              background: C.inputBg,
-              fontSize: 14,
-              fontFamily: FONT,
-              color: C.text,
-              outline: 'none',
-              boxSizing: 'border-box',
+              flex: 1, border: 'none', background: 'transparent',
+              fontSize: 15, fontFamily: FONT, color: C.text, outline: 'none',
             }}
           />
         </div>
 
-        {/* Divider */}
-        <div style={{ height: 1, background: C.divider, margin: '0 14px' }} />
+        {/* Filter chips */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 16px 12px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11.5, color: C.textLight, marginRight: 2 }}>I&apos;m looking for…</span>
+          {FILTERS.map((f) => {
+            const active = filter === f.id
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                style={{
+                  padding: '5px 12px', borderRadius: C.radiusPill,
+                  border: `1px solid ${active ? C.accent : C.border}`,
+                  background: active ? C.accent : C.bg,
+                  color: active ? '#fff' : C.text,
+                  fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: FONT,
+                  transition: 'background 0.13s, border-color 0.13s, color 0.13s',
+                }}
+              >
+                {f.label}
+              </button>
+            )
+          })}
+        </div>
 
-        {/* Action list */}
-        <div
-          ref={listRef}
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: '6px 6px 8px',
-          }}
-        >
+        <div style={{ height: 1, background: C.divider }} />
+
+        {/* Sectioned list */}
+        <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 10px' }}>
           {filtered.length === 0 && (
-            <div
-              style={{
-                padding: '18px 12px',
-                textAlign: 'center',
-                color: C.textMuted,
-                fontSize: 13,
-              }}
-            >
+            <div style={{ padding: '22px 12px', textAlign: 'center', color: C.textMuted, fontSize: 13 }}>
               No matching commands
             </div>
           )}
-          {filtered.map((action, idx) => (
-            <button
-              key={action.id}
-              onClick={() => execute(action.id)}
-              onMouseEnter={() => setSelectedIdx(idx)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                width: '100%',
-                padding: '9px 12px',
-                border: 'none',
-                borderRadius: C.radiusSm,
-                background: idx === selectedIdx ? C.hoverBg : 'transparent',
-                color: C.text,
-                cursor: 'pointer',
-                fontFamily: FONT,
-                fontSize: 13.5,
-                textAlign: 'left',
-                transition: 'background 0.1s',
-              }}
-            >
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 28,
-                  height: 28,
-                  borderRadius: C.radiusSm,
-                  background: idx === selectedIdx ? C.surfaceMuted : 'transparent',
-                  color: C.textMuted,
-                  flexShrink: 0,
-                  transition: 'background 0.1s',
-                }}
-              >
-                {action.icon}
-              </span>
-              <span style={{ flex: 1 }}>{action.label}</span>
-              {action.shortcut && (
-                <span
+          {filtered.map((action, idx) => {
+            const showHeader = idx === 0 || filtered[idx - 1].category !== action.category
+            const selected = idx === selectedIdx
+            return (
+              <div key={action.id}>
+                {showHeader && (
+                  <p style={{
+                    margin: idx === 0 ? '4px 10px 4px' : '10px 10px 4px',
+                    fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em',
+                    textTransform: 'uppercase', color: C.textLight,
+                  }}>
+                    {CATEGORY_LABEL[action.category]}
+                  </p>
+                )}
+                <button
+                  data-cmd-idx={idx}
+                  onClick={() => execute(action.id)}
+                  onMouseEnter={() => setSelectedIdx(idx)}
                   style={{
-                    fontSize: 11,
-                    color: C.textLight,
-                    background: C.surfaceMuted,
-                    padding: '2px 7px',
-                    borderRadius: 6,
+                    display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                    padding: '9px 10px', border: 'none', borderRadius: C.radiusSm,
+                    background: selected ? C.hoverBg : 'transparent',
+                    color: C.text, cursor: 'pointer', fontFamily: FONT,
+                    textAlign: 'left', transition: 'background 0.1s',
                   }}
                 >
-                  {action.shortcut}
-                </span>
-              )}
-            </button>
-          ))}
+                  <span style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                    background: selected ? C.bg : C.surfaceMuted,
+                    border: `1px solid ${C.border}`,
+                    color: C.textMuted,
+                  }}>
+                    {action.icon}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 13.5, fontWeight: 500, color: C.text }}>{action.label}</span>
+                    {action.hint && (
+                      <span style={{ display: 'block', fontSize: 11.5, color: C.textLight, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{action.hint}</span>
+                    )}
+                  </span>
+                  {action.shortcut && (
+                    <span style={{
+                      fontSize: 11, fontWeight: 600, color: C.textMuted,
+                      background: C.surfaceMuted, border: `1px solid ${C.border}`,
+                      padding: '2px 7px', borderRadius: 6, flexShrink: 0,
+                    }}>
+                      {action.shortcut}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '9px 14px', borderTop: `1px solid ${C.divider}`, background: C.surfaceBubble,
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11, color: C.textLight }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 5, background: '#0B1735' }}>
+              <span style={{ display: 'block', width: 2, height: 8, borderRadius: 2, background: '#fff', transform: 'rotate(-12deg)' }} />
+            </span>
+            Inline
+          </span>
+          <span style={{ fontSize: 11, color: C.textLight }}>
+            <kbd style={kbd}>↑</kbd> <kbd style={kbd}>↓</kbd> to navigate · <kbd style={kbd}>↵</kbd> to run
+          </span>
         </div>
       </div>
     </div>
   )
+}
+
+const kbd: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  minWidth: 16, height: 16, padding: '0 4px', borderRadius: 5,
+  background: C.surfaceMuted, border: `1px solid ${C.border}`,
+  fontSize: 10, color: C.textMuted, fontFamily: FONT,
 }

@@ -1,16 +1,7 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
 import type { StickyNoteData } from './storage'
 import { formatTime, seekMedia } from '../lib/mediaDetect'
-
-/* ─── pastel palette ─── */
-export const PALETTE = [
-  { bg: '#ede9fe', header: '#ddd6fe' }, // lavender
-  { bg: '#fef9c3', header: '#fef08a' }, // yellow
-  { bg: '#fce7f3', header: '#fbcfe8' }, // pink
-  { bg: '#dcfce7', header: '#bbf7d0' }, // mint
-  { bg: '#dbeafe', header: '#bfdbfe' }, // sky blue
-  { bg: '#ffedd5', header: '#fed7aa' }, // peach
-]
+import { PALETTE } from './palette'
 
 function getPreset(color: string) {
   return PALETTE.find(p => p.bg === color) ?? PALETTE[0]
@@ -186,7 +177,7 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
           : <span
               className="sticky-note-title"
               onDoubleClick={e => { e.stopPropagation(); setIsEditingTitle(true) }}
-              title="Double-click to rename"
+              aria-label="Double-click to rename"
             >
               {note.title ?? 'Note'}
             </span>
@@ -196,7 +187,7 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
           <button
             type="button"
             onMouseDown={e => { e.preventDefault(); e.stopPropagation(); seekMedia(note.mediaTimestamp!) }}
-            title={`Jump to ${formatTime(note.mediaTimestamp)}`}
+            aria-label={`Jump to ${formatTime(note.mediaTimestamp)}`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 3,
               padding: '2px 8px', border: 'none', borderRadius: 10,
@@ -218,13 +209,13 @@ export default function StickyNote({ note, onUpdate, onDelete }: StickyNoteProps
           type="button"
           onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setShowPalette(p => !p) }}
           className="sticky-palette-btn"
-          title="Change color"
+          aria-label="Change color"
         >
           <IPalette />
         </button>
 
         <span className="sticky-dot" style={{ background: '#6366f1' }} />
-        <button className="sticky-note-delete" onClick={() => onDelete(note.id)} title="Delete">×</button>
+        <button className="sticky-note-delete" onClick={() => onDelete(note.id)} aria-label="Delete">×</button>
       </div>
 
       {/* ── color palette (below header) ── */}

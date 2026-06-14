@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useLayoutEffect, useRef, Fragment } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Rewrite from './Rewrite'
 import AI from './AI'
@@ -14,165 +14,145 @@ import CropOverlay from './CropOverlay'
 import Laser from './Laser'
 import SharePanel from './SharePanel'
 import Handwriting from './Handwriting'
+import { BRAND, FONT, PANEL as C } from '../lib/extensionTheme'
+import { isAiBusy } from '../lib/panelLock'
+import { ensurePanelKeyframes } from './panelKit'
+import { loadSettings } from '../lib/extensionSettings'
 
-type PanelId = 'rewrite' | 'ai' | 'notes' | 'settings' | 'highlighter' | 'draw' | 'layers' | 'stamps' | 'search' | 'screenshot' | 'laser' | 'share' | 'handwriting' | null
+type PanelId =
+  | 'rewrite' | 'ai' | 'notes' | 'settings' | 'highlighter' | 'draw'
+  | 'layers' | 'stamps' | 'search' | 'screenshot' | 'laser' | 'share' | 'handwriting'
+  | null
 
-const ACCENT = '#1C1E26'
-const FONT = '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif'
-
-const pillSpring = {
-  type: 'spring' as const,
-  stiffness: 300,
-  damping: 30,
-  mass: 0.7,
+/** Open the Inline dashboard using the configured API base (not a hardcoded host). */
+function openDashboard(path = '/app/dashboard') {
+  void loadSettings()
+    .then(s => { window.open(`${s.apiBaseUrl}${path}`, '_blank') })
+    .catch(() => { window.open(`http://localhost:3000${path}`, '_blank') })
 }
 
-const panelTransition = {
-  type: 'spring' as const,
-  stiffness: 400,
-  damping: 32,
-  mass: 0.5,
-}
+const spring = { type: 'spring' as const, stiffness: 380, damping: 30, mass: 0.6 }
+const panelSpring = { type: 'spring' as const, stiffness: 440, damping: 36, mass: 0.5 }
 
+/* ─── Tool glyphs ─── */
 const IRewrite = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
   </svg>
 )
 const IAi = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
   </svg>
 )
 const INotes = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-    <polyline points="14 2 14 8 20 8"/>
-    <line x1="16" y1="13" x2="8" y2="13"/>
-    <line x1="16" y1="17" x2="8" y2="17"/>
-    <line x1="10" y1="9" x2="8" y2="9"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+    <polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" /><line x1="10" y1="9" x2="8" y2="9" />
   </svg>
 )
 const IDraw = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-    <path d="M2 2l7.586 7.586"/>
-    <circle cx="11" cy="11" r="2"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+    <path d="M2 2l7.586 7.586" /><circle cx="11" cy="11" r="2" />
   </svg>
 )
 const IHighlight = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 11l-6 6v3h9l3-3"/>
-    <path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 11l-6 6v3h9l3-3" /><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
   </svg>
 )
 const ISettings = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
   </svg>
 )
 const ILayers = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-    <polyline points="2 17 12 22 22 17"/>
-    <polyline points="2 12 12 17 22 12"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" />
   </svg>
 )
 const IStamps = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 )
 const ISearch = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"/>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 )
 const IScreenshot = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-    <circle cx="12" cy="13" r="4"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
   </svg>
 )
 const ILaser = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="2" fill="currentColor"/>
-    <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="2" fill="currentColor" />
+    <path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
   </svg>
 )
 const IShare = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
   </svg>
 )
 const IHandwriting = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-    <path d="M2 22c2-2 4-3.5 6-3.5s3 1 5 1 4-1.5 6-3.5"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+    <path d="M2 22c2-2 4-3.5 6-3.5s3 1 5 1 4-1.5 6-3.5" />
   </svg>
 )
 const INotebook = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
   </svg>
 )
 const IEyeOff = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
-    <line x1="1" y1="1" x2="23" y2="23"/>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 )
 const IEye = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-    <circle cx="12" cy="12" r="3"/>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
   </svg>
 )
 
-function Tooltip({ text, visible }: { text: string; visible: boolean }) {
+/** The Inline brand glyph — the slanted tick from the web wordmark, in white. */
+function BrandGlyph({ size = 22 }: { size?: number }) {
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, x: 6, scale: 0.95 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: 6, scale: 0.95 }}
-          transition={{ duration: 0.1, ease: 'easeOut' }}
-          style={{
-            position: 'absolute',
-            right: '100%',
-            marginRight: 10,
-            whiteSpace: 'nowrap',
-            background: ACCENT,
-            color: '#ffffff',
-            fontSize: 11,
-            fontWeight: 700,
-            fontFamily: FONT,
-            padding: '6px 14px',
-            borderRadius: 9999,
-            border: '1px solid rgba(255,255,255,0.1)',
-            pointerEvents: 'none',
-            letterSpacing: '-0.01em',
-            lineHeight: 1,
-            boxShadow: '0 4px 16px -4px rgba(0,0,0,0.25)',
-          }}
-        >
-          {text}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <span style={{
+      display: 'block', width: Math.round(size * 0.22), height: size,
+      borderRadius: 2, background: '#FFFFFF', transform: 'rotate(-12deg)',
+    }} />
   )
 }
 
-const PILL_W = 46
-const PILL_BTN = 32
+/** Small dark keycap used inside the launcher tooltip. */
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      minWidth: 15, height: 15, padding: '0 3px', borderRadius: 4,
+      background: 'rgba(255,255,255,0.16)', color: 'rgba(255,255,255,0.92)',
+      fontSize: 9.5, fontWeight: 700, lineHeight: 1,
+    }}>{children}</span>
+  )
+}
+
+const RAIL_TOP = 48
+const LAUNCHER = 46
+const DOCK_BTN = 38
+const DOCK_PAD = 6
+const PANEL_GAP = 14
+const SMALL_SCREEN = 560
 
 interface HomeProps {
   selectedText: string
@@ -180,38 +160,142 @@ interface HomeProps {
 }
 
 type PaperNote = {
-  id: string
-  x: number
-  y: number
-  w: number
-  h: number
-  content: string
-  paperStyle: 'Plain' | 'Ruled' | 'Grid' | 'Dotted'
-  createdAt: number
-  updatedAt: number
+  id: string; x: number; y: number; w: number; h: number
+  content: string; paperStyle: 'Plain' | 'Ruled' | 'Grid' | 'Dotted'
+  createdAt: number; updatedAt: number
 }
+
+/** Tool definitions keyed by panel id — used to build the rail. */
+const TOOL_DEFS: Record<string, { icon: React.ReactNode; label: string }> = {
+  ai: { icon: <IAi />, label: 'Ask Inline' },
+  rewrite: { icon: <IRewrite />, label: 'Rewrite' },
+  highlighter: { icon: <IHighlight />, label: 'Highlight' },
+  notes: { icon: <INotes />, label: 'Sticky note' },
+  draw: { icon: <IDraw />, label: 'Draw' },
+  handwriting: { icon: <IHandwriting />, label: 'Pen' },
+  stamps: { icon: <IStamps />, label: 'Stamp' },
+  search: { icon: <ISearch />, label: 'Search' },
+  screenshot: { icon: <IScreenshot />, label: 'Screenshot' },
+  laser: { icon: <ILaser />, label: 'Laser pointer' },
+  layers: { icon: <ILayers />, label: 'Layers' },
+  share: { icon: <IShare />, label: 'Share' },
+  settings: { icon: <ISettings />, label: 'Settings' },
+}
+
+/** Tools grouped into segments separated by hairline dividers. */
+const DOCK_GROUPS: string[][] = [
+  ['ai', 'rewrite'],
+  ['highlighter', 'notes', 'draw', 'handwriting', 'stamps'],
+  ['search', 'screenshot', 'laser', 'layers'],
+  ['share', 'settings'],
+]
+
+/** Tools that swap content into the main docked panel. */
+const PANEL_TOOLS = new Set<string>(['ai', 'rewrite', 'search', 'settings', 'highlighter', 'draw', 'handwriting', 'stamps', 'layers', 'share'])
+
+/** Tools that enter a page-interaction mode and show a status toast. */
+const MODE_LABELS: Record<string, string> = {
+  highlighter: 'Highlight mode active',
+  draw: 'Drawing mode active',
+  handwriting: 'Pen mode active',
+  stamps: 'Stamp mode active',
+  laser: 'Laser pointer active',
+}
+
+/** Panels whose tool interacts with the page — keep these open on page clicks. */
+const MODE_PANEL_TOOLS = new Set<string>(['highlighter', 'draw', 'handwriting', 'stamps'])
 
 function makePaperNoteId(): string {
   return `pn-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+/** Hairline divider between vertical rail segments. */
+function RailDivider() {
+  return <span style={{ height: 1, width: 22, background: C.divider, margin: '4px 0', flexShrink: 0 }} />
+}
+
+/** A single rail icon button with a custom navy tooltip to its left. */
+function RailButton({
+  icon, label, active, suppressTip, onClick,
+}: {
+  icon: React.ReactNode; label: string; active: boolean; suppressTip?: boolean
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
+}) {
+  const [hov, setHov] = useState(false)
+  const showTip = hov && !suppressTip
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+      <AnimatePresence>
+        {showTip && (
+          <motion.span
+            initial={{ opacity: 0, x: 5, scale: 0.94 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 5, scale: 0.94 }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
+            style={{
+              position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)',
+              marginRight: 12, whiteSpace: 'nowrap', pointerEvents: 'none',
+              background: BRAND, color: '#fff', fontSize: 11.5, fontWeight: 600,
+              padding: '6px 11px', borderRadius: 9, letterSpacing: '-0.01em', lineHeight: 1,
+              boxShadow: '0 8px 22px -8px rgba(11,23,53,0.55)',
+            }}
+          >
+            {label}
+            <span style={{
+              position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)',
+              width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
+              borderLeft: `6px solid ${BRAND}`,
+            }} />
+          </motion.span>
+        )}
+      </AnimatePresence>
+      <button
+        type="button"
+        onClick={onClick}
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        aria-label={label}
+        aria-pressed={active}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: DOCK_BTN, height: DOCK_BTN, borderRadius: 12, border: 'none', padding: 0,
+          background: active ? BRAND : hov ? C.hoverBg : 'transparent',
+          color: active ? '#FFFFFF' : C.textMuted,
+          cursor: 'pointer', transition: 'background 0.14s, color 0.14s',
+          boxShadow: active ? '0 5px 14px -5px rgba(11,23,53,0.55)' : 'none',
+        }}
+      >{icon}</button>
+    </div>
+  )
+}
+
 export default function Home({ selectedText, originalRange }: HomeProps) {
-  const [pinnedPanel, setPinnedPanel] = useState<PanelId>(null)
+  const [activePanel, setActivePanel] = useState<PanelId>(null)
   const [paperNotes, setPaperNotes] = useState<PaperNote[]>([])
   const [paperNotesLoaded, setPaperNotesLoaded] = useState(false)
   const paperSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [pillCollapsed, setPillCollapsed] = useState(false)
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false)
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
   const [laserActive, setLaserActive] = useState(false)
   const [hidden, setHidden] = useState(false)
-  const [hoveredTool, setHoveredTool] = useState<string | null>(null)
-  const [hoveredEye, setHoveredEye] = useState(false)
-  const [pillHoverKey, setPillHoverKey] = useState<string | null>(null)
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [launcherHover, setLauncherHover] = useState(false)
 
-  const activePanel = pinnedPanel
+  /* Main-panel geometry — the panel is anchored to the LEFT of the launcher,
+     top-aligned with the rail, and never moves when tools are swapped. */
+  const [panelRight, setPanelRight] = useState<number>(16 + DOCK_BTN + 2 * DOCK_PAD + PANEL_GAP)
+  const [smallScreen, setSmallScreen] = useState<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth < SMALL_SCREEN : false,
+  )
+  const colRef = useRef<HTMLDivElement>(null)
+  const panelWrapRef = useRef<HTMLDivElement>(null)
 
+  /* Inject the spinner keyframes into the shadow root once mounted. */
+  useEffect(() => {
+    const root = colRef.current?.getRootNode()
+    ensurePanelKeyframes(root as ShadowRoot | Document | null)
+  }, [])
+
+  /* ─── Paper-note persistence ─── */
   useEffect(() => {
     if (!chrome.runtime?.id) { setPaperNotesLoaded(true); return }
     chrome.runtime.sendMessage(
@@ -249,66 +333,58 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
   }, [paperNotes, paperNotesLoaded])
 
   const updatePaperNote = useCallback((id: string, patch: Partial<PaperNote>) => {
-    setPaperNotes(prev => prev.map(n => n.id === id
-      ? { ...n, ...patch, updatedAt: Date.now() }
-      : n))
+    setPaperNotes(prev => prev.map(n => n.id === id ? { ...n, ...patch, updatedAt: Date.now() } : n))
   }, [])
 
   const closePaperNote = useCallback((id: string) => {
     setPaperNotes(prev => prev.filter(n => n.id !== id))
   }, [])
 
-  const toggle = useCallback((id: PanelId) => {
-    if (id === 'notes') {
-      setPaperNotes(prev => [...prev, {
-        id: makePaperNoteId(),
-        x: 120 + prev.length * 20,
-        y: 120 + prev.length * 20,
-        w: 320, h: 260,
-        content: '',
-        paperStyle: 'Plain',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      }])
-      return
-    }
-    if (id === 'screenshot') {
-      if (!chrome.runtime?.id) return
-      chrome.runtime.sendMessage({ type: 'CAPTURE_TAB' }, (response) => {
-        if (chrome.runtime.lastError) return
-        if (response?.ok && response.dataUrl) {
-          setScreenshotUrl(response.dataUrl)
-        }
-      })
-      return
-    }
-    if (id === 'laser') {
-      setLaserActive(prev => !prev)
-      return
-    }
-    setPinnedPanel(p => p === id ? null : id)
-  }, [])
-
   const closePanel = useCallback(() => {
-    setPinnedPanel(null)
+    setActivePanel(null)
   }, [])
 
-  const togglePillCollapse = useCallback(() => {
-    setPillCollapsed((c) => {
-      const next = !c
-      if (next) closePanel()
-      return next
+  /* Spawn a sticky note (page object). */
+  const spawnNote = useCallback(() => {
+    setPaperNotes(prev => [...prev, {
+      id: makePaperNoteId(),
+      x: 120 + prev.length * 20, y: 120 + prev.length * 20,
+      w: 320, h: 260, content: '', paperStyle: 'Plain',
+      createdAt: Date.now(), updatedAt: Date.now(),
+    }])
+  }, [])
+
+  /* Capture a screenshot, then open the crop overlay. */
+  const captureScreenshot = useCallback(() => {
+    if (!chrome.runtime?.id) return
+    chrome.runtime.sendMessage({ type: 'CAPTURE_TAB' }, (response) => {
+      if (chrome.runtime.lastError) return
+      if (response?.ok && response.dataUrl) setScreenshotUrl(response.dataUrl)
     })
-  }, [closePanel])
+  }, [])
+
+  /**
+   * Run a tool from the rail. Panels swap content inside the single docked
+   * surface (one at a time); the same icon toggles the panel/mode off.
+   */
+  const runTool = useCallback((id: PanelId) => {
+    if (!id) return
+    if (id === 'notes') { spawnNote(); return }
+    if (id === 'screenshot') { captureScreenshot(); return }
+    if (id === 'laser') { setLaserActive(p => !p); return }
+    if (PANEL_TOOLS.has(id)) setActivePanel(p => (p === id ? null : id))
+  }, [spawnNote, captureScreenshot])
+
+  /** The launcher opens the flagship Ask Inline surface (or toggles it shut). */
+  const toggleLauncher = useCallback(() => {
+    setActivePanel(p => (p === 'ai' ? null : 'ai'))
+  }, [])
 
   const toggleHidden = useCallback(() => {
     setHidden(h => {
       const next = !h
       if (next) {
-        closePanel()
-        setPillCollapsed(false)
-        setLaserActive(false)
-        setScreenshotUrl(null)
+        closePanel(); setLaserActive(false); setScreenshotUrl(null)
         document.dispatchEvent(new CustomEvent('inline:hideAll', { detail: { hidden: true } }))
       } else {
         document.dispatchEvent(new CustomEvent('inline:hideAll', { detail: { hidden: false } }))
@@ -321,417 +397,358 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ hidden: boolean }>).detail
       setHidden(detail.hidden)
-      if (detail.hidden) {
-        closePanel()
-        setPillCollapsed(false)
-        setLaserActive(false)
-        setScreenshotUrl(null)
-      }
+      if (detail.hidden) { closePanel(); setLaserActive(false); setScreenshotUrl(null) }
     }
     document.addEventListener('inline:hideAll', handler)
     return () => document.removeEventListener('inline:hideAll', handler)
   }, [closePanel])
 
-  const handlePillEnter = useCallback((key: string, label: string) => {
-    setPillHoverKey(key)
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-    hoverTimerRef.current = setTimeout(() => setHoveredTool(label), 150)
+  /* ─── Panel anchor: measure the rail's left edge, sit just left of it ─── */
+  const recomputePanelRight = useCallback(() => {
+    const rail = colRef.current
+    if (!rail) return
+    const r = rail.getBoundingClientRect()
+    setPanelRight(Math.max(14, Math.round(window.innerWidth - r.left + PANEL_GAP)))
   }, [])
 
-  const handlePillLeave = useCallback(() => {
-    setPillHoverKey(null)
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
-    setHoveredTool(null)
-  }, [])
+  useLayoutEffect(() => {
+    recomputePanelRight()
+  }, [recomputePanelRight, hidden, activePanel])
 
-  const TOOLS: { id: PanelId; icon: React.ReactNode; label: string }[] = [
-    { id: 'rewrite', icon: <IRewrite />, label: 'Rewrite' },
-    { id: 'ai', icon: <IAi />, label: 'Ask AI' },
-    { id: 'notes', icon: <INotes />, label: 'Sticky note' },
-    { id: 'draw', icon: <IDraw />, label: 'Draw' },
-    { id: 'highlighter', icon: <IHighlight />, label: 'Highlight' },
-    { id: 'layers', icon: <ILayers />, label: 'Layers' },
-    { id: 'stamps', icon: <IStamps />, label: 'Stamps' },
-    { id: 'search', icon: <ISearch />, label: 'Search' },
-    { id: 'screenshot', icon: <IScreenshot />, label: 'Screenshot' },
-    { id: 'laser', icon: <ILaser />, label: 'Laser pointer' },
-    { id: 'share', icon: <IShare />, label: 'Share' },
-    { id: 'handwriting', icon: <IHandwriting />, label: 'Handwriting' },
-    { id: 'settings', icon: <ISettings />, label: 'Settings' },
-  ]
+  useEffect(() => {
+    const onResize = () => {
+      setSmallScreen(window.innerWidth < SMALL_SCREEN)
+      recomputePanelRight()
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [recomputePanelRight])
 
-  const handlePaletteAction = useCallback(
-    (actionId: string) => {
-      switch (actionId) {
-        case 'rewrite':
-        case 'ai':
-        case 'notes':
-        case 'draw':
-        case 'highlighter':
-        case 'settings':
-        case 'layers':
-        case 'stamps':
-        case 'search':
-        case 'screenshot':
-        case 'laser':
-        case 'share':
-        case 'handwriting':
-          toggle(actionId)
-          break
-        case 'notebooks':
-          window.open('http://localhost:3000/dashboard', '_blank')
-          break
-        case 'collapse':
-        case 'pause':
-          togglePillCollapse()
-          break
-      }
-      setCmdPaletteOpen(false)
-    },
-    [toggle, togglePillCollapse],
-  )
+  /* ─── Outside-click: close panel unless typing/editing or AI generating ─── */
+  useEffect(() => {
+    if (!activePanel) return
+    const onPointerDown = (e: Event) => {
+      const path = (e as Event & { composedPath?: () => EventTarget[] }).composedPath?.() ?? []
+      const inPanel = panelWrapRef.current ? path.includes(panelWrapRef.current) : false
+      const inRail = colRef.current ? path.includes(colRef.current) : false
+      if (inPanel || inRail) return
+      // Mode tools interact with the page itself (drawing, selecting, stamping)
+      // — page clicks must not dismiss their panel.
+      if (MODE_PANEL_TOOLS.has(activePanel)) return
+      if (isAiBusy()) return
+      const sr = panelWrapRef.current?.getRootNode() as ShadowRoot | null
+      const ae = sr?.activeElement as HTMLElement | null
+      const editing = !!ae && panelWrapRef.current?.contains(ae) && (
+        ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable
+      )
+      if (editing) return
+      closePanel()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [activePanel, closePanel])
+
+  /* ─── Escape: cancel mode, then close panel ─── */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (laserActive) { e.stopPropagation(); setLaserActive(false); return }
+      if (activePanel) { e.stopPropagation(); closePanel() }
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [laserActive, activePanel, closePanel])
+
+  const handlePaletteAction = useCallback((actionId: string) => {
+    switch (actionId) {
+      case 'rewrite': case 'ai': case 'search': case 'settings':
+      case 'highlighter': case 'draw': case 'handwriting':
+      case 'stamps': case 'layers': case 'share':
+        runTool(actionId as PanelId); break
+      case 'notes': spawnNote(); break
+      case 'screenshot': captureScreenshot(); break
+      case 'laser': setLaserActive(p => !p); break
+      case 'notebooks': openDashboard(); break
+      case 'collapse': case 'pause': toggleHidden(); break
+    }
+    setCmdPaletteOpen(false)
+  }, [runTool, spawnNote, captureScreenshot, toggleHidden])
 
   useEffect(() => {
     const handleCommand = (e: Event) => {
       const command = (e as CustomEvent<{ command: string }>).detail.command
       switch (command) {
-        case 'toggle-command-palette':
-          setCmdPaletteOpen((v) => !v)
-          break
-        case 'toggle-rewrite':
-          toggle('rewrite')
-          break
-        case 'toggle-ai':
-          toggle('ai')
-          break
-        case 'toggle-highlighter':
-          toggle('highlighter')
-          break
-        case 'new-note':
-          toggle('notes')
-          break
-        case 'toggle-pause':
-          togglePillCollapse()
-          break
+        case 'toggle-command-palette': setCmdPaletteOpen(v => !v); break
+        case 'toggle-rewrite': runTool('rewrite'); break
+        case 'toggle-ai': runTool('ai'); break
+        case 'toggle-highlighter': runTool('highlighter'); break
+        case 'new-note': spawnNote(); break
+        case 'toggle-pause': toggleHidden(); break
       }
     }
     document.addEventListener('inline:command', handleCommand)
     return () => document.removeEventListener('inline:command', handleCommand)
-  }, [toggle, togglePillCollapse])
+  }, [runTool, spawnNote, toggleHidden])
 
   useEffect(() => {
     const handleKb = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        setCmdPaletteOpen((v) => !v)
+        setCmdPaletteOpen(v => !v)
       }
     }
     document.addEventListener('keydown', handleKb)
     return () => document.removeEventListener('keydown', handleKb)
   }, [])
 
-  const panelContent = activePanel && activePanel !== 'notes' && activePanel !== 'screenshot' && activePanel !== 'laser' ? (
-    <motion.div
-      key={activePanel}
-      initial={{ opacity: 0, x: 12, scale: 0.97 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 12, scale: 0.97 }}
-      transition={panelTransition}
-      style={{
-        marginRight: 8,
-        pointerEvents: 'auto',
-        maxHeight: 'calc(100vh - 40px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(0,0,0,0.08) transparent',
-      }}
-    >
-      {activePanel === 'rewrite' && <Rewrite selectedText={selectedText} originalRange={originalRange} onClose={closePanel} />}
-      {activePanel === 'ai' && <AI selectedText={selectedText} originalRange={originalRange} onClose={closePanel} />}
-      {activePanel === 'settings' && <Settings onClose={closePanel} onOpenDashboard={() => { window.open('http://localhost:3000', '_blank'); closePanel() }} />}
-      {activePanel === 'highlighter' && <Highlighter onClose={closePanel} />}
-      {activePanel === 'draw' && <Draw onClose={closePanel} />}
-      {activePanel === 'layers' && <Layers onClose={closePanel} />}
-      {activePanel === 'stamps' && <Stamps onClose={closePanel} />}
-      {activePanel === 'search' && <Search onClose={closePanel} />}
-      {activePanel === 'share' && <SharePanel onClose={closePanel} />}
-      {activePanel === 'handwriting' && <Handwriting onClose={closePanel} />}
-    </motion.div>
+  const modeLabel = laserActive
+    ? MODE_LABELS.laser
+    : activePanel && MODE_LABELS[activePanel]
+      ? MODE_LABELS[activePanel]
+      : null
+
+  const panelInner = activePanel ? (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activePanel}
+        initial={{ opacity: 0, x: 10, scale: 0.985 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        exit={{ opacity: 0, x: 10, scale: 0.985 }}
+        transition={panelSpring}
+        style={{ pointerEvents: 'auto' }}
+      >
+        {activePanel === 'rewrite' && <Rewrite selectedText={selectedText} originalRange={originalRange} onClose={closePanel} />}
+        {activePanel === 'ai' && <AI selectedText={selectedText} originalRange={originalRange} onClose={closePanel} />}
+        {activePanel === 'search' && <Search onClose={closePanel} />}
+        {activePanel === 'settings' && <Settings onClose={closePanel} onOpenDashboard={() => { openDashboard(); closePanel() }} />}
+        {activePanel === 'highlighter' && <Highlighter onClose={closePanel} />}
+        {activePanel === 'draw' && <Draw onClose={closePanel} />}
+        {activePanel === 'handwriting' && <Handwriting onClose={closePanel} />}
+        {activePanel === 'stamps' && <Stamps onClose={closePanel} />}
+        {activePanel === 'layers' && <Layers onClose={closePanel} />}
+        {activePanel === 'share' && <SharePanel onClose={closePanel} />}
+      </motion.div>
+    </AnimatePresence>
   ) : null
 
   return (
     <>
+      {/* ─── Main docked panel: anchored top-left of the launcher (stable) ─── */}
+      <AnimatePresence>
+        {!hidden && activePanel && !smallScreen && (
+          <motion.div
+            ref={panelWrapRef}
+            key="panel-wrap"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.14 }}
+            style={{
+              position: 'fixed', right: panelRight, top: RAIL_TOP,
+              zIndex: 2147483646, pointerEvents: 'none',
+              display: 'flex', fontFamily: FONT,
+            }}
+          >
+            {panelInner}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Small-screen: centered floating card with scrim ─── */}
+      <AnimatePresence>
+        {!hidden && activePanel && smallScreen && (
+          <>
+            <motion.div
+              key="scrim"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onPointerDown={() => { if (!isAiBusy()) closePanel() }}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 2147483645,
+                background: 'rgba(11,18,33,0.34)', pointerEvents: 'auto',
+              }}
+            />
+            <motion.div
+              ref={panelWrapRef}
+              key="panel-sheet"
+              initial={{ opacity: 0, y: 24, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.98 }}
+              transition={panelSpring}
+              style={{
+                position: 'fixed', left: '50%', top: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 2147483646, pointerEvents: 'none', display: 'flex', fontFamily: FONT,
+              }}
+            >
+              {panelInner}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Right rail: launcher (top) + vertical tool dock ─── */}
       <div
+        ref={colRef}
         style={{
-          position: 'fixed',
-          right: 12,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 2147483647,
-          pointerEvents: 'auto',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
+          position: 'fixed', right: 16, top: RAIL_TOP,
+          zIndex: 2147483647, pointerEvents: 'none',
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12,
           fontFamily: FONT,
         }}
       >
-        <AnimatePresence mode="wait">
-          {!hidden && panelContent}
-        </AnimatePresence>
-
-        {hidden && (
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <Tooltip text="Show Inline" visible={hoveredEye} />
-            <motion.button
-              type="button"
-              onClick={toggleHidden}
-              onMouseEnter={() => setHoveredEye(true)}
-              onMouseLeave={() => setHoveredEye(false)}
-              title="Show Inline"
-              aria-label="Show Inline"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={pillSpring}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                background: '#FFFFFF',
-                border: '1px solid rgba(0,0,0,0.08)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#666',
-                boxShadow: '0 4px 16px -4px rgba(0,0,0,0.12)',
-                padding: 0,
-                outline: 'none',
-              }}
-            >
-              <IEye />
-            </motion.button>
-          </div>
-        )}
-
-        {!hidden && (
-          <motion.div
+        {hidden ? (
+          <motion.button
+            type="button"
+            onClick={toggleHidden}
+            aria-label="Show Inline"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={spring}
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              width: PILL_W,
-              background: ACCENT,
-              overflow: 'hidden',
-              boxShadow: '0 4px 20px -6px rgba(28,30,38,0.22)',
-              justifyContent: pillCollapsed ? 'center' : 'flex-start',
+              pointerEvents: 'auto', width: 42, height: 42, borderRadius: 14,
+              background: '#FFFFFF', border: `1px solid ${C.border}`,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: C.textMuted, boxShadow: C.shadow, padding: 0,
             }}
-            animate={{
-              borderRadius: pillCollapsed ? '50%' : PILL_W / 2,
-              height: pillCollapsed ? PILL_W : 'auto',
-              paddingTop: pillCollapsed ? 0 : 5,
-              paddingBottom: pillCollapsed ? 0 : 5,
-            }}
-            transition={pillSpring}
-          >
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Tooltip
-                text={pillCollapsed ? 'Expand Inline' : 'Collapse Inline'}
-                visible={hoveredTool === (pillCollapsed ? 'Expand Inline' : 'Collapse Inline')}
-              />
+          ><IEye /></motion.button>
+        ) : (
+          <>
+            {/* Launcher (master) with mode toast floating directly above it */}
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
+              {/* Tool-mode status toast — pinned above the launcher */}
+              <AnimatePresence>
+                {modeLabel && (
+                  <motion.div
+                    key={modeLabel}
+                    initial={{ opacity: 0, y: 6, scale: 0.94 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.94 }}
+                    transition={{ duration: 0.16, ease: 'easeOut' }}
+                    style={{
+                      position: 'absolute', bottom: 'calc(100% + 9px)', right: 0,
+                      pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 7,
+                      background: BRAND, color: '#fff', padding: '6px 12px', borderRadius: 11,
+                      fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+                      boxShadow: '0 10px 26px -8px rgba(11,23,53,0.55)',
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5BE49B', boxShadow: '0 0 0 3px rgba(91,228,155,0.28)' }} />
+                    {modeLabel}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Launcher hover tooltip */}
+              <AnimatePresence>
+                {launcherHover && !activePanel && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 8, scale: 0.94 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 8, scale: 0.94 }}
+                    transition={{ duration: 0.13, ease: 'easeOut' }}
+                    style={{
+                      position: 'absolute', right: '100%', marginRight: 13,
+                      display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
+                      background: BRAND, color: '#fff', padding: '7px 12px', borderRadius: 10,
+                      fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em', pointerEvents: 'none',
+                      boxShadow: '0 10px 26px -8px rgba(11,23,53,0.55)',
+                    }}
+                  >
+                    <span>Ask Inline</span>
+                    <span style={{ display: 'inline-flex', gap: 3 }}><Kbd>⌘</Kbd><Kbd>⇧</Kbd><Kbd>K</Kbd></span>
+                    <span style={{
+                      position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)',
+                      width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
+                      borderLeft: `6px solid ${BRAND}`,
+                    }} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <motion.button
                 type="button"
-                onClick={togglePillCollapse}
-                onMouseEnter={() =>
-                  handlePillEnter('collapse', pillCollapsed ? 'Expand Inline' : 'Collapse Inline')
-                }
-                onMouseLeave={handlePillLeave}
-                aria-expanded={!pillCollapsed}
-                aria-label={pillCollapsed ? 'Expand Inline' : 'Collapse Inline'}
-                title={pillCollapsed ? 'Expand Inline' : 'Collapse Inline'}
-                transition={pillSpring}
+                onClick={toggleLauncher}
+                onMouseEnter={() => setLauncherHover(true)}
+                onMouseLeave={() => setLauncherHover(false)}
+                aria-label="Ask Inline"
+                aria-expanded={activePanel === 'ai'}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.94 }}
+                transition={spring}
                 style={{
-                  width: PILL_BTN,
-                  height: PILL_BTN,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: 'none',
-                  background: pillHoverKey === 'collapse' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  cursor: 'pointer',
-                  padding: 0,
-                  flexShrink: 0,
-                  transition: 'background 0.15s',
+                  position: 'relative', width: LAUNCHER, height: LAUNCHER, borderRadius: 16,
+                  background: BRAND, border: '1px solid rgba(255,255,255,0.12)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', padding: 0, outline: 'none',
+                  boxShadow: activePanel === 'ai'
+                    ? '0 0 0 3px rgba(11,23,53,0.16), 0 14px 32px -10px rgba(11,23,53,0.55)'
+                    : '0 14px 32px -10px rgba(11,23,53,0.55), 0 2px 6px -2px rgba(0,0,0,0.3)',
                 }}
               >
-                <div style={{
-                  width: 3,
-                  height: 14,
-                  borderRadius: 2,
-                  background: 'rgba(255,255,255,0.55)',
-                  transform: 'rotate(-12deg)',
+                <span style={{
+                  position: 'absolute', inset: 0, borderRadius: 16, pointerEvents: 'none',
+                  background: 'linear-gradient(155deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 55%)',
                 }} />
+                <BrandGlyph size={22} />
               </motion.button>
             </div>
 
+            {/* Vertical tool dock — always present, the persistent right rail */}
             <motion.div
-              initial={false}
-              animate={
-                pillCollapsed
-                  ? { height: 0, opacity: 0 }
-                  : { height: 'auto', opacity: 1 }
-              }
-              transition={pillSpring}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={spring}
               style={{
-                overflow: 'hidden',
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                transformOrigin: 'top center',
-                pointerEvents: pillCollapsed ? 'none' : 'auto',
+                pointerEvents: 'auto',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                padding: DOCK_PAD, background: C.bg, border: `1px solid ${C.border}`,
+                borderRadius: 20, boxShadow: C.shadow,
+                maxHeight: 'min(72vh, 640px)', overflowY: 'auto', overflowX: 'hidden',
               }}
             >
-              <div style={{ width: 18, height: 1, background: 'rgba(255,255,255,0.08)', margin: '2px 0 3px' }} />
-
-              <div
-                style={{
-                  position: 'relative',
-                  maxHeight: 'min(50vh, 380px)',
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  scrollbarWidth: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 0,
-                  width: '100%',
-                  maskImage: 'linear-gradient(to bottom, transparent 0%, black 6px, black calc(100% - 6px), transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 6px, black calc(100% - 6px), transparent 100%)',
-                }}
-              >
-                {TOOLS.map(t => {
-                  const isActive = activePanel === t.id
-                  const hk = t.id ?? ''
-                  const hoveredHere = pillHoverKey === hk
-                  const bg = isActive
-                    ? 'rgba(255,255,255,0.14)'
-                    : hoveredHere
-                      ? 'rgba(255,255,255,0.08)'
-                      : 'transparent'
-                  return (
-                    <div key={t.id} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                      <Tooltip text={t.label} visible={hoveredTool === t.label} />
-                      <button
-                        type="button"
-                        onClick={() => toggle(t.id)}
-                        onMouseEnter={() => handlePillEnter(hk, t.label)}
-                        onMouseLeave={handlePillLeave}
-                        title={t.label}
-                        aria-label={t.label}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: PILL_BTN,
-                          height: PILL_BTN,
-                          borderRadius: 8,
-                          border: 'none',
-                          background: bg,
-                          color: isActive ? '#ffffff' : 'rgba(255,255,255,0.48)',
-                          cursor: 'pointer',
-                          transition: 'background 0.15s, color 0.15s',
-                          padding: 0,
-                          flexShrink: 0,
-                        }}
-                      >{t.icon}</button>
-                    </div>
-                  )
-                })}
-
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Tooltip text="Notebooks" visible={hoveredTool === 'Notebooks'} />
-                  <button
-                    type="button"
-                    onClick={() => window.open('http://localhost:3000/dashboard', '_blank')}
-                    onMouseEnter={() => handlePillEnter('notebooks', 'Notebooks')}
-                    onMouseLeave={handlePillLeave}
-                    title="Notebooks"
-                    aria-label="Notebooks"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: PILL_BTN,
-                      height: PILL_BTN,
-                      borderRadius: 8,
-                      border: 'none',
-                      background: pillHoverKey === 'notebooks' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                      color: 'rgba(255,255,255,0.48)',
-                      cursor: 'pointer',
-                      transition: 'background 0.15s, color 0.15s',
-                      padding: 0,
-                      flexShrink: 0,
-                    }}
-                  ><INotebook /></button>
-                </div>
-
-                <div style={{ width: 18, height: 1, background: 'rgba(255,255,255,0.08)', margin: '3px 0' }} />
-
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <Tooltip text="Hide extension" visible={hoveredTool === 'Hide extension'} />
-                  <button
-                    type="button"
-                    onClick={toggleHidden}
-                    onMouseEnter={() => handlePillEnter('hide', 'Hide extension')}
-                    onMouseLeave={handlePillLeave}
-                    title="Hide extension"
-                    aria-label="Hide extension"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: PILL_BTN,
-                      height: PILL_BTN,
-                      borderRadius: 8,
-                      border: 'none',
-                      background: pillHoverKey === 'hide' ? 'rgba(255,255,255,0.08)' : 'transparent',
-                      color: 'rgba(255,255,255,0.48)',
-                      cursor: 'pointer',
-                      transition: 'background 0.15s, color 0.15s',
-                      padding: 0,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <IEyeOff />
-                  </button>
-                </div>
-              </div>
+              {DOCK_GROUPS.map((group, gi) => (
+                <Fragment key={gi}>
+                  {gi > 0 && <RailDivider />}
+                  {group.map((id) => {
+                    const def = TOOL_DEFS[id]
+                    const isActive = id === 'laser' ? laserActive : activePanel === id
+                    return (
+                      <RailButton
+                        key={id}
+                        icon={def.icon}
+                        label={def.label}
+                        active={isActive}
+                        suppressTip={isActive}
+                        onClick={() => runTool(id as PanelId)}
+                      />
+                    )
+                  })}
+                </Fragment>
+              ))}
+              <RailDivider />
+              <RailButton icon={<INotebook />} label="Notebooks" active={false} onClick={() => { openDashboard() }} />
+              <RailButton icon={<IEyeOff />} label="Hide Inline" active={false} onClick={toggleHidden} />
             </motion.div>
-          </motion.div>
+          </>
         )}
       </div>
 
+      {/* ─── Page objects & overlays ─── */}
       {!hidden && paperNotes.map(n => (
         <Notes
           key={n.id}
-          initialX={n.x}
-          initialY={n.y}
-          initialW={n.w}
-          initialH={n.h}
-          initialContent={n.content}
-          initialPaperStyle={n.paperStyle}
+          initialX={n.x} initialY={n.y} initialW={n.w} initialH={n.h}
+          initialContent={n.content} initialPaperStyle={n.paperStyle}
           onClose={() => closePaperNote(n.id)}
           onUpdate={(patch) => updatePaperNote(n.id, patch)}
         />
       ))}
 
       {cmdPaletteOpen && (
-        <CommandPalette
-          onClose={() => setCmdPaletteOpen(false)}
-          onAction={handlePaletteAction}
-        />
+        <CommandPalette onClose={() => setCmdPaletteOpen(false)} onAction={handlePaletteAction} />
       )}
 
       {!hidden && screenshotUrl && (

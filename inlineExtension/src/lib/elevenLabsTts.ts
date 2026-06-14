@@ -1,32 +1,72 @@
 import { loadSettings } from './extensionSettings'
 import { normalizeInlineVoiceId } from './inlineVoicePresets'
 
-let currentAudio: HTMLAudioElement | null = null
+/**
+ * Read-aloud resolution order:
+ *
+ *   1. Proxy through the dashboard's /api/tts via the background service
+ *      worker. The ElevenLabs key lives ONLY in the server env — it never
+ *      ships in the extension bundle, chrome.storage, or any request from
+ *      the extension.
+ *   2. `window.speechSynthesis` — the browser's built-in voice. Always
+ *      available, needs no keys, and keeps read-aloud working when the
+ *      server route is unreachable or cloud TTS is unavailable.
+ *
+ * The only audible surface a caller needs is `speakWithElevenLabs`; it
+ * walks the list in order and stops on the first success. Callers can pass
+ * `onFallback` to tell the user the browser voice is being used.
+ */
+
+type PlaybackHandle =
+  | { kind: 'audio'; el: HTMLAudioElement }
+  | { kind: 'utterance'; utterance: SpeechSynthesisUtterance }
+
+let currentPlayback: PlaybackHandle | null = null
 
 export function stopSpeaking(): void {
-  if (currentAudio) {
-    currentAudio.pause()
-    currentAudio = null
+  if (!currentPlayback) return
+  if (currentPlayback.kind === 'audio') {
+    try { currentPlayback.el.pause() } catch { /* ignore */ }
+  } else if (currentPlayback.kind === 'utterance') {
+    try { window.speechSynthesis.cancel() } catch { /* ignore */ }
   }
+  currentPlayback = null
+}
+
+/** Pause/resume whatever is currently speaking. Returns the new paused state. */
+export function togglePauseSpeaking(): boolean {
+  if (!currentPlayback) return false
+  if (currentPlayback.kind === 'audio') {
+    const el = currentPlayback.el
+    if (el.paused) { void el.play(); return false }
+    el.pause(); return true
+  }
+  const synth = window.speechSynthesis
+  if (synth.paused) { synth.resume(); return false }
+  synth.pause(); return true
+}
+
+export function isSpeaking(): boolean {
+  return currentPlayback !== null
 }
 
 function playBlobUrl(url: string, opts?: { onEnd?: () => void }) {
   const audio = new Audio(url)
-  currentAudio = audio
+  currentPlayback = { kind: 'audio', el: audio }
   audio.onended = () => {
     URL.revokeObjectURL(url)
-    currentAudio = null
+    currentPlayback = null
     opts?.onEnd?.()
   }
   audio.onerror = () => {
     URL.revokeObjectURL(url)
-    currentAudio = null
+    currentPlayback = null
     opts?.onEnd?.()
   }
   void audio.play()
 }
 
-/** Prefer dashboard /api/tts (server ELEVENLABS_API_KEY) via background — avoids CORS and duplicate keys. */
+/** Proxy through the dashboard so the server's ELEVENLABS_API_KEY is used. */
 function ttsViaBackground(
   text: string,
   voiceId: string,
@@ -65,47 +105,66 @@ function ttsViaBackground(
   })
 }
 
-export async function speakWithElevenLabs(
+/**
+ * Final fallback: the browser's built-in speech synthesis. Has no quota, no
+ * keys, and works offline in every modern browser, so the read-aloud
+ * feature is functional even when the cloud voice is unavailable.
+ */
+function ttsViaBrowserSynth(
   text: string,
   opts?: { onStart?: () => void; onEnd?: () => void },
+): boolean {
+  try {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return false
+    const synth = window.speechSynthesis
+    const utter = new SpeechSynthesisUtterance(text)
+    utter.rate = 1
+    utter.pitch = 1
+    // Prefer an English voice when one is available so the output matches
+    // the typical dashboard audience. We silently accept whatever the user
+    // has installed if none match.
+    const voices = synth.getVoices()
+    const preferred = voices.find(v => /en(-|_)?(US|GB)?/i.test(v.lang))
+    if (preferred) utter.voice = preferred
+
+    utter.onstart = () => { opts?.onStart?.() }
+    utter.onend = () => {
+      currentPlayback = null
+      opts?.onEnd?.()
+    }
+    utter.onerror = () => {
+      currentPlayback = null
+      opts?.onEnd?.()
+    }
+
+    currentPlayback = { kind: 'utterance', utterance: utter }
+    synth.speak(utter)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export async function speakWithElevenLabs(
+  text: string,
+  opts?: { onStart?: () => void; onEnd?: () => void; onFallback?: () => void },
 ): Promise<void> {
   stopSpeaking()
 
   const trimmed = text.slice(0, 2000)
-  if (!trimmed) return
+  if (!trimmed.trim()) return
 
-  const { elevenLabsKey, voiceId: rawVoiceId } = await loadSettings()
+  const { voiceId: rawVoiceId } = await loadSettings()
   const voiceId = normalizeInlineVoiceId(rawVoiceId)
 
-  const usedProxy = await ttsViaBackground(trimmed, voiceId, opts)
-  if (usedProxy) return
+  // 1. Secure server proxy (server-side key, never exposed to the client).
+  if (await ttsViaBackground(trimmed, voiceId, opts)) return
 
-  if (!elevenLabsKey) {
-    opts?.onEnd?.()
-    return
-  }
+  // 2. Browser speech synthesis — guaranteed to work offline, no keys.
+  opts?.onFallback?.()
+  if (ttsViaBrowserSynth(trimmed, opts)) return
 
-  try {
-    opts?.onStart?.()
-    const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'xi-api-key': elevenLabsKey },
-      body: JSON.stringify({
-        text: trimmed,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-      }),
-    })
-
-    if (!resp.ok) {
-      opts?.onEnd?.()
-      return
-    }
-
-    const blob = await resp.blob()
-    const url = URL.createObjectURL(blob)
-    playBlobUrl(url, { onEnd: opts?.onEnd })
-  } catch {
-    opts?.onEnd?.()
-  }
+  // Nothing produced audio. Fire onEnd so callers that were waiting on the
+  // promise chain can unblock their UI state.
+  opts?.onEnd?.()
 }

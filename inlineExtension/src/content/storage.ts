@@ -1,13 +1,9 @@
 /**
  * Sticky Note Storage Layer
  *
- * Currently uses chrome.storage.local for persistence.
- * This module is the ONLY place that touches the storage backend,
- * so swapping to Supabase later means changing ONLY this file.
- *
- * TODO: Replace chrome.storage.local calls with Supabase client
- * when the backend is ready. The interface (loadNotes, saveNotes,
- * deleteNote) stays the same — only the implementation changes.
+ * Uses chrome.storage.local for local persistence; notes are mirrored to the
+ * backend via SAVE_ANNOTATIONS. This module is the ONLY place that touches
+ * the local storage backend, so a future swap stays contained to this file.
  */
 
 export interface StickyNoteData {

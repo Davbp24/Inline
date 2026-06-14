@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import Image from 'next/image'
 import type { MapCoordinate } from '@/lib/types'
 type GeocodeHit = { lat: number; lng: number; label: string }
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,9 +29,27 @@ const VIEW_MODES: { id: ViewMode; label: string; icon: React.ElementType }[] = [
 
 const MY_PLACES_DOMAIN = 'my-places'
 
-function locationImageUrl(coord: MapCoordinate): string {
-  const seed = coord.id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 12)
-  return `https://picsum.photos/seed/${seed}/400/240`
+/**
+ * Decorative placeholder for location cards: a soft tint of the domain color
+ * with the location's initial. Deterministic and honest (no stock photos
+ * pretending to be the actual place).
+ */
+function LocationThumb({ coord, color }: { coord: MapCoordinate; color: string }) {
+  const initial = (coord.locationLabel || coord.domain || '?').trim().charAt(0).toUpperCase()
+  return (
+    <div
+      className="relative flex h-full w-full items-center justify-center"
+      style={{ background: `linear-gradient(135deg, ${color}22, ${color}3d)` }}
+      aria-hidden
+    >
+      <span
+        className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white"
+        style={{ backgroundColor: color }}
+      >
+        {initial}
+      </span>
+    </div>
+  )
 }
 
 function loadStoredPins(key: string): MapCoordinate[] {
@@ -399,14 +416,7 @@ export default function SpatialMap({
                   style={isSelected ? { '--tw-ring-color': color } as React.CSSProperties : undefined}
                 >
                   <div className="relative h-[160px] w-full overflow-hidden rounded-lg bg-[#eee]">
-                    <Image
-                      src={locationImageUrl(coord)}
-                      alt={coord.locationLabel}
-                      fill
-                      className="object-cover"
-                      sizes="240px"
-                      unoptimized
-                    />
+                    <LocationThumb coord={coord} color={color} />
                   </div>
 
                   <div className="px-1 pb-1 pt-2.5">

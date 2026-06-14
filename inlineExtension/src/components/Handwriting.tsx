@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { PANEL as C, FONT } from '../lib/extensionTheme'
+import { PANEL as C } from '../lib/extensionTheme'
+import { PanelShell, SectionLabel } from './panelKit'
+import { ensureHandwritingCanvas, restoreHandwriting } from '../content/handwritingRestore'
 
 type HWTool = 'pen' | 'highlighter' | 'eraser'
 
@@ -41,17 +43,6 @@ const IEraser = () => (
     <path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l5.88-5.879z" />
   </svg>
 )
-const IHW = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="#1C1E26" stroke="none">
-    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
-  </svg>
-)
-const IClose = () => (
-  <svg width="12" height="12" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-  </svg>
-)
-
 interface HandwritingProps {
   onClose: () => void
 }
@@ -66,37 +57,24 @@ export default function Handwriting({ onClose }: HandwritingProps) {
   const drawing = useRef(false)
   const rafId = useRef(0)
 
+  /* ─── Reuse the shared canvas owned by the content script ───
+   *
+   * The canvas and its saved strokes are created at content-script init
+   * (handwritingRestore.ts). We only attach pointer listeners while the
+   * panel is open and detach them on close — the canvas element itself
+   * persists across panel open/close and across page reloads.
+   */
   useEffect(() => {
-    const existing = document.getElementById('inline-handwriting-canvas') as HTMLCanvasElement | null
-    if (existing) {
-      canvasRef.current = existing
-      return
-    }
-    const canvas = document.createElement('canvas')
-    canvas.id = 'inline-handwriting-canvas'
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-    canvas.style.cssText =
-      'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483639;pointer-events:none;touch-action:none;'
-    document.body.appendChild(canvas)
+    const canvas = ensureHandwritingCanvas()
     canvasRef.current = canvas
 
-    const onResize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
-      renderAllStrokes()
-    }
-    window.addEventListener('resize', onResize)
+    // Hydrate our strokes cache from whatever the restore layer already
+    // drew onto the canvas (it stashes the array on the element).
+    const existing = (canvas as unknown as { __inlineStrokes?: Stroke[] }).__inlineStrokes
+    if (Array.isArray(existing)) strokes.current = existing
 
-    return () => {
-      window.removeEventListener('resize', onResize)
-      canvas.remove()
-      canvasRef.current = null
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
+    // Also re-request from storage in case the restore raced page load.
+    restoreHandwriting()
     try {
       if (!chrome.runtime?.id) return
       chrome.runtime.sendMessage(
@@ -106,6 +84,7 @@ export default function Handwriting({ onClose }: HandwritingProps) {
           const saved = response.data?.elements?.handwriting as Stroke[] | undefined
           if (Array.isArray(saved) && saved.length > 0) {
             strokes.current = saved
+            ;(canvas as unknown as { __inlineStrokes?: Stroke[] }).__inlineStrokes = saved
             renderAllStrokes()
           }
         },
@@ -188,6 +167,11 @@ export default function Handwriting({ onClose }: HandwritingProps) {
       if (!chrome.runtime?.id) return
       const data = strokes.current.map(s => ({ ...s, id: s.id ?? makeStrokeId() }))
       strokes.current = data
+      // Mirror to the canvas element so the restore layer's resize handler
+      // and any panel re-mount see the latest strokes without a storage
+      // round-trip.
+      const canvas = canvasRef.current
+      if (canvas) (canvas as unknown as { __inlineStrokes?: Stroke[] }).__inlineStrokes = data
       chrome.runtime.sendMessage(
         {
           type: 'SAVE_ANNOTATIONS',
@@ -288,118 +272,107 @@ export default function Handwriting({ onClose }: HandwritingProps) {
     { id: 'highlighter', icon: <IHighlighter />, label: 'Highlighter' },
     { id: 'eraser', icon: <IEraser />, label: 'Eraser' },
   ]
+  const activeLabel = tools.find(t => t.id === tool)?.label ?? 'Pen'
 
   return (
-    <div style={{
-      width: 196, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <IHW />
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Handwriting</span>
+    <PanelShell title="Pen" subtitle="Handwrite & highlight freely" chip={activeLabel} width={312} onClose={onClose}>
+      <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Tools */}
+        <div>
+          <SectionLabel>Tool</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 9 }}>
+            {tools.map(t => {
+              const on = tool === t.id
+              return (
+                <button key={t.id} type="button"
+                  onClick={() => setTool(t.id)}
+                  aria-label={t.label}
+                  aria-pressed={on}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    height: 46, borderRadius: 14,
+                    border: `1px solid ${on ? C.accent : C.border}`,
+                    background: on ? C.accent : C.surfaceBubble,
+                    color: on ? '#fff' : C.textMuted,
+                    cursor: 'pointer', fontSize: 12, fontWeight: 650,
+                    boxShadow: on ? '0 5px 14px -5px rgba(11,23,53,0.5)' : C.shadowSoft,
+                    transition: 'background 0.14s, box-shadow 0.14s, border-color 0.14s, color 0.14s',
+                  }}
+                >{t.icon}</button>
+              )
+            })}
+          </div>
         </div>
-        <button type="button" onClick={onClose} style={btnIcon}><IClose /></button>
-      </div>
 
-      {/* Tool grid */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: 10, padding: '14px 16px', justifyItems: 'center',
-      }}>
-        {tools.map(t => (
-          <button key={t.id} type="button"
-            onClick={() => setTool(t.id)}
-            title={t.label}
-            style={{
+        {/* Stroke */}
+        <div>
+          <SectionLabel>Stroke weight</SectionLabel>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+            border: `1px solid ${C.border}`, borderRadius: 16, background: C.surfaceBubble, boxShadow: C.shadowSoft,
+          }}>
+            <button type="button" onClick={() => setThickness(v => Math.max(1, v - 1))} aria-label="Thinner" style={sliderBtn}>−</button>
+            <input
+              type="range" min={1} max={16} value={thickness}
+              onChange={e => setThickness(Number(e.target.value))}
+              aria-label="Stroke weight"
+              style={{ flex: 1, accentColor: C.accent, height: 6, cursor: 'pointer' }}
+            />
+            <button type="button" onClick={() => setThickness(v => Math.min(16, v + 1))} aria-label="Thicker" style={sliderBtn}>+</button>
+            <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 42, height: 42, borderRadius: C.radiusMd,
-              border: `1.5px solid ${tool === t.id ? C.accent : C.border}`,
-              background: tool === t.id ? C.toneSelectedBg : C.surfaceBubble,
-              color: tool === t.id ? C.accent : C.textMuted,
-              cursor: 'pointer',
-              boxShadow: tool === t.id ? C.shadowSoft : 'none',
-              transition: 'background 0.15s, box-shadow 0.15s, border-color 0.15s',
-            }}
-          >{t.icon}</button>
-        ))}
-      </div>
-
-      {/* Thickness slider */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '6px 16px 12px', justifyContent: 'center',
-      }}>
-        <button type="button" onClick={() => setThickness(v => Math.max(1, v - 1))} style={sliderBtn}>−</button>
-        <div style={{
-          flex: 1, height: 10, borderRadius: C.radiusPill,
-          background: C.surfaceMuted, padding: '0 4px', display: 'flex', alignItems: 'center',
-          boxShadow: 'none',
-        }}>
-          <input
-            type="range" min={1} max={16} value={thickness}
-            onChange={e => setThickness(Number(e.target.value))}
-            style={{ flex: 1, width: '100%', accentColor: C.accent, height: 6, cursor: 'pointer' }}
-          />
+              minWidth: 26, height: 26, borderRadius: 8, background: C.surfaceSunken,
+              fontSize: 12, fontWeight: 700, color: C.text,
+            }}>{thickness}</span>
+          </div>
         </div>
-        <button type="button" onClick={() => setThickness(v => Math.min(16, v + 1))} style={sliderBtn}>+</button>
-      </div>
 
-      {/* Color grid */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: 10, padding: '8px 16px 14px',
-      }}>
-        {COLORS.map(c => (
-          <button
-            key={c} type="button"
-            onClick={() => setColor(c)}
-            style={{
-              width: 30, height: 30, borderRadius: 10,
-              background: c, cursor: 'pointer',
-              border: color === c ? `3px solid ${C.accent}` : '2px solid rgba(255,255,255,0.85)',
-              boxShadow: color === c ? C.shadowSoft : 'none',
-              transition: 'transform 0.12s ease, box-shadow 0.12s',
-              transform: color === c ? 'scale(1.06)' : 'scale(1)',
-            }}
-          />
-        ))}
-      </div>
+        {/* Colour */}
+        <div>
+          <SectionLabel>Colour</SectionLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 11 }}>
+            {COLORS.map(c => {
+              const on = color === c
+              return (
+                <button
+                  key={c} type="button"
+                  onClick={() => setColor(c)}
+                  aria-label={`Colour ${c}`}
+                  aria-pressed={on}
+                  style={{
+                    height: 34, borderRadius: 12, background: c, cursor: 'pointer', padding: 0,
+                    border: on ? `2.5px solid ${C.accent}` : '1px solid rgba(17,19,33,0.08)',
+                    boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
+                    transform: on ? 'translateY(-2px)' : 'none',
+                    transition: 'transform 0.13s ease, box-shadow 0.13s',
+                  }}
+                />
+              )
+            })}
+          </div>
+        </div>
 
-      {/* Action buttons */}
-      <div style={{
-        display: 'flex', gap: 8, padding: '0 16px 16px',
-      }}>
-        <button type="button" onClick={handleClear} style={actionBtn}>Clear all</button>
-        <button type="button" onClick={handleExport} style={actionBtn}>Export PNG</button>
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 9 }}>
+          <button type="button" onClick={handleClear} aria-label="Clear all" style={actionBtn}>Clear all</button>
+          <button type="button" onClick={handleExport} aria-label="Export PNG" style={{ ...actionBtn, background: C.accent, color: '#fff', border: 'none', boxShadow: '0 5px 14px -6px rgba(11,23,53,0.5)' }}>Export PNG</button>
+        </div>
       </div>
-    </div>
+    </PanelShell>
   )
-}
-
-const btnIcon: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, border: 'none', borderRadius: C.radiusSm,
-  background: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0,
 }
 
 const sliderBtn: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, borderRadius: C.radiusPill,
+  width: 30, height: 30, borderRadius: 10, flexShrink: 0,
   border: `1px solid ${C.border}`, background: C.surfaceBubble,
-  cursor: 'pointer', fontSize: 16, fontWeight: 500, color: C.textMuted,
+  cursor: 'pointer', fontSize: 16, fontWeight: 600, color: C.textMuted,
   boxShadow: C.shadowSoft,
 }
 
 const actionBtn: React.CSSProperties = {
-  flex: 1, padding: '8px 0', fontSize: 12, fontWeight: 500,
-  borderRadius: C.radiusSm, cursor: 'pointer', letterSpacing: '-0.01em',
-  border: `1.5px solid ${C.border}`, background: C.surfaceBubble,
-  color: C.textMuted, transition: 'background 0.15s, border-color 0.15s',
+  flex: 1, padding: '11px 0', fontSize: 12.5, fontWeight: 700,
+  borderRadius: 13, cursor: 'pointer', letterSpacing: '-0.01em',
+  border: `1px solid ${C.border}`, background: C.surfaceBubble,
+  color: C.text, transition: 'background 0.15s, border-color 0.15s', fontFamily: 'inherit',
 }

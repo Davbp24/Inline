@@ -26,14 +26,6 @@ export default defineConfig({
         } catch {
           // Icon is optional
         }
-        copyFileSync(
-          resolve(__dirname, "public/popup.html"),
-          resolve(__dirname, "dist/popup.html"),
-        );
-        copyFileSync(
-          resolve(__dirname, "public/popup.js"),
-          resolve(__dirname, "dist/popup.js"),
-        );
       },
     },
   ],

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
+import { after } from 'next/server'
 import { generateText } from 'ai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { getAIApiKey, getSupabaseAndUserFromRequest } from '@/lib/ai-key'
 import { INLINE_SHORT_PERSONA } from '@/lib/inline-persona'
+import { indexDocumentById } from '@/lib/ai/rag/indexer'
 
 /**
  * POST /api/ai/page-recap
@@ -32,8 +34,8 @@ export async function POST(request: Request) {
   type NoteRow = {
     id: string
     type: string
-    title: string | null
-    body: string | null
+    page_title: string | null
+    content: string | null
     page_url: string | null
     domain: string | null
     created_at: string
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
 
   const { data: notesRaw } = await sb
     .from('notes')
-    .select('id, type, title, body, page_url, domain, created_at, updated_at')
+    .select('id, type, page_title, content, page_url, domain, created_at, updated_at')
     .eq('user_id', user.id)
     .eq('workspace_id', workspaceId)
     .eq('page_url', pageUrl)
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, skipped: 'no activity' })
   }
 
-  const pageTitle = notes.find(n => n.title && !/^\s*$/.test(n.title))?.title
+  const pageTitle = notes.find(n => n.page_title && !/^\s*$/.test(n.page_title))?.page_title
     ?? (() => { try { return new URL(pageUrl).hostname } catch { return pageUrl } })()
 
   const grouped: Record<string, NoteRow[]> = {}
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
   ]
 
   const sourceSnippet = (items: NoteRow[]) => items.slice(0, 30).map((n) => {
-    const body = (n.body ?? '').trim().slice(0, 300)
+    const body = (n.content ?? '').trim().slice(0, 300)
     return `- ${body || '(no content)'}`
   }).join('\n')
 
@@ -143,7 +145,7 @@ export async function POST(request: Request) {
     .map((t) => {
       const heading = TYPE_HEADINGS[t] ?? t
       const rows = grouped[t].map((n) => {
-        const body = (n.body ?? '').trim()
+        const body = (n.content ?? '').trim()
         const stamp = new Date(n.updated_at ?? n.created_at).toLocaleString()
         const bullet = body ? body.replace(/\n+/g, ' ').slice(0, 500) : '_empty_'
         return `- **${stamp}** — ${bullet}`
@@ -188,6 +190,22 @@ export async function POST(request: Request) {
   if (upsertErr) {
     console.error('[page-recap] upsert error:', upsertErr)
     return NextResponse.json({ error: 'Failed to upsert document' }, { status: 500 })
+  }
+
+  // Embed the recap document for RAG after responding. The page's individual
+  // notes are indexed separately via /api/ai/index (triggered by the Express
+  // mirror) so we don't double-embed them here.
+  const recapId = (upserted as { id?: string } | null)?.id
+  if (recapId) {
+    after(async () => {
+      try {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        await indexDocumentById(supabase as any, user.id, recapId)
+        /* eslint-enable @typescript-eslint/no-explicit-any */
+      } catch (err) {
+        console.warn('[page-recap] indexing failed:', (err as Error)?.message)
+      }
+    })
   }
 
   return NextResponse.json({ ok: true, document: upserted })

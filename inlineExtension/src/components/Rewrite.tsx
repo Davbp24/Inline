@@ -6,39 +6,37 @@ import { PROMPT_TEMPLATES } from '../lib/promptTemplates'
 import { fetchViaBackground } from '../lib/backgroundFetch'
 import { saveAIResultToHistory } from '../lib/historyApi'
 import { buildAIInsertMark } from '../lib/insertBadge'
+import { saveAIReplacement } from '../content/aiReplacements'
+import { PanelShell, Spinner, SectionLabel, ActionTile, Chip, Segmented, Composer } from './panelKit'
+import { setAiBusy } from '../lib/panelLock'
 
-/* ─── Icons ─── */
-const ISparkle = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#1C1E26">
-    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.829l.645-1.936zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.61.955 1.128 1.128l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.75l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.75a1.734 1.734 0 0 0-1.127-1.128l-1.163-.387a.217.217 0 0 1 0-.412l1.163-.387a1.734 1.734 0 0 0 1.127-1.128l.387-1.162z"/>
-  </svg>
-)
-const IClose = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-  </svg>
-)
 const ICopy = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </svg>
 )
 const IVolume = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
   </svg>
 )
 const IVolumeOff = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
   </svg>
 )
+const GRephrase = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" /></svg>)
+const GShorten = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 7l-4 5 4 5M16 7l4 5-4 5M14 4l-4 16" /></svg>)
+const GSummarize = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 10h16M4 14h10M4 18h7" /></svg>)
 
 const TONES = ['Formal', 'Casual', 'Concise'] as const
 type Tone = typeof TONES[number]
+
+const REWRITE_ACTIONS: { label: string; desc: string; task: string; icon: React.ReactNode }[] = [
+  { label: 'Rephrase', desc: 'Reword while keeping the meaning', task: 'rephrase', icon: <GRephrase /> },
+  { label: 'Shorten', desc: 'Trim it down without losing the point', task: 'shorten', icon: <GShorten /> },
+  { label: 'Summarize', desc: 'Condense to the essentials', task: 'summarize', icon: <GSummarize /> },
+]
 
 interface RewriteProps {
   selectedText: string
@@ -49,14 +47,11 @@ interface RewriteProps {
 function computeWordDiff(oldText: string, newText: string) {
   const oldWords = oldText.split(/(\s+)/)
   const newWords = newText.split(/(\s+)/)
-
   let prefixLen = 0
   while (prefixLen < oldWords.length && prefixLen < newWords.length && oldWords[prefixLen] === newWords[prefixLen]) prefixLen++
-
   let oldSuffix = oldWords.length - 1
   let newSuffix = newWords.length - 1
   while (oldSuffix >= prefixLen && newSuffix >= prefixLen && oldWords[oldSuffix] === newWords[newSuffix]) { oldSuffix--; newSuffix-- }
-
   const parts: { type: 'same' | 'del' | 'add'; text: string }[] = []
   if (prefixLen > 0) parts.push({ type: 'same', text: oldWords.slice(0, prefixLen).join('') })
   const deleted = oldWords.slice(prefixLen, oldSuffix + 1).join('')
@@ -78,8 +73,9 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
   const [speaking, setSpeaking] = useState(false)
   const [lastTask, setLastTask] = useState<string>('')
   const [lastInstruction, setLastInstruction] = useState<string | undefined>(undefined)
-  const customRef = useRef<HTMLInputElement>(null)
   const originalContentRef = useRef<string | null>(null)
+
+  const hasSelection = selectedText.trim().length > 0
 
   function handleSpeak() {
     if (speaking) { stopSpeaking(); setSpeaking(false); return }
@@ -89,6 +85,7 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
 
   const runTask = useCallback(async (task: string, instruction?: string) => {
     setLoading(true)
+    setAiBusy(true)
     setResult(null)
     setLastTask(task)
     setLastInstruction(instruction)
@@ -112,11 +109,7 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
             summarize: 'ai-summarize',
             rewrite:   instruction ? 'ai-custom' : 'ai-rewrite',
           }
-          void saveAIResultToHistory({
-            kind: kindMap[task] ?? 'ai-custom',
-            selection: text,
-            result: output,
-          })
+          void saveAIResultToHistory({ kind: kindMap[task] ?? 'ai-custom', selection: text, result: output })
         }
       } else {
         setResult('AI request failed. Check your API settings.')
@@ -125,32 +118,28 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
       setResult('Could not reach AI server.')
     } finally {
       setLoading(false)
+      setAiBusy(false)
     }
   }, [selectedText])
 
   function handleInsert() {
     if (!result || !originalRange) return
     try {
-      originalContentRef.current = originalRange.toString()
+      const originalText = originalRange.toString()
+      originalContentRef.current = originalText
       originalRange.deleteContents()
-
-      // Highlight the inserted text so it is visibly an AI edit, with a
-      // native tooltip naming the exact action. Matches the same styling as
-      // the quick-action AI panel.
       const mark = buildAIInsertMark(result, lastTask, lastInstruction)
       mark.style.display = 'inline-block'
       mark.style.lineHeight = '1.55'
-
       const attr = document.createElement('span')
       attr.className = 'inline-cite-attr'
-      attr.style.cssText =
-        'display:block;font-size:10px;color:#78716c;margin-top:4px;font-style:italic;'
+      attr.style.cssText = 'display:block;font-size:10px;color:#78716c;margin-top:4px;font-style:italic;'
       attr.textContent = `via Inline · ${new Date().toLocaleString()}`
       mark.appendChild(document.createElement('br'))
       mark.appendChild(attr)
-
       originalRange.insertNode(mark)
       setInserted(true)
+      saveAIReplacement(mark, originalText, result, lastTask, lastInstruction)
     } catch { /* range may be invalid if user navigated away */ }
   }
 
@@ -168,161 +157,113 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
     if (result) navigator.clipboard.writeText(result)
   }
 
-  function handleRetry() {
-    setResult(null)
-  }
-
   /* ─── Config state (before AI result) ─── */
   if (!result && !loading) {
     return (
-      <div style={{
-        width: 252, background: C.bg, border: `1px solid ${C.border}`,
-        borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-        overflow: 'hidden', userSelect: 'none',
-      }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 14px', background: C.headerBg,
-          borderBottom: `1px solid ${C.divider}`,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ISparkle />
-            <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Rewrite</span>
+      <PanelShell
+        title="Rewrite"
+        subtitle="Reword your selection with AI"
+        chip={hasSelection ? 'Selection' : undefined}
+        width={392}
+        onClose={onClose}
+        footer={
+          <div style={{ padding: '12px 16px 14px' }}>
+            <Composer
+              value={customPrompt}
+              onChange={setCustomPrompt}
+              onSubmit={() => { if (customPrompt.trim()) runTask('rewrite', customPrompt) }}
+              placeholder={hasSelection ? 'Describe how to rewrite it…' : 'Select text to rewrite'}
+              sendDisabled={!hasSelection}
+              modeLabel={tone}
+            />
           </div>
-          <button type="button" onClick={onClose} title="Close" aria-label="Close" style={btnIcon}><IClose /></button>
-        </div>
-
-        {/* Body */}
-        <div style={{ padding: '18px 18px 20px' }}>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 500, color: C.text, letterSpacing: '-0.02em' }}>Make any page yours</p>
-          <p style={{ margin: '8px 0 18px', fontSize: 13, color: C.textMuted, lineHeight: 1.5 }}>
-            Use AI tools to speed your workflow.
-          </p>
-
-          {/* Tone selector */}
-          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 500, color: C.text }}>Tone</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
-            {TONES.map(t => (
-              <button key={t} type="button" onClick={() => setTone(t)} title={`Tone: ${t}`} aria-label={`Tone: ${t}`} style={{
-                padding: '8px 16px', borderRadius: C.radiusPill,
-                border: `1.5px solid ${tone === t ? C.accent : C.border}`,
-                background: tone === t ? C.toneSelectedBg : C.surfaceBubble,
-                color: tone === t ? C.accent : C.text,
-                fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: FONT,
-                boxShadow: tone === t ? C.shadowSoft : 'none',
-                transition: 'background 0.15s, box-shadow 0.15s, border-color 0.15s',
-              }}>{t}</button>
-            ))}
+        }
+      >
+        <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Tone */}
+          <div>
+            <SectionLabel>Tone</SectionLabel>
+            <Segmented options={TONES.map(t => ({ value: t, label: t }))} value={tone} onChange={setTone} />
           </div>
 
           {/* Actions */}
-          {(['Rephrase', 'Shorten', 'Summarize'] as const).map(a => (
-            <button key={a} type="button"
-              onClick={() => runTask(a.toLowerCase(), `Tone: ${tone}`)}
-              title={a}
-              aria-label={a}
-              style={{
-                display: 'block', width: '100%', textAlign: 'left',
-                padding: '11px 14px', border: 'none', borderRadius: C.radiusPill,
-                background: 'transparent', fontSize: 13, color: C.text,
-                cursor: 'pointer', fontWeight: 500, marginBottom: 6, fontFamily: FONT,
-                transition: 'background 0.18s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.hoverBg)}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-            >{a}</button>
-          ))}
-
-          {/* Template chips */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 0' }}>
-            {PROMPT_TEMPLATES.map(t => (
-              <button key={t.id} type="button"
-                onClick={() => runTask('rewrite', t.prompt)}
-                title={t.label}
-                aria-label={t.label}
-                style={{
-                  padding: '6px 12px', borderRadius: C.radiusPill,
-                  border: `1px solid ${C.border}`, background: C.surfaceBubble,
-                  fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                  color: C.text, fontFamily: FONT,
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = C.hoverBg)}
-                onMouseLeave={e => (e.currentTarget.style.background = C.surfaceBubble)}
-              >{t.label}</button>
-            ))}
+          <div>
+            <SectionLabel>Rewrite as</SectionLabel>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+              {REWRITE_ACTIONS.map(a => (
+                <ActionTile
+                  key={a.label}
+                  icon={a.icon}
+                  label={a.label}
+                  desc={a.desc}
+                  disabled={!hasSelection}
+                  onClick={() => runTask(a.task, `Tone: ${tone}`)}
+                />
+              ))}
+            </div>
+            {!hasSelection && (
+              <p style={{ margin: '10px 2px 0', fontSize: 11.5, color: C.textLight, lineHeight: 1.5 }}>
+                Select text on the page to rewrite it.
+              </p>
+            )}
           </div>
 
-          {/* Custom prompt */}
-          <div style={{ marginTop: 14, position: 'relative' }}>
-            <input
-              ref={customRef}
-              value={customPrompt}
-              onChange={e => setCustomPrompt(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && customPrompt.trim()) runTask('rewrite', customPrompt) }}
-              placeholder="Custom prompt"
-              style={{
-                width: '100%', boxSizing: 'border-box', padding: '11px 16px',
-                border: `1px solid ${C.border}`, borderRadius: C.radiusPill,
-                fontSize: 13, outline: 'none', color: C.text,
-                fontFamily: FONT, background: C.inputBg,
-                boxShadow: C.shadowSoft,
-                transition: 'border-color 0.15s',
-              }}
-            />
-          </div>
+          {/* Quick prompts */}
+          {PROMPT_TEMPLATES.length > 0 && (
+            <div>
+              <SectionLabel>Quick prompts</SectionLabel>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {PROMPT_TEMPLATES.map(t => (
+                  <Chip key={t.id} label={t.label} disabled={!hasSelection} onClick={() => runTask('rewrite', t.prompt)} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Footer */}
-        <div style={{
-          padding: '10px 16px', borderTop: `1px solid ${C.divider}`,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: C.surfaceMuted,
-        }}>
-          <span style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>By Inline</span>
-          <span style={{ fontSize: 11, color: C.textLight }}>⠿</span>
-        </div>
-      </div>
+      </PanelShell>
     )
   }
 
   /* ─── Result / Loading state ─── */
   return (
-    <div style={{
-      width: 288, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ISparkle />
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Rewrite</span>
+    <PanelShell
+      title="Rewrite"
+      subtitle={loading ? 'Rewriting…' : 'Review & apply'}
+      chip={lastInstruction ? 'Custom' : (lastTask || undefined)}
+      width={400}
+      onClose={onClose}
+      footer={!loading ? (
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => { setResult(null); setShowDiff(false); setInserted(false) }} aria-label="Back" style={ghostBtn}>Back</button>
+          <button type="button" onClick={() => setShowDiff(d => !d)} aria-label={showDiff ? 'Hide diff' : 'Show diff'} style={ghostBtn}>{showDiff ? 'Hide diff' : 'Diff'}</button>
+          {!inserted ? (
+            <button type="button" onClick={handleInsert} aria-label="Insert into page" style={primaryBtn}>Insert</button>
+          ) : (
+            <button type="button" onClick={handleUndo} aria-label="Undo insert" style={{ ...primaryBtn, background: '#DC2626', boxShadow: '0 6px 16px -6px rgba(220,38,38,0.5)' }}>Undo</button>
+          )}
+          <button type="button" onClick={handleSpeak} aria-label={speaking ? 'Stop speaking' : 'Speak'} style={{ ...iconBtn, marginLeft: 'auto' }}>{speaking ? <IVolumeOff /> : <IVolume />}</button>
+          <button type="button" onClick={handleCopy} aria-label="Copy" style={iconBtn}><ICopy /></button>
         </div>
-        <button type="button" onClick={onClose} title="Close" aria-label="Close" style={btnIcon}><IClose /></button>
-      </div>
-
-      {/* Result body */}
-      <div style={{ padding: 18 }}>
+      ) : undefined}
+    >
+      <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{
-          padding: 16, border: `1px solid ${C.border}`, borderRadius: C.radiusMd,
-          fontSize: 13, lineHeight: 1.65, color: C.text, minHeight: 72,
-          background: C.surfaceBubble, boxShadow: C.shadowSoft,
+          padding: 16, border: `1px solid ${C.border}`, borderRadius: 18,
+          fontSize: 13.5, lineHeight: 1.7, color: C.text, minHeight: 80,
+          background: C.surfaceBubble, boxShadow: C.shadowCard,
+          maxHeight: 280, overflowY: 'auto', whiteSpace: 'pre-wrap',
         }}>
           {loading ? (
-            <span style={{ color: C.textMuted, fontStyle: 'italic' }}>Generating…</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
+              <Spinner size={16} /><span style={{ fontStyle: 'italic' }}>Generating…</span>
+            </span>
           ) : showDiff && result ? (
             <span>
               {computeWordDiff(selectedText, result).map((p, i) =>
                 p.type === 'del' ? (
-                  <span key={i} style={{ color: '#ef4444', textDecoration: 'line-through', background: 'rgba(239,68,68,0.08)' }}>{p.text}</span>
+                  <span key={i} style={{ color: '#ef4444', textDecoration: 'line-through', background: 'rgba(239,68,68,0.1)' }}>{p.text}</span>
                 ) : p.type === 'add' ? (
-                  <span key={i} style={{ color: '#22c55e', background: 'rgba(34,197,94,0.08)' }}>{p.text}</span>
+                  <span key={i} style={{ color: '#16a34a', background: 'rgba(34,197,94,0.12)' }}>{p.text}</span>
                 ) : (
                   <span key={i}>{p.text}</span>
                 )
@@ -331,70 +272,35 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
           ) : result}
         </div>
 
-        {/* Action row */}
         {!loading && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14, alignItems: 'center' }}>
-            <button type="button" onClick={handleRetry} title="Retry" aria-label="Retry" style={pillBtn}>Retry</button>
-            <button type="button" onClick={() => { setResult(null); setShowDiff(false); setInserted(false); customRef.current?.focus() }} title="Refine prompt" aria-label="Refine prompt" style={pillBtn}>Refine</button>
-            <button type="button" onClick={() => setShowDiff(d => !d)} title={showDiff ? 'Hide diff' : 'Show diff'} aria-label={showDiff ? 'Hide diff' : 'Show diff'} style={pillBtn}>{showDiff ? 'Hide diff' : 'Show diff'}</button>
-            {!inserted ? (
-              <button type="button" onClick={handleInsert} title="Insert into page" aria-label="Insert into page" style={{
-                ...pillBtn, background: C.accent, color: '#fff', borderColor: C.accent, fontWeight: 600,
-                boxShadow: C.shadowSoft,
-              }}>Insert</button>
-            ) : (
-              <button type="button" onClick={handleUndo} title="Undo insert" aria-label="Undo insert" style={{
-                ...pillBtn, background: '#ef4444', color: '#fff', borderColor: '#ef4444', fontWeight: 500,
-                boxShadow: C.shadowSoft,
-              }}>Undo</button>
-            )}
-            <button type="button" onClick={handleSpeak} title={speaking ? 'Stop speaking' : 'Speak'} aria-label={speaking ? 'Stop speaking' : 'Speak'} style={{ ...btnIcon, marginLeft: 'auto' }}>{speaking ? <IVolumeOff /> : <IVolume />}</button>
-            <button type="button" onClick={handleCopy} title="Copy" aria-label="Copy" style={btnIcon}><ICopy /></button>
-          </div>
+          <Composer
+            value={customPrompt}
+            onChange={setCustomPrompt}
+            onSubmit={() => { if (customPrompt.trim()) runTask('rewrite', customPrompt) }}
+            placeholder="Refine with another instruction…"
+            sendDisabled={!hasSelection}
+            modeLabel={tone}
+          />
         )}
-
-        {/* Custom prompt for refine */}
-        <input
-          placeholder="Customize with prompt"
-          value={customPrompt}
-          onChange={e => setCustomPrompt(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && customPrompt.trim()) runTask('rewrite', customPrompt) }}
-          style={{
-            width: '100%', boxSizing: 'border-box', marginTop: 14,
-            padding: '11px 16px', border: `1px solid ${C.border}`, borderRadius: C.radiusPill,
-            fontSize: 13, outline: 'none', color: C.text,
-            fontFamily: FONT, background: C.inputBg, boxShadow: C.shadowSoft,
-          }}
-        />
       </div>
-
-      {/* Footer */}
-      <div style={{
-        padding: '10px 16px', borderTop: `1px solid ${C.divider}`,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        background: C.surfaceMuted,
-      }}>
-        <span style={{ fontSize: 11, color: C.textLight, fontWeight: 500 }}>By Inline</span>
-        <span style={{ fontSize: 11, color: C.textLight }}>⠿</span>
-      </div>
-    </div>
+    </PanelShell>
   )
 }
 
-/* shared button styles */
-const btnIcon: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, border: 'none', borderRadius: C.radiusSm,
-  background: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0,
-  transition: 'background 0.15s',
-}
-
-const pillBtn: React.CSSProperties = {
-  padding: '8px 18px', borderRadius: C.radiusPill,
+const ghostBtn: React.CSSProperties = {
+  padding: '9px 16px', borderRadius: C.radiusPill,
   border: `1px solid ${C.border}`, background: C.surfaceBubble,
-  fontSize: 12, fontWeight: 500, cursor: 'pointer',
-  color: C.text, fontFamily: FONT,
+  fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: C.text, fontFamily: FONT,
   boxShadow: C.shadowSoft,
-  transition: 'transform 0.15s ease, background 0.15s',
 }
-
+const primaryBtn: React.CSSProperties = {
+  padding: '9px 20px', borderRadius: C.radiusPill, border: 'none',
+  background: C.accent, color: '#fff', fontSize: 12.5, fontWeight: 700,
+  cursor: 'pointer', fontFamily: FONT, boxShadow: '0 6px 16px -6px rgba(11,23,53,0.5)',
+}
+const iconBtn: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: 36, height: 36, border: `1px solid ${C.border}`, borderRadius: 12,
+  background: C.surfaceBubble, cursor: 'pointer', padding: 0, color: C.textMuted,
+  boxShadow: C.shadowSoft,
+}

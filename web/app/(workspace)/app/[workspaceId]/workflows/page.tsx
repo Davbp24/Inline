@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Play, CheckCircle2, Circle, AlertTriangle,
   Sparkles, StickyNote, ListTodo, Link2, Lightbulb,
-  ChevronRight, X, Clock, Users, MoreHorizontal,
+  ChevronRight, X, Clock, Users,
   ArrowRight, Trash2, GripVertical,
 } from 'lucide-react'
 
@@ -133,20 +133,17 @@ export default function WorkflowsPage() {
 
   function runConflictCheck() {
     setChecking(true)
-    setConflictResult(null)
-    setTimeout(() => {
-      const inProgress = tasks.filter(t => t.status === 'in-progress')
-      const assignees = inProgress.map(t => t.assignee)
-      const duplicates = assignees.filter((a, i) => assignees.indexOf(a) !== i && a !== 'Unassigned')
-      if (duplicates.length > 0) {
-        setConflictResult(`Potential conflict: ${[...new Set(duplicates)].join(', ')} ${duplicates.length > 1 ? 'are' : 'is'} working on multiple tasks simultaneously. Consider prioritizing to avoid bottlenecks.`)
-      } else if (inProgress.length > 5) {
-        setConflictResult('You have more than 5 tasks in progress. Consider completing some before starting new ones to maintain focus.')
-      } else {
-        setConflictResult('No conflicts detected. Your workflow looks good!')
-      }
-      setChecking(false)
-    }, 1500)
+    const inProgress = tasks.filter(t => t.status === 'in-progress')
+    const assignees = inProgress.map(t => t.assignee)
+    const duplicates = assignees.filter((a, i) => assignees.indexOf(a) !== i && a !== 'Unassigned')
+    if (duplicates.length > 0) {
+      setConflictResult(`Potential conflict: ${[...new Set(duplicates)].join(', ')} ${duplicates.length > 1 ? 'are' : 'is'} working on multiple tasks simultaneously. Consider prioritizing to avoid bottlenecks.`)
+    } else if (inProgress.length > 5) {
+      setConflictResult('You have more than 5 tasks in progress. Consider completing some before starting new ones to maintain focus.')
+    } else {
+      setConflictResult('No conflicts detected. Your workflow looks good!')
+    }
+    setChecking(false)
   }
 
   const columns: { status: TaskStatus; label: string; color: string }[] = [
@@ -226,7 +223,7 @@ export default function WorkflowsPage() {
           {[
             { id: 'board' as const, label: 'Task Board', icon: ListTodo },
             { id: 'ideas' as const, label: 'Ideas Wall', icon: Lightbulb },
-            { id: 'insights' as const, label: 'AI Insights', icon: Sparkles },
+            { id: 'insights' as const, label: 'Insights', icon: Sparkles },
           ].map(tab => (
             <button
               key={tab.id}
@@ -411,7 +408,7 @@ export default function WorkflowsPage() {
               <div className="border-t border-slate-100 pt-3">
                 <p className="text-xs text-slate-500 leading-relaxed">
                   {tasks.length === 0
-                    ? 'Add some tasks to get started. AI insights will appear here as your workflow grows.'
+                    ? 'Add some tasks to get started. Insights will appear here as your workflow grows.'
                     : `You have ${tasks.length} total tasks across your workflow. ${tasks.filter(t => t.status === 'done').length} completed so far. ${ideas.length} ideas on the wall.`
                   }
                 </p>

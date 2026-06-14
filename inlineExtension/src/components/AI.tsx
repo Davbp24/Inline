@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { wrapSelectionWithHighlight } from '../content/highlightWrap'
 import { loadSettings } from '../lib/extensionSettings'
 import { speakWithElevenLabs, stopSpeaking } from '../lib/elevenLabsTts'
@@ -7,35 +7,46 @@ import { PROMPT_TEMPLATES } from '../lib/promptTemplates'
 import { fetchViaBackground } from '../lib/backgroundFetch'
 import { saveAIResultToHistory } from '../lib/historyApi'
 import { buildAIInsertMark } from '../lib/insertBadge'
+import { PanelShell, Spinner, SectionLabel, ActionTile, Chip, Composer } from './panelKit'
+import { setAiBusy } from '../lib/panelLock'
 
-const ISparkle = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#1C1E26">
-    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.829l.645-1.936zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.61.955 1.128 1.128l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.734 1.734 0 0 0 4.593 5.75l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.75a1.734 1.734 0 0 0-1.127-1.128l-1.163-.387a.217.217 0 0 1 0-.412l1.163-.387a1.734 1.734 0 0 0 1.127-1.128l.387-1.162z"/>
-  </svg>
-)
-const IClose = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-  </svg>
-)
 const ICopy = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
   </svg>
 )
 const IVolume = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
   </svg>
 )
 const IVolumeOff = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-    <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
   </svg>
 )
+const IGlobe = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+)
+/* Quick-action glyphs */
+const GSummarize = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h16M4 10h16M4 14h10M4 18h7" /></svg>)
+const GRephrase = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5" /></svg>)
+const GShorten = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 7l-4 5 4 5M16 7l4 5-4 5M14 4l-4 16" /></svg>)
+const GExplain = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z" /></svg>)
+const GProsCons = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18M3 7h6M5 5v4M15 9h6M18 7v4" /><circle cx="6" cy="14" r="3" /><circle cx="18" cy="16" r="3" /></svg>)
+const GActions = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l2 2 4-4M4 6h.01M4 12h.01M4 18h.01M9 18h11M9 6h11" /></svg>)
+
+/** Quick actions — all operate on the current text selection. */
+const QUICK_ACTIONS: { label: string; desc: string; task: string; instruction?: string; icon: React.ReactNode }[] = [
+  { label: 'Summarize', desc: 'Key points', task: 'summarize', icon: <GSummarize /> },
+  { label: 'Rephrase', desc: 'Same meaning', task: 'rephrase', icon: <GRephrase /> },
+  { label: 'Shorten', desc: 'Make it tight', task: 'shorten', icon: <GShorten /> },
+  { label: 'Explain simply', desc: 'Plain language', task: 'rewrite', instruction: 'Explain this clearly in simple, plain language anyone can understand.', icon: <GExplain /> },
+  { label: 'Pros & cons', desc: 'Two lists', task: 'rewrite', instruction: 'Summarize this as two short labelled lists: Pros and Cons.', icon: <GProsCons /> },
+  { label: 'Action items', desc: 'Checklist', task: 'rewrite', instruction: 'Extract the key takeaways as a short, clear checklist of action items.', icon: <GActions /> },
+]
 
 interface AIProps {
   selectedText: string
@@ -50,7 +61,41 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
   const [speaking, setSpeaking] = useState(false)
   const [lastTask, setLastTask] = useState<string>('')
   const [lastInstruction, setLastInstruction] = useState<string | undefined>(undefined)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [recapState, setRecapState] = useState<'idle' | 'loading' | 'done' | 'empty' | 'error'>('idle')
+  const [pageMeta, setPageMeta] = useState({ title: '', domain: '' })
+
+  useEffect(() => {
+    setPageMeta({ title: document.title || 'Untitled page', domain: window.location.hostname })
+  }, [])
+
+  const hasSelection = selectedText.trim().length > 0
+
+  const runPageRecap = useCallback(async () => {
+    setRecapState('loading')
+    setAiBusy(true)
+    try {
+      const { apiBaseUrl, accessToken } = await loadSettings()
+      const workspaceId = await new Promise<string>(resolve => {
+        chrome.storage.local.get(['inlineActiveWorkspaceId'], r => {
+          resolve(typeof r.inlineActiveWorkspaceId === 'string' && r.inlineActiveWorkspaceId
+            ? r.inlineActiveWorkspaceId : 'ws-1')
+        })
+      })
+      const h: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (accessToken) h.Authorization = `Bearer ${accessToken}`
+      const res = await fetchViaBackground(`${apiBaseUrl}/api/ai/page-recap`, {
+        method: 'POST', headers: h,
+        body: JSON.stringify({ workspaceId, pageUrl: window.location.href }),
+      })
+      if (!res.ok) { setRecapState('error'); return }
+      const j = await res.json<{ ok?: boolean; skipped?: string }>()
+      setRecapState(j.skipped ? 'empty' : 'done')
+    } catch {
+      setRecapState('error')
+    } finally {
+      setAiBusy(false)
+    }
+  }, [])
 
   function handleSpeak() {
     if (speaking) { stopSpeaking(); setSpeaking(false); return }
@@ -61,6 +106,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
   const runTask = useCallback(async (task: string, instruction?: string) => {
     wrapSelectionWithHighlight(task)
     setLoading(true)
+    setAiBusy(true)
     setResult(null)
     setLastTask(task)
     setLastInstruction(instruction)
@@ -84,11 +130,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
             summarize: 'ai-summarize',
             rewrite:   instruction ? 'ai-custom' : 'ai-rewrite',
           }
-          void saveAIResultToHistory({
-            kind: kindMap[task] ?? 'ai-custom',
-            selection: text,
-            result: output,
-          })
+          void saveAIResultToHistory({ kind: kindMap[task] ?? 'ai-custom', selection: text, result: output })
         }
       } else {
         setResult('AI request failed. Check settings.')
@@ -97,6 +139,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
       setResult('Could not reach AI server.')
     } finally {
       setLoading(false)
+      setAiBusy(false)
     }
   }, [selectedText])
 
@@ -114,149 +157,159 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
     if (result) navigator.clipboard.writeText(result)
   }
 
-  /* ─── Input form (before result) ─── */
+  /* ─── Assistant home (before result) ─── */
   if (!result && !loading) {
     return (
-      <div style={{
-        width: 204, background: C.bg, border: `1px solid ${C.border}`,
-        borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-        overflow: 'hidden', userSelect: 'none',
-      }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 14px', background: C.headerBg,
-          borderBottom: `1px solid ${C.divider}`,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ISparkle />
-            <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Ask AI</span>
+      <PanelShell
+        title="Ask Inline"
+        subtitle={hasSelection ? 'Working with your selection' : 'Working with this page'}
+        chip={hasSelection ? 'Selection' : 'Page'}
+        width={416}
+        onClose={onClose}
+        footer={
+          <div style={{ padding: '12px 16px 14px' }}>
+            <Composer
+              value={customPrompt}
+              onChange={setCustomPrompt}
+              onSubmit={() => void runTask('rewrite', customPrompt)}
+              placeholder={hasSelection ? 'Ask Inline anything about this text…' : 'Select text on the page to ask Inline'}
+              sendDisabled={!hasSelection}
+              modeLabel="Auto"
+            />
           </div>
-          <button type="button" onClick={onClose} title="Close" aria-label="Close" style={btnIcon}><IClose /></button>
-        </div>
+        }
+      >
+        <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Working-context card */}
+          <div style={{
+            border: `1px solid ${C.border}`, borderRadius: 18,
+            background: C.surfaceBubble, padding: 14, boxShadow: C.shadowCard,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 30, height: 30, borderRadius: 9, background: C.surfaceMuted, color: C.accent, flexShrink: 0,
+              }}><IGlobe /></span>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {pageMeta.title || 'This page'}
+                </span>
+                <span style={{ display: 'block', fontSize: 11, color: C.textLight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {pageMeta.domain}
+                </span>
+              </span>
+            </div>
+            {hasSelection && (
+              <p style={{
+                margin: '11px 0 0', padding: '9px 11px', borderRadius: 12,
+                background: C.surfaceSunken, fontSize: 11.5, lineHeight: 1.55, color: C.textMuted,
+                display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              }}>“{selectedText.trim()}”</p>
+            )}
+          </div>
 
-        {/* Actions */}
-        <div style={{ padding: '12px 12px 8px' }}>
-          {(['Rephrase', 'Shorten', 'Summarize'] as const).map(a => (
-            <button key={a} type="button"
-              onClick={() => void runTask(a.toLowerCase())}
-              title={a}
-              aria-label={a}
-              style={{
-                display: 'block', width: '100%', textAlign: 'left',
-                padding: '11px 14px', border: 'none', borderRadius: C.radiusPill,
-                background: 'transparent', fontSize: 13, color: C.text,
-                cursor: 'pointer', fontWeight: 500, fontFamily: FONT,
-                marginBottom: 6,
-                transition: 'background 0.18s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.hoverBg)}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-            >{a}</button>
-          ))}
-        </div>
+          {/* Quick actions */}
+          <div>
+            <SectionLabel>Quick actions</SectionLabel>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
+              {QUICK_ACTIONS.map(a => (
+                <ActionTile
+                  key={a.label}
+                  icon={a.icon}
+                  label={a.label}
+                  desc={a.desc}
+                  disabled={!hasSelection}
+                  onClick={() => void runTask(a.task, a.instruction)}
+                />
+              ))}
+            </div>
+            {!hasSelection && (
+              <p style={{ margin: '10px 2px 0', fontSize: 11.5, color: C.textLight, lineHeight: 1.5 }}>
+                Select text on the page to use these actions.
+              </p>
+            )}
+          </div>
 
-        {/* Template chips */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 12px' }}>
-          {PROMPT_TEMPLATES.map(t => (
-            <button key={t.id} type="button"
-              onClick={() => void runTask('rewrite', t.prompt)}
-              title={t.label}
-              aria-label={t.label}
-              style={{
-                padding: '6px 12px', borderRadius: C.radiusPill,
-                border: `1px solid ${C.border}`, background: C.surfaceBubble,
-                fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                color: C.text, fontFamily: FONT,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.hoverBg)}
-              onMouseLeave={e => (e.currentTarget.style.background = C.surfaceBubble)}
-            >{t.label}</button>
-          ))}
-        </div>
+          {/* Whole-page recap */}
+          <div>
+            <SectionLabel>This page</SectionLabel>
+            <ActionTile
+              icon={recapState === 'loading' ? <Spinner size={15} /> : <IGlobe />}
+              label={recapState === 'loading' ? 'Generating recap…' : 'Page recap'}
+              desc="Summarize everything you captured here"
+              disabled={recapState === 'loading'}
+              onClick={() => void runPageRecap()}
+            />
+            {recapState === 'done' && <p style={{ margin: '8px 2px 0', fontSize: 11.5, color: '#0f766e' }}>Recap saved to your workspace library.</p>}
+            {recapState === 'empty' && <p style={{ margin: '8px 2px 0', fontSize: 11.5, color: C.textMuted }}>No captures on this page yet — highlight or clip something first.</p>}
+            {recapState === 'error' && <p style={{ margin: '8px 2px 0', fontSize: 11.5, color: '#b91c1c' }}>Recap failed. Check that you&apos;re signed in to the dashboard.</p>}
+          </div>
 
-        {/* Custom prompt */}
-        <div style={{ padding: '4px 14px 16px' }}>
-          <input
-            ref={inputRef}
-            value={customPrompt}
-            onChange={e => setCustomPrompt(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && customPrompt.trim()) void runTask('rewrite', customPrompt) }}
-            placeholder="Custom prompt"
-            style={{
-              width: '100%', boxSizing: 'border-box', padding: '11px 16px',
-              border: `1px solid ${C.border}`, borderRadius: C.radiusPill,
-              fontSize: 13, outline: 'none', color: C.text,
-              fontFamily: FONT, background: C.inputBg, boxShadow: C.shadowSoft,
-            }}
-          />
+          {/* Suggestions */}
+          {PROMPT_TEMPLATES.length > 0 && (
+            <div>
+              <SectionLabel>Suggestions</SectionLabel>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {PROMPT_TEMPLATES.map(t => (
+                  <Chip key={t.id} label={t.label} disabled={!hasSelection} onClick={() => void runTask('rewrite', t.prompt)} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </PanelShell>
     )
   }
 
   /* ─── Result / Loading state ─── */
   return (
-    <div style={{
-      width: 288, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ISparkle />
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Ask AI</span>
+    <PanelShell
+      title="Ask Inline"
+      subtitle={loading ? 'Thinking…' : 'Here is your result'}
+      chip={lastTask ? (lastInstruction ? 'Custom' : lastTask) : undefined}
+      width={400}
+      onClose={onClose}
+      footer={!loading ? (
+        <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button type="button" onClick={() => setResult(null)} aria-label="Back" style={ghostBtn}>Back</button>
+          <button type="button" onClick={handleInsert} aria-label="Insert into page" style={primaryBtn}>Insert</button>
+          <button type="button" onClick={handleSpeak} aria-label={speaking ? 'Stop speaking' : 'Speak'} style={{ ...iconBtn, marginLeft: 'auto' }}>{speaking ? <IVolumeOff /> : <IVolume />}</button>
+          <button type="button" onClick={handleCopy} aria-label="Copy" style={iconBtn}><ICopy /></button>
         </div>
-        <button type="button" onClick={onClose} title="Close" aria-label="Close" style={btnIcon}><IClose /></button>
-      </div>
-
-      {/* Result body */}
+      ) : undefined}
+    >
       <div style={{ padding: 18 }}>
         <div style={{
-          padding: 16, border: `1px solid ${C.border}`, borderRadius: C.radiusMd,
-          fontSize: 13, lineHeight: 1.65, color: C.text, minHeight: 72,
-          background: C.surfaceBubble, boxShadow: C.shadowSoft,
-          maxHeight: 260, overflowY: 'auto',
+          padding: 16, border: `1px solid ${C.border}`, borderRadius: 18,
+          fontSize: 13.5, lineHeight: 1.7, color: C.text, minHeight: 80,
+          background: C.surfaceBubble, boxShadow: C.shadowCard,
+          maxHeight: 320, overflowY: 'auto', whiteSpace: 'pre-wrap',
         }}>
           {loading ? (
-            <span style={{ color: C.textMuted, fontStyle: 'italic' }}>Generating…</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
+              <Spinner size={16} /><span style={{ fontStyle: 'italic' }}>Generating…</span>
+            </div>
           ) : result}
         </div>
-
-        {/* Action row */}
-        {!loading && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 14, alignItems: 'center' }}>
-            <button type="button" onClick={() => setResult(null)} title="Back" aria-label="Back" style={pillBtn}>Back</button>
-            <button type="button" onClick={handleInsert} title="Insert into page" aria-label="Insert into page" style={{
-              ...pillBtn, background: C.accent, color: '#fff', borderColor: C.accent, fontWeight: 600,
-              boxShadow: C.shadowSoft,
-            }}>Insert</button>
-            <button type="button" onClick={handleSpeak} title={speaking ? 'Stop speaking' : 'Speak'} aria-label={speaking ? 'Stop speaking' : 'Speak'} style={{ ...btnIcon, marginLeft: 'auto' }}>{speaking ? <IVolumeOff /> : <IVolume />}</button>
-            <button type="button" onClick={handleCopy} title="Copy" aria-label="Copy" style={btnIcon}><ICopy /></button>
-          </div>
-        )}
       </div>
-    </div>
+    </PanelShell>
   )
 }
 
-const btnIcon: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 32, height: 32, border: 'none', borderRadius: C.radiusSm,
-  background: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0,
-}
-
-const pillBtn: React.CSSProperties = {
-  padding: '8px 18px', borderRadius: C.radiusPill,
+const ghostBtn: React.CSSProperties = {
+  padding: '9px 18px', borderRadius: C.radiusPill,
   border: `1px solid ${C.border}`, background: C.surfaceBubble,
-  fontSize: 12, fontWeight: 500, cursor: 'pointer',
-  color: C.text, fontFamily: FONT,
+  fontSize: 12.5, fontWeight: 600, cursor: 'pointer', color: C.text, fontFamily: FONT,
   boxShadow: C.shadowSoft,
-  transition: 'transform 0.15s ease, background 0.15s',
+}
+const primaryBtn: React.CSSProperties = {
+  padding: '9px 20px', borderRadius: C.radiusPill, border: 'none',
+  background: C.accent, color: '#fff', fontSize: 12.5, fontWeight: 700,
+  cursor: 'pointer', fontFamily: FONT, boxShadow: '0 6px 16px -6px rgba(11,23,53,0.5)',
+}
+const iconBtn: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: 36, height: 36, border: `1px solid ${C.border}`, borderRadius: 12,
+  background: C.surfaceBubble, cursor: 'pointer', padding: 0, color: C.textMuted,
+  boxShadow: C.shadowSoft,
 }

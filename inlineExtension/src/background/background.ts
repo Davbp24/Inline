@@ -115,18 +115,44 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'INLINE_SYNC_VOICE_SETTINGS') {
+    // Voice PREFERENCES only. API keys are never accepted or stored —
+    // read-aloud always goes through the dashboard's server-side /api/tts.
     const p = message.payload as {
-      elevenLabsKey?: string
       voiceId?: string
       stability?: string
       similarity?: string
     }
     const patch: Record<string, string> = {}
-    if (p.elevenLabsKey !== undefined) patch.inlineElevenLabsKey = p.elevenLabsKey
     if (p.voiceId !== undefined) patch.inlineVoiceId = normalizeInlineVoiceId(p.voiceId)
     if (p.stability !== undefined) patch.inlineVoiceStability = p.stability
     if (p.similarity !== undefined) patch.inlineVoiceSimilarity = p.similarity
+    // Purge any legacy user-pasted key from older versions.
+    void chrome.storage.local.remove(['inlineElevenLabsKey'])
     void chrome.storage.local.set(patch, () => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ ok: false, error: chrome.runtime.lastError.message })
+        return
+      }
+      sendResponse({ ok: true })
+    })
+    return true
+  }
+
+  /**
+   * Domain blocklist sync from the dashboard's Extension settings tab.
+   * Stored under the same key the content script and popup Settings read.
+   */
+  if (message?.type === 'INLINE_SYNC_BLOCKLIST') {
+    const p = message.payload as { blockedDomains?: string[] }
+    if (!Array.isArray(p?.blockedDomains)) {
+      sendResponse({ ok: false, error: 'blockedDomains must be an array' })
+      return true
+    }
+    const cleaned = p.blockedDomains
+      .filter((d): d is string => typeof d === 'string')
+      .map(d => d.trim().toLowerCase())
+      .filter(Boolean)
+    void chrome.storage.local.set({ inlineBlockedDomains: JSON.stringify(cleaned) }, () => {
       if (chrome.runtime.lastError) {
         sendResponse({ ok: false, error: chrome.runtime.lastError.message })
         return
@@ -215,7 +241,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     void chrome.storage.local.get(
-      ['inlineApiBase', 'inlineElevenLabsKey', 'inlineVoiceId', 'inlineVoiceStability', 'inlineVoiceSimilarity'],
+      ['inlineApiBase', 'inlineAccessToken', 'inlineVoiceId', 'inlineVoiceStability', 'inlineVoiceSimilarity'],
       async (r) => {
         const baseRaw = typeof r.inlineApiBase === 'string' && r.inlineApiBase ? r.inlineApiBase : WEB_URL
         const base = baseRaw.replace(/\/$/, '')
@@ -224,7 +250,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             (typeof r.inlineVoiceId === 'string' && r.inlineVoiceId) ||
             DEFAULT_INLINE_VOICE_ID,
         )
-        const userKey = typeof r.inlineElevenLabsKey === 'string' ? r.inlineElevenLabsKey : ''
         const stability = parseFloat(
           typeof r.inlineVoiceStability === 'string' ? r.inlineVoiceStability : '0.5',
         )
@@ -232,8 +257,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           typeof r.inlineVoiceSimilarity === 'string' ? r.inlineVoiceSimilarity : '0.75',
         )
 
+        // The server TTS proxy requires auth; forward the dashboard-synced
+        // Supabase JWT. No third-party keys ever leave or enter the extension.
+        const accessToken = typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : ''
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (userKey) headers['x-elevenlabs-key'] = userKey
+        if (isUsableJwt(accessToken)) headers.Authorization = `Bearer ${accessToken}`
 
         try {
           const res = await fetch(`${base}/api/tts`, {
@@ -289,20 +317,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'CLIP_TO_WORKSPACE') {
     const { pageUrl, pageTitle, selection, highlights, workspaceId } = message.payload
 
-    fetch(`${WEB_URL}/api/clip`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pageUrl, pageTitle, selection, highlights, workspaceId }),
-    })
-      .then(async (res) => {
-        const json = await res.json()
-        if (!res.ok) {
-          sendResponse({ ok: false, error: json.error ?? `HTTP ${res.status}` })
-          return
+    void chrome.storage.local.get(
+      ['inlineApiBase', 'inlineAccessToken', 'inlineActiveWorkspaceId'],
+      async (r) => {
+        const base = (typeof r.inlineApiBase === 'string' && r.inlineApiBase ? r.inlineApiBase : WEB_URL).replace(/\/$/, '')
+        const accessToken = typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : ''
+        const ws = workspaceId
+          || (typeof r.inlineActiveWorkspaceId === 'string' ? r.inlineActiveWorkspaceId : '')
+
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (isUsableJwt(accessToken)) headers.Authorization = `Bearer ${accessToken}`
+
+        try {
+          const res = await fetch(`${base}/api/clip`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ pageUrl, pageTitle, selection, highlights, workspaceId: ws }),
+          })
+          const json = await res.json()
+          if (!res.ok) {
+            sendResponse({ ok: false, error: json.error ?? `HTTP ${res.status}` })
+            return
+          }
+          sendResponse({ ok: true, data: json })
+        } catch (err) {
+          sendResponse({ ok: false, error: err instanceof Error ? err.message : 'Clip failed' })
         }
-        sendResponse({ ok: true, data: json })
-      })
-      .catch((err: Error) => sendResponse({ ok: false, error: err.message }))
+      },
+    )
 
     return true
   }

@@ -10,6 +10,9 @@ import StickyNotesManager from './StickyNotesManager'
 import SmartOverlay from './SmartOverlay'
 import PanelHost from './PanelHost'
 import { restoreHighlights } from './highlightWrap'
+import { restoreDrawings } from './drawingsRestore'
+import { restoreHandwriting } from './handwritingRestore'
+import { restoreAIReplacements } from './aiReplacements'
 import { enableReaderMode, disableReaderMode } from '../lib/readerMode'
 import { loadLayers, type LayerVisibility } from '../lib/layerState'
 import { speakWithElevenLabs, stopSpeaking } from '../lib/elevenLabsTts'
@@ -34,7 +37,20 @@ import cssText from './content.css?inline'
   const focusMode = stored.inlineFocusMode === 'true' || stored.inlineFocusMode === true
   if (focusMode) enableReaderMode()
 
-  setTimeout(restoreHighlights, 800)
+  /* ── Feature restoration (runs regardless of which panels the user opens) ──
+   *
+   * These helpers create the relevant layer (SVG / canvas / wrapped text)
+   * and repopulate it from storage, so every annotation feature survives
+   * a page reload without requiring the user to reopen the authoring
+   * panel. The 800ms delay gives the host page a chance to hydrate its
+   * own DOM first — otherwise we'd miss text nodes rendered by the SPA.
+   */
+  setTimeout(() => {
+    restoreHighlights()
+    restoreDrawings()
+    restoreHandwriting()
+    restoreAIReplacements()
+  }, 800)
 
   const HOST_ID = 'inline-extension-root'
   if (!document.getElementById(HOST_ID)) {

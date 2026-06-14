@@ -64,7 +64,7 @@ const ACTION_META: Record<string, { bg: string; title: string }> = {
   export function wrapSelectionWithHighlight(
     action: string,
     colorOverride?: string,
-  ): { text: string; title: string } | null {
+  ): { text: string; title: string; span: HTMLElement } | null {
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null
   const text = sel.toString()
@@ -100,7 +100,7 @@ const ACTION_META: Record<string, { bg: string; title: string }> = {
       timestamp: Date.now(),
     })
 
-  return { text, title: meta.title }
+  return { text, title: meta.title, span }
   }
   
   function applyHighlights(saved: SavedHighlight[]): void {

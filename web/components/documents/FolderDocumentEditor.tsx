@@ -15,7 +15,7 @@ import { Underline } from '@tiptap/extension-underline'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Bold, Italic, Heading1, Heading2, Heading3,
+  Heading1, Heading2, Heading3,
   Plus, GripVertical, ChevronRight, Link2,
   ArrowLeft, Search, List, ListOrdered, AlignLeft,
   Quote, Code, Minus, CheckSquare, Type,

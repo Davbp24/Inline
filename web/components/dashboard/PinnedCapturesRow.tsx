@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { Note } from '@/lib/types'
-import { Star } from 'lucide-react'
+import { Star, Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   getPinnedNoteIds,
   togglePinnedNote,
   isPinnedNote,
 } from '@/lib/dashboard-favorites'
-import { collaboratorIndexForId } from '@/lib/dashboard-mock-avatars'
 import { prettyNotePreviewTruncated } from '@/lib/note-preview'
 
 const PASTEL_BGS = [
@@ -19,25 +18,6 @@ const PASTEL_BGS = [
   'bg-[#FDECC8] dark:bg-[#1B326D]',
   'bg-[#E7E5E4] dark:bg-[#1E3878]',
 ]
-
-const MOCK_USERS = [
-  { name: 'Wonpil',  avatar: 'W', color: '#D9730D' },
-  { name: 'Young K', avatar: 'Y', color: '#7c3aed' },
-  { name: 'Dowoon',  avatar: 'D', color: '#57534e' },
-  { name: 'Park S',  avatar: 'P', color: '#0f766e' },
-  { name: 'Jae W',   avatar: 'J', color: '#C4554D' },
-  { name: 'Brian L', avatar: 'B', color: '#f59e0b' },
-]
-
-function getMockAvatars(noteId: string) {
-  const base = collaboratorIndexForId(noteId, MOCK_USERS.length)
-  const count = 2 + (base % 2)
-  const avatars: typeof MOCK_USERS = []
-  for (let i = 0; i < count; i++) {
-    avatars.push(MOCK_USERS[(base + i) % MOCK_USERS.length])
-  }
-  return avatars
-}
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -66,7 +46,6 @@ function NoteCaptureCard({
 }) {
   const time = relativeTime(note.updatedAt)
   const bg = PASTEL_BGS[index % PASTEL_BGS.length]
-  const avatars = getMockAvatars(note.id)
 
   return (
     <div className={cn(
@@ -100,19 +79,12 @@ function NoteCaptureCard({
           </p>
         </div>
 
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex -space-x-2">
-            {avatars.map((user, i) => (
-              <div
-                key={user.name}
-                className="relative w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white"
-                style={{ backgroundColor: user.color, zIndex: avatars.length - i }}
-              >
-                {user.avatar}
-              </div>
-            ))}
-          </div>
-          <span className="text-[10px] text-slate-400 dark:text-[#9BBCE5]">{time}</span>
+        <div className="flex items-center justify-between gap-2 mt-4">
+          <span className="inline-flex min-w-0 items-center gap-1 text-[10px] text-slate-500 dark:text-[#9BBCE5]">
+            <Globe className="w-3 h-3 shrink-0" aria-hidden />
+            <span className="truncate">{note.domain}</span>
+          </span>
+          <span className="shrink-0 text-[10px] text-slate-400 dark:text-[#9BBCE5]">{time}</span>
         </div>
       </Link>
     </div>

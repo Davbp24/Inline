@@ -151,64 +151,64 @@ function SectionLabel({ label, collapsed, expanded, onToggle, action }: {
 }
 
 // ---------------------------------------------------------------------------
-// Invite Modal
+// Share / Invite Modal — honest version. Workspaces are single-user today, so
+// instead of pretending to email invites, this offers two real actions:
+// copy a link to Inline and open a pre-filled email in the user's mail client.
 // ---------------------------------------------------------------------------
 function InviteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [email,   setEmail]   = useState('')
-  const [role,    setRole]    = useState('Editor')
-  const [sent,    setSent]    = useState(false)
-  const [loading, setLoading] = useState(false)
-  const roles = ['Viewer', 'Editor', 'Admin']
+  const [copied, setCopied] = useState(false)
 
-  function handleSend(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim()) return
-    setLoading(true)
-    setTimeout(() => {
-      setSent(true); setLoading(false)
-      setTimeout(() => { setSent(false); setEmail(''); onClose() }, 1800)
-    }, 600)
+  const shareUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const mailto = `mailto:?subject=${encodeURIComponent('Try Inline — a memory layer for the web')}&body=${encodeURIComponent(
+    `I've been using Inline to capture highlights and notes directly on webpages and ask AI across them. You can set it up here: ${shareUrl}`,
+  )}`
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      /* clipboard unavailable (insecure context) — selection fallback below */
+      setCopied(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold">Invite team member</DialogTitle>
+          <DialogTitle className="text-sm font-semibold">Share Inline</DialogTitle>
         </DialogHeader>
-        {sent ? (
-          <div className="flex flex-col items-center gap-2 py-4">
-            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
-              <Check className="w-5 h-5 text-accent" />
-            </div>
-            <p className="text-sm text-stone-400">Invite sent to <strong>{email}</strong></p>
-          </div>
-        ) : (
-          <form onSubmit={handleSend} className="space-y-3 mt-1">
-            <div className="space-y-1">
-              <label className="text-xs font-medium">Email address</label>
-              <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="colleague@company.com"
-                className="w-full h-8 px-3 text-sm rounded-lg border border-stone-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#C4D4E4]" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium">Role</label>
-              <div className="flex gap-1.5">
-                {roles.map(r => (
-                  <button key={r} type="button" onClick={() => setRole(r)}
-                    className={cn('flex-1 h-8 rounded-lg text-xs font-medium border transition-colors cursor-pointer',
-                      role === r ? 'bg-[#1C1E26] text-white border-[#191919]' : 'bg-white text-stone-400 border-stone-200 hover:border-[#D3D1CB]')}>
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <button type="submit" disabled={loading}
-              className="w-full h-8 rounded-lg bg-[#1C1E26] text-white text-sm font-medium hover:bg-[#150C00] transition-colors disabled:opacity-60 cursor-pointer">
-              {loading ? 'Sending…' : 'Send invite'}
+        <div className="space-y-3 mt-1">
+          <p className="text-xs leading-relaxed text-stone-500">
+            Workspaces are currently personal — shared workspaces with roles
+            aren&apos;t available yet. You can still send someone a link so they can
+            set up their own Inline.
+          </p>
+          <div className="flex items-center gap-1.5">
+            <input
+              readOnly
+              value={shareUrl}
+              onFocus={e => e.currentTarget.select()}
+              aria-label="Inline link"
+              className="flex-1 h-8 px-3 text-xs rounded-lg border border-stone-200 bg-stone-50 text-stone-600 focus:outline-none focus:ring-2 focus:ring-[#C4D4E4] min-w-0"
+            />
+            <button
+              type="button"
+              onClick={copyLink}
+              className="h-8 px-3 rounded-lg bg-[#1C1E26] text-white text-xs font-medium hover:bg-stone-800 transition-colors cursor-pointer shrink-0"
+            >
+              {copied ? 'Copied' : 'Copy link'}
             </button>
-          </form>
-        )}
+          </div>
+          <a
+            href={mailto}
+            className="flex h-8 w-full items-center justify-center rounded-lg border border-stone-200 text-xs font-medium text-stone-700 hover:bg-stone-50 transition-colors"
+          >
+            Compose an email instead
+          </a>
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -624,7 +624,7 @@ export default function Sidebar() {
                 {favoritedWorkspaces.map(ws => {
                   const Icon = ICON_MAP[ws.icon] ?? Zap
                   return (
-                    <NavRow key={`fav-${ws.id}`} href={`/app/${ws.id}/dashboard`} icon={Icon}
+                    <NavRow key={`fav-${ws.id}`} href={`/app/${ws.id}/home`} icon={Icon}
                       label={ws.label} collapsed={collapsed} active={activeWsId === ws.id}
                       dotColor={ws.color} onStar={() => toggleFavorite(ws.id)} starred />
                   )
@@ -666,26 +666,41 @@ export default function Sidebar() {
               const isActive    = activeWsId === ws.id
               const isAddingHere = addingFolderForWs === ws.id
 
+              const canExpand = wsRootFolders.length > 0 || isAddingHere
+
               return (
                 <div key={ws.id}>
-                  {/* Workspace row */}
+                  {/* Workspace row — clicking always navigates to the workspace
+                      Home. Folder disclosure is a separate chevron control so
+                      the row never behaves like a dropdown. */}
                   <div className="group/row relative flex items-center">
+                    {/* Disclosure chevron (expanded view only). Reserves the
+                        same gutter even without folders so labels stay aligned. */}
+                    {!collapsed && (
+                      canExpand ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleWsExpand(ws.id)}
+                          aria-label={wsExpanded ? `Collapse ${ws.label} folders` : `Expand ${ws.label} folders`}
+                          className="w-4 h-7 shrink-0 flex items-center justify-center rounded text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
+                        >
+                          <ChevronRight className={cn('w-3 h-3 transition-transform duration-150', wsExpanded && 'rotate-90')} />
+                        </button>
+                      ) : (
+                        <span className="w-4 shrink-0" aria-hidden />
+                      )
+                    )}
                     <Link
-                      href={`/app/${ws.id}/dashboard`}
-                      onClick={e => {
-                        const canExpand = wsRootFolders.length > 0 || isAddingHere
-                        if (canExpand) {
-                          e.preventDefault()
-                          toggleWsExpand(ws.id)
-                        }
-                      }}
+                      href={`/app/${ws.id}/home`}
+                      aria-current={isActive ? 'page' : undefined}
                       className={cn(
                         collapsed
                           ? 'w-10 h-10 aspect-square rounded-md flex items-center justify-center transition-all cursor-pointer shrink-0'
-                          : 'flex flex-1 items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-sm transition-all cursor-pointer min-w-0',
-                        isActive ? 'bg-[#F1F1EF] text-[#37352F] font-semibold' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100',
+                          : 'flex flex-1 items-center gap-2.5 px-2 py-[7px] rounded-lg text-sm transition-all cursor-pointer min-w-0',
+                        isActive
+                          ? 'bg-[#F1F1EF] text-[#37352F] font-semibold dark:bg-[#1B326D] dark:text-white'
+                          : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100 dark:text-[#9BBCE5] dark:hover:text-white dark:hover:bg-[#17296B]',
                       )}
-                      title={(wsRootFolders.length > 0 || isAddingHere) ? `${wsExpanded ? 'Collapse' : 'Expand'} folders` : undefined}
                     >
                       <span className="w-4 h-4 rounded-md flex items-center justify-center shrink-0" style={{ background: ws.color + '22' }}>
                         <Icon className="w-3 h-3 shrink-0" style={{ color: ws.color }} />
@@ -699,35 +714,18 @@ export default function Sidebar() {
                     </Link>
                     {!collapsed && (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity pr-1 shrink-0">
-                        {/* Dashboard — when row click expands folders, still need a way to open this workspace */}
-                        {(wsRootFolders.length > 0 || isAddingHere) && (
-                          <Link
-                            href={`/app/${ws.id}/dashboard`}
-                            onClick={e => e.stopPropagation()}
-                            className="w-5 h-5 flex items-center justify-center rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
-                            title="Open workspace dashboard"
-                          >
-                            <LayoutDashboard className="w-3 h-3" />
-                          </Link>
-                        )}
                         {/* Add folder */}
                         <button onClick={e => { e.preventDefault(); e.stopPropagation(); setAddingFolderForWs(ws.id); setExpandedWorkspaces(p => ({ ...p, [ws.id]: true })) }}
-                          className="w-5 h-5 flex items-center justify-center rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer" title="New folder">
+                          className="w-5 h-5 flex items-center justify-center rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer dark:text-[#9BBCE5] dark:hover:text-white dark:hover:bg-[#17296B]" title="New folder" aria-label={`New folder in ${ws.label}`}>
                           <FolderPlus className="w-3 h-3" />
                         </button>
                         {/* Star */}
                         <button onClick={e => { e.preventDefault(); e.stopPropagation(); toggleFavorite(ws.id) }}
                           className="w-5 h-5 flex items-center justify-center rounded transition-colors cursor-pointer"
-                          title={favorites.includes(ws.id) ? 'Unpin' : 'Pin to Favorites'}>
+                          title={favorites.includes(ws.id) ? 'Unpin' : 'Pin to Favorites'}
+                          aria-label={favorites.includes(ws.id) ? `Unpin ${ws.label}` : `Pin ${ws.label} to favorites`}>
                           <Star className={cn('w-3 h-3 transition-colors', favorites.includes(ws.id) ? 'fill-amber-400 text-amber-400' : 'text-stone-400 hover:text-amber-400')} />
                         </button>
-                        {/* Expand/collapse */}
-                        {(wsRootFolders.length > 0 || isAddingHere) && (
-                          <button onClick={e => { e.preventDefault(); e.stopPropagation(); toggleWsExpand(ws.id) }}
-                            className="w-5 h-5 flex items-center justify-center rounded text-stone-400 hover:text-stone-700 transition-colors cursor-pointer">
-                            <ChevronRight className={cn('w-3 h-3 transition-transform duration-150', wsExpanded && 'rotate-90')} />
-                          </button>
-                        )}
                       </div>
                     )}
                   </div>
@@ -810,7 +808,7 @@ export default function Sidebar() {
               onClick={() => setInviteOpen(true)}
             >
               <UserPlus className="w-3.5 h-3.5 shrink-0" />
-              <span>Invite Users</span>
+              <span>Share Inline</span>
             </button>
           </div>
 

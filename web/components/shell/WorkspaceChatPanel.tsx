@@ -3,30 +3,68 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Send, Loader2, Bot, User, ChevronDown, Volume2, VolumeX } from 'lucide-react'
+import { Sparkles, Send, Loader2, Bot, User, ChevronDown, Volume2, VolumeX, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useChatPanel } from '@/lib/chat-panel-context'
 import { loadFolderDocuments } from '@/lib/workspace-library'
 import { normalizeInlineVoiceId } from '@/lib/inlineVoicePresets'
+import { SourceCardRow, type ChatSource } from '@/components/shell/SourceCard'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 const PANEL_DURATION = 0.32
 
+type RetrievalMode = 'semantic' | 'recency' | 'none'
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  /** Server-retrieved sources only — never derived from model output. */
+  sources?: ChatSource[]
+  mode?: RetrievalMode
+  error?: boolean
 }
 
 let currentChatAudio: HTMLAudioElement | null = null
+let currentChatUtterance: SpeechSynthesisUtterance | null = null
 
-async function speakViaTts(text: string, onEnd?: () => void): Promise<void> {
+/** Fallback: browser speech synthesis. Always available, no keys, no quota. */
+function speakViaBrowserSynth(text: string, onEnd?: () => void): boolean {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return false
+  try {
+    const utter = new SpeechSynthesisUtterance(text)
+    currentChatUtterance = utter
+    utter.onend = () => { currentChatUtterance = null; onEnd?.() }
+    utter.onerror = () => { currentChatUtterance = null; onEnd?.() }
+    window.speechSynthesis.cancel()
+    window.speechSynthesis.speak(utter)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Chat read-aloud resolution order:
+ *
+ *   1. `/api/tts` proxy — authenticated via the dashboard session cookie;
+ *      the ElevenLabs key lives only in the server env.
+ *   2. `window.speechSynthesis` (browser built-in voice) when the proxy
+ *      fails or cloud TTS is unavailable.
+ */
+async function speakViaTts(text: string, onEnd?: () => void, onFallback?: () => void): Promise<void> {
   if (currentChatAudio) { currentChatAudio.pause(); currentChatAudio = null }
+  if (currentChatUtterance && typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel()
+    currentChatUtterance = null
+  }
+
+  const trimmed = text.slice(0, 2000)
+  if (!trimmed.trim()) { onEnd?.(); return }
 
   const voiceId =
     typeof window !== 'undefined'
       ? normalizeInlineVoiceId(localStorage.getItem('inline_voice_id'))
       : normalizeInlineVoiceId(null)
-  const elevenKey = typeof window !== 'undefined' ? localStorage.getItem('inline_elevenlabs_key') || '' : ''
   const stability = typeof window !== 'undefined'
     ? parseFloat(localStorage.getItem('inline_voice_stability') || '0.5')
     : 0.5
@@ -34,15 +72,12 @@ async function speakViaTts(text: string, onEnd?: () => void): Promise<void> {
     ? parseFloat(localStorage.getItem('inline_voice_similarity') || '0.75')
     : 0.75
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (elevenKey) headers['x-elevenlabs-key'] = elevenKey
-
   try {
     const res = await fetch('/api/tts', {
       method: 'POST',
-      headers,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: text.slice(0, 2000),
+        text: trimmed,
         voiceId,
         stability: Number.isFinite(stability) ? stability : 0.5,
         similarityBoost: Number.isFinite(similarityBoost) ? similarityBoost : 0.75,
@@ -50,7 +85,10 @@ async function speakViaTts(text: string, onEnd?: () => void): Promise<void> {
     })
 
     if (!res.ok) {
-      onEnd?.()
+      // Cloud voice unavailable — fall back to the browser's built-in
+      // voice so the user still gets audio, and let the UI say so.
+      onFallback?.()
+      if (!speakViaBrowserSynth(trimmed, onEnd)) onEnd?.()
       return
     }
 
@@ -62,12 +100,17 @@ async function speakViaTts(text: string, onEnd?: () => void): Promise<void> {
     audio.onerror = () => { URL.revokeObjectURL(url); currentChatAudio = null; onEnd?.() }
     audio.play()
   } catch {
-    onEnd?.()
+    onFallback?.()
+    if (!speakViaBrowserSynth(trimmed, onEnd)) onEnd?.()
   }
 }
 
 function stopChatSpeaking() {
   if (currentChatAudio) { currentChatAudio.pause(); currentChatAudio = null }
+  if (currentChatUtterance && typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel()
+    currentChatUtterance = null
+  }
 }
 
 function getWsId(pathname: string): string {
@@ -96,6 +139,7 @@ export default function WorkspaceChatPanel() {
     typeof window !== 'undefined' ? localStorage.getItem('inline_voice_chat') === 'true' : false,
   )
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null)
+  const [ttsNotice, setTtsNotice] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -112,7 +156,12 @@ export default function WorkspaceChatPanel() {
     if (speakingIdx === idx) { stopChatSpeaking(); setSpeakingIdx(null); return }
     stopChatSpeaking()
     setSpeakingIdx(idx)
-    void speakViaTts(content, () => setSpeakingIdx(null))
+    setTtsNotice(null)
+    void speakViaTts(
+      content,
+      () => setSpeakingIdx(null),
+      () => setTtsNotice('Cloud voice unavailable — using the browser voice.'),
+    )
   }
 
   useEffect(() => {
@@ -163,39 +212,86 @@ export default function WorkspaceChatPanel() {
       })
 
       if (!res.ok || !res.body) {
+        let detail = 'The AI service may be temporarily unavailable.'
+        try {
+          const j = (await res.json()) as { error?: string }
+          if (j?.error) detail = j.error
+        } catch { /* non-JSON error body */ }
         setMessages(prev => [
           ...prev,
-          {
-            role: 'assistant',
-            content: 'Sorry, something went wrong. The AI service may be temporarily unavailable.',
-          },
+          { role: 'assistant', content: detail, error: true },
         ])
         return
       }
 
+      // The stream starts with one JSON metadata line:
+      //   { "sources": [...], "mode": "semantic" | "recency" | "none" }\n
+      // followed by the plain-text answer. Sources rendered in the UI come
+      // exclusively from this server-built header.
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
+      let buffer = ''
+      let headerParsed = false
+      let sources: ChatSource[] = []
+      let mode: RetrievalMode = 'none'
       let accumulated = ''
       setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+
+      const applyUpdate = () => {
+        setMessages(prev => {
+          const next = [...prev]
+          next[next.length - 1] = { role: 'assistant', content: accumulated, sources, mode }
+          return next
+        })
+      }
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        accumulated += decoder.decode(value, { stream: true })
-        setMessages(prev => {
-          const next = [...prev]
-          next[next.length - 1] = { role: 'assistant', content: accumulated }
-          return next
-        })
+        buffer += decoder.decode(value, { stream: true })
+
+        if (!headerParsed) {
+          const newlineIdx = buffer.indexOf('\n')
+          if (newlineIdx === -1) continue
+          const headerLine = buffer.slice(0, newlineIdx)
+          buffer = buffer.slice(newlineIdx + 1)
+          try {
+            const meta = JSON.parse(headerLine) as { sources?: ChatSource[]; mode?: RetrievalMode }
+            sources = Array.isArray(meta.sources) ? meta.sources : []
+            mode = meta.mode ?? 'none'
+          } catch {
+            // Header missing (older server) — treat the line as answer text.
+            buffer = headerLine + '\n' + buffer
+          }
+          headerParsed = true
+        }
+
+        if (buffer) {
+          accumulated += buffer
+          buffer = ''
+          applyUpdate()
+        }
+      }
+      if (buffer) {
+        accumulated += buffer
+        applyUpdate()
       }
 
       if (voiceMode && accumulated) {
         const msgIdx = messages.length + 1
         setSpeakingIdx(msgIdx)
-        void speakViaTts(accumulated, () => setSpeakingIdx(null))
+        setTtsNotice(null)
+        void speakViaTts(
+          accumulated,
+          () => setSpeakingIdx(null),
+          () => setTtsNotice('Cloud voice unavailable — using the browser voice.'),
+        )
       }
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Network error.' }])
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: 'Network error — check your connection and try again.', error: true },
+      ])
     } finally {
       setLoading(false)
     }
@@ -321,13 +417,15 @@ export default function WorkspaceChatPanel() {
                       <Bot className="h-2.5 w-2.5 text-muted-foreground" />
                     )}
                   </div>
-                  <div className="group/msg relative">
+                  <div className="group/msg relative min-w-0 flex-1">
                     <div
                       className={cn(
                         'max-w-[82%] rounded-xl px-3 py-2 text-xs leading-relaxed',
                         m.role === 'user'
-                          ? 'rounded-tr-sm bg-primary text-primary-foreground'
-                          : 'rounded-tl-sm border border-border bg-muted/60 text-foreground',
+                          ? 'ml-auto w-fit rounded-tr-sm bg-primary text-primary-foreground'
+                          : m.error
+                            ? 'rounded-tl-sm border border-destructive/30 bg-destructive/5 text-foreground'
+                            : 'rounded-tl-sm border border-border bg-muted/60 text-foreground',
                       )}
                     >
                       {m.content ||
@@ -337,6 +435,15 @@ export default function WorkspaceChatPanel() {
                           '…'
                         ))}
                     </div>
+                    {m.role === 'assistant' && m.mode === 'recency' && m.content && (
+                      <p className="mt-1 flex items-center gap-1 text-[9px] text-muted-foreground/80">
+                        <Clock className="h-2.5 w-2.5" />
+                        Workspace not indexed yet — answering from recent captures only.
+                      </p>
+                    )}
+                    {m.role === 'assistant' && !loading && m.sources && m.sources.length > 0 && (
+                      <SourceCardRow sources={m.sources} workspaceId={wsId} />
+                    )}
                     {m.role === 'assistant' && m.content && !loading && (
                       <button
                         type="button"
@@ -362,6 +469,11 @@ export default function WorkspaceChatPanel() {
                   </div>
                   <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                 </div>
+              )}
+              {ttsNotice && (
+                <p className="text-center text-[9px] text-muted-foreground/80" role="status">
+                  {ttsNotice}
+                </p>
               )}
               <div ref={bottomRef} />
             </div>

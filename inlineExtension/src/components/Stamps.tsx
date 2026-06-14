@@ -1,13 +1,8 @@
 import { useState, useCallback } from 'react'
 import { PANEL as C, FONT } from '../lib/extensionTheme'
+import { PanelShell, SectionLabel } from './panelKit'
 
 const STAMP_SYMBOLS = ['✓', '✗', '?', '!', '★', '♥', '+', '−', '→', '•']
-
-const IClose = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854z"/>
-  </svg>
-)
 
 interface StampsProps {
   onClose: () => void
@@ -19,7 +14,6 @@ export default function Stamps({ onClose }: StampsProps) {
   const handleStampClick = useCallback((symbol: string) => {
     setPlacing(symbol)
     document.dispatchEvent(new CustomEvent('inline:stampPlace', { detail: { emoji: symbol } }))
-
     const onPlaced = () => {
       setPlacing(null)
       document.removeEventListener('inline:stampPlaced', onPlaced)
@@ -27,73 +21,58 @@ export default function Stamps({ onClose }: StampsProps) {
     document.addEventListener('inline:stampPlaced', onPlaced)
   }, [])
 
-  const cancelPlacing = useCallback(() => {
-    setPlacing(null)
-  }, [])
+  const cancelPlacing = useCallback(() => setPlacing(null), [])
 
   return (
-    <div style={{
-      width: 220, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 16px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.01em' }}>
-          Stamps
-        </span>
-        <button type="button" onClick={onClose} style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 30, height: 30, border: 'none', borderRadius: C.radiusSm,
-          background: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0,
-        }}><IClose /></button>
-      </div>
-
-      {/* Placing indicator */}
+    <PanelShell title="Stamp" subtitle="Pick a stamp, then click the page" width={332} onClose={onClose}>
       {placing && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '10px 16px', background: C.toneSelectedBg,
-          borderBottom: `1px solid ${C.divider}`,
+          margin: '14px 18px 0', padding: '10px 14px', borderRadius: 14,
+          background: C.accent, color: '#fff', fontFamily: FONT,
+          boxShadow: '0 8px 20px -8px rgba(11,23,53,0.5)',
         }}>
-          <span style={{ fontSize: 12, fontWeight: 500, color: C.text }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, fontWeight: 600 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5BE49B' }} />
             Click anywhere to place {placing}
           </span>
-          <button type="button" onClick={cancelPlacing} style={{
-            border: 'none', background: 'transparent', cursor: 'pointer',
-            fontSize: 11, fontWeight: 500, color: C.textMuted, fontFamily: FONT,
-            padding: '4px 8px', borderRadius: C.radiusPill,
+          <button type="button" onClick={cancelPlacing} aria-label="Cancel placing" style={{
+            border: 'none', background: 'rgba(255,255,255,0.16)', cursor: 'pointer',
+            fontSize: 11, fontWeight: 700, color: '#fff', fontFamily: FONT,
+            padding: '5px 11px', borderRadius: C.radiusPill,
           }}>Cancel</button>
         </div>
       )}
 
-      {/* Grid */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: 6, padding: 14,
-      }}>
-        {STAMP_SYMBOLS.map(sym => (
-          <button
-            key={sym}
-            type="button"
-            onClick={() => handleStampClick(sym)}
-            style={{
-              width: '100%', aspectRatio: '1', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, border: `1px solid ${placing === sym ? C.accent : C.border}`,
-              borderRadius: C.radiusSm,
-              background: placing === sym ? C.toneSelectedBg : C.surfaceBubble,
-              cursor: 'pointer', padding: 0,
-              transition: 'transform 0.15s, background 0.15s',
-              fontFamily: FONT,
-            }}
-          >{sym}</button>
-        ))}
+      <div style={{ padding: '16px 18px 20px', fontFamily: FONT }}>
+        <SectionLabel>Symbols</SectionLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+          {STAMP_SYMBOLS.map(sym => {
+            const on = placing === sym
+            return (
+              <button
+                key={sym}
+                type="button"
+                onClick={() => handleStampClick(sym)}
+                aria-label={`Stamp ${sym}`}
+                aria-pressed={on}
+                style={{
+                  aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, fontWeight: 600,
+                  border: `1px solid ${on ? C.accent : C.border}`,
+                  borderRadius: 14,
+                  background: on ? C.accent : C.surfaceBubble,
+                  color: on ? '#fff' : C.text,
+                  cursor: 'pointer', padding: 0, fontFamily: FONT,
+                  boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
+                  transform: on ? 'translateY(-2px)' : 'none',
+                  transition: 'transform 0.14s, background 0.14s, border-color 0.14s, color 0.14s',
+                }}
+              >{sym}</button>
+            )
+          })}
+        </div>
       </div>
-    </div>
+    </PanelShell>
   )
 }

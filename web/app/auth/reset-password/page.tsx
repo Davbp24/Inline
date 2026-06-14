@@ -115,8 +115,8 @@ export default function ResetPasswordPage() {
               </form>
 
               <div className="mt-8 text-center text-[13px] text-stone-500 leading-relaxed">
-                By resetting your password, you agree with Inline&apos;s<br />
-                <a href="#" className="text-[#1C1E26] font-medium hover:underline">Privacy Policy</a> and <a href="#" className="text-[#1C1E26] font-medium hover:underline">Terms of Service</a>.
+                Your captures stay private to your account,<br />
+                protected by row-level security.
               </div>
             </div>
           )}

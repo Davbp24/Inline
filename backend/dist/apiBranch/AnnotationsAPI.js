@@ -289,6 +289,13 @@ function mirrorToNotes(supabase, params) {
                 headers,
                 body: JSON.stringify({ workspaceId: workspaceId !== null && workspaceId !== void 0 ? workspaceId : '', pageUrl }),
             }).catch(() => { });
+            // Embed the mirrored notes for semantic retrieval (RAG). Fire-and-forget,
+            // same debounce window as the recap call.
+            void fetch(`${NEXT_APP_URL}/api/ai/index`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ pageUrl, workspaceId: workspaceId !== null && workspaceId !== void 0 ? workspaceId : '' }),
+            }).catch(() => { });
         }
     });
 }

@@ -1,77 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { after } from 'next/server'
+import { getSupabaseAndUserFromRequest } from '@/lib/ai-key'
+import { indexNoteById } from '@/lib/ai/rag/indexer'
 
 /**
  * Save a captured clip / AI result / highlight bundle into public.notes so it
- * appears on the History, Graph, Analytics, and Map pages. The caller can pass
- * either a Supabase access token (Bearer header) or a userId in the body — one
- * of the two is required so the row satisfies RLS.
+ * appears on the History, Graph, Analytics, and Map pages.
+ *
+ * Auth: a verified Supabase session is required — either a Bearer JWT (the
+ * extension forwards the dashboard-synced token) or the dashboard cookie
+ * session. Raw userId values in the body are no longer trusted.
+ *
+ * After the row is written, the note is chunked + embedded for RAG in a
+ * post-response task so saving stays fast.
  */
 
-function looksLikeJwt(token: string): boolean {
-  if (!token) return false
-  const parts = token.split('.')
-  return parts.length === 3 && parts.every(p => p.length > 0)
-}
-
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const {
-    pageUrl,
-    pageTitle,
-    selection,
-    highlights,
-    workspaceId,
-    userId: userIdFromBody,
-    type,
-    tags,
-    content: overrideContent,
-    color,
-  } = body as {
+  const { user, supabase } = await getSupabaseAndUserFromRequest(req)
+  if (!user || !supabase) {
+    return NextResponse.json(
+      { error: 'Not signed in. Open the Inline dashboard once to sync your session, then try again.' },
+      { status: 401 },
+    )
+  }
+
+  let body: {
     pageUrl?: string
     pageTitle?: string
     selection?: string
     highlights?: Array<{ text?: string }>
     workspaceId?: string
-    userId?: string
     type?: string
     tags?: string[]
     content?: string
     color?: string
   }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
 
-  if (!pageUrl) {
+  const { pageUrl, pageTitle, selection, highlights, workspaceId, type, tags, content: overrideContent, color } = body
+
+  if (!pageUrl || typeof pageUrl !== 'string') {
     return NextResponse.json({ error: 'pageUrl required' }, { status: 400 })
-  }
-
-  const authHeader = req.headers.get('authorization') || ''
-  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : ''
-  const hasJwt = looksLikeJwt(bearer)
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    hasJwt
-      ? {
-          global: { headers: { Authorization: `Bearer ${bearer}` } },
-          auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
-        }
-      : undefined,
-  )
-
-  let userId: string | null = userIdFromBody ?? null
-  if (hasJwt) {
-    try {
-      const { data } = await supabase.auth.getUser()
-      if (data?.user?.id) userId = data.user.id
-    } catch { /* ignore */ }
-  }
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'not authenticated: missing Authorization bearer or userId' },
-      { status: 401 },
-    )
   }
 
   const content =
@@ -110,7 +83,7 @@ export async function POST(req: NextRequest) {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const { data, error } = await (supabase.from('notes') as any)
     .insert({
-      user_id:      userId,
+      user_id:      user.id,
       workspace_id: workspaceId ?? null,
       page_url:     pageUrl,
       page_title:   pageTitle || '',
@@ -124,6 +97,21 @@ export async function POST(req: NextRequest) {
     .single()
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true, noteId: data.id })
+  if (error) {
+    console.error('[clip] insert failed:', error.message)
+    return NextResponse.json({ error: 'Failed to save clip' }, { status: 500 })
+  }
+
+  const noteId: string = data.id
+  after(async () => {
+    try {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      await indexNoteById(supabase as any, user.id, noteId)
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+    } catch (err) {
+      console.warn('[clip] indexing failed:', (err as Error)?.message)
+    }
+  })
+
+  return NextResponse.json({ success: true, noteId })
 }

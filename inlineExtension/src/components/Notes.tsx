@@ -248,18 +248,18 @@ export default function Notes({
         <div style={{ width: 1, height: 18, background: C.divider, margin: '0 4px', flexShrink: 0 }} />
 
         {/* Formatting buttons */}
-        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('bold')} title="Bold"><b style={{ fontSize: 12 }}>B</b></ToolbarBtn>
-        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('italic')} title="Italic"><i style={{ fontSize: 12 }}>I</i></ToolbarBtn>
-        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('underline')} title="Underline">
+        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('bold')} aria-label="Bold"><b style={{ fontSize: 12 }}>B</b></ToolbarBtn>
+        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('italic')} aria-label="Italic"><i style={{ fontSize: 12 }}>I</i></ToolbarBtn>
+        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('underline')} aria-label="Underline">
           <span style={{ fontSize: 12, fontWeight: 500, color: '#1C1E26' }}>A</span>
         </ToolbarBtn>
 
         <div style={{ width: 1, height: 18, background: C.divider, margin: '0 4px', flexShrink: 0 }} />
 
-        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('insertUnorderedList')} title="Bullet list">
+        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('insertUnorderedList')} aria-label="Bullet list">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0 4a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm0-8a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
         </ToolbarBtn>
-        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('insertOrderedList')} title="Numbered list">
+        <ToolbarBtn onPointerDown={e => e.stopPropagation()} onClick={() => fmt('insertOrderedList')} aria-label="Numbered list">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5z"/><path d="M1.713 11.865v-.474H2c.217 0 .363-.137.363-.317 0-.185-.158-.31-.361-.31-.223 0-.367.152-.373.31h-.59c.016-.467.373-.787.986-.787.588-.002.954.291.957.703a.595.595 0 0 1-.492.594v.015a.63.63 0 0 1 .569.631c0 .438-.395.744-1.017.744-.564 0-.954-.303-.965-.754h.6c.01.175.155.303.376.303.218 0 .38-.152.38-.347 0-.227-.186-.347-.437-.347h-.215v-.468z"/><path d="M2 1a1 1 0 0 0-1 1v.217l.652-.33.348.667L.5 3.476V5h2V4H1.5v-.39l1.217-.66L2 1.5V2z"/></svg>
         </ToolbarBtn>
 
@@ -302,8 +302,9 @@ export default function Notes({
         <span style={{ fontSize: 10, color: C.textLight }}>By {author} | {timestamp}</span>
         <div
           onMouseDown={onResizeDown}
+          role="separator"
+          aria-label="Resize note"
           style={{ cursor: 'nwse-resize', color: C.textLight, fontSize: 10, userSelect: 'none' }}
-          title="Resize"
         >⠿</div>
       </div>
     </div>

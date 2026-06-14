@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { after } from 'next/server'
 import { getSupabaseAndUserFromRequest } from '@/lib/ai-key'
+import { indexDocumentById } from '@/lib/ai/rag/indexer'
 
 /**
  * GET  /api/library/:docId  — fetch a single server-side document
@@ -64,6 +66,15 @@ export async function POST(request: Request, { params }: Ctx) {
 
   if (error) return NextResponse.json({ error: 'Write failed' }, { status: 500 })
   if (!data)  return NextResponse.json({ error: 'Not found' },  { status: 404 })
+
+  // Re-embed the document for RAG after the response is sent.
+  after(async () => {
+    try {
+      await indexDocumentById(sb, user.id, docId)
+    } catch (err) {
+      console.warn('[library] indexing failed:', (err as Error)?.message)
+    }
+  })
 
   return NextResponse.json({ document: data })
 }

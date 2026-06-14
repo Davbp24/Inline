@@ -8,10 +8,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Settings2, UserPlus, MoreHorizontal } from 'lucide-react'
+import { Settings2, MoreHorizontal } from 'lucide-react'
 import ExportButton from './ExportButton'
 
 interface Crumb { label: string; href?: string }
@@ -86,11 +85,6 @@ export default function PageHeader({ crumbs, title, titleSlot, subtitle, action,
                   workspaceId={workspaceId}
                   className="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-slate-600 rounded-sm hover:bg-slate-50 transition-colors"
                 />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-slate-100" />
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-800">
-                <UserPlus className="w-3.5 h-3.5 text-slate-400" />
-                <span>Invite Members</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

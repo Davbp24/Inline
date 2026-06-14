@@ -1,62 +1,18 @@
 import { useState, useCallback, useEffect } from 'react'
 import { PANEL as C, FONT } from '../lib/extensionTheme'
+import { PanelShell, Toggle, SectionLabel } from './panelKit'
 
-/* ─── Icons ─── */
-const IPencil = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="#1C1E26">
-    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zM13.5 6.207 9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5z"/>
-    <path d="M6.032 13.575A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
-  </svg>
-)
-const IGear = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.421 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.421-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.116l.094-.318z"/>
-  </svg>
-)
-const IArrowRight = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
-  </svg>
-)
 const IExtLink = () => (
-  <svg width="12" height="12" viewBox="0 0 16 16" fill="#1C1E26">
-    <path d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-    <path d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
   </svg>
 )
 const IPause = () => (
-  <svg width="14" height="14" viewBox="0 0 16 16" fill="#78716c">
-    <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
-  </svg>
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.4" /><rect x="14" y="5" width="4" height="14" rx="1.4" /></svg>
 )
-
-/* ─── Toggle Switch ─── */
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      style={{
-        position: 'relative', width: 48, height: 28, borderRadius: C.radiusPill,
-        background: checked ? C.toggleOn : C.toggleOff,
-        border: 'none', cursor: 'pointer', padding: 0,
-        transition: 'background 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: 'none',
-      }}
-    >
-      <span style={{
-        position: 'absolute', top: 4, left: checked ? 24 : 4,
-        width: 20, height: 20, borderRadius: '50%', background: '#fff',
-        transition: 'left 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
-        display: 'block',
-        boxShadow: 'none',
-      }} />
-    </button>
-  )
-}
+const IChevron = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+)
 
 interface SettingsProps {
   onClose: () => void
@@ -119,167 +75,142 @@ export default function Settings({ onClose, onOpenDashboard }: SettingsProps) {
     } catch { /* sandboxed */ }
   }, [])
 
-  const togglePause = useCallback(() => {
-    setPaused(p => !p)
-  }, [])
-
   return (
-    <div style={{
-      width: 272, background: C.bg, border: `1px solid ${C.border}`,
-      borderRadius: C.radius, boxShadow: C.shadow, fontFamily: FONT,
-      overflow: 'hidden', userSelect: 'none', display: 'flex', flexDirection: 'column',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '10px 14px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <IPencil />
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>Inline</span>
+    <PanelShell
+      title="Settings"
+      subtitle="Global preferences"
+      width={372}
+      onClose={onClose}
+      footer={
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
+          <button type="button" onClick={onOpenDashboard} style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            border: `1px solid ${C.border}`, background: C.surfaceBubble, cursor: 'pointer',
+            fontSize: 12.5, fontWeight: 650, color: C.text, padding: '9px 14px',
+            borderRadius: C.radiusPill, fontFamily: FONT, boxShadow: C.shadowSoft,
+          }}>
+            All settings <IExtLink />
+          </button>
+          <button type="button" onClick={() => setPaused(p => !p)} aria-label={paused ? 'Resume Inline' : 'Pause Inline'} style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 40, height: 40, borderRadius: 13, border: `1px solid ${paused ? 'rgba(220,38,38,0.25)' : C.border}`,
+            background: paused ? '#FEF2F2' : C.surfaceBubble, cursor: 'pointer',
+            color: paused ? '#DC2626' : C.textMuted, boxShadow: C.shadowSoft,
+          }}>
+            <IPause />
+          </button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button type="button" onClick={() => {}} style={hdrBtn}><IGear /></button>
-          <button type="button" onClick={onClose} style={hdrBtn}><IArrowRight /></button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div style={{ padding: '18px 18px 20px', flex: 1 }}>
-        <p style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 500, color: C.text, letterSpacing: '-0.02em' }}>Global settings</p>
-
+      }
+    >
+      <div style={{ padding: '16px 18px 18px', fontFamily: FONT }}>
         {/* Accessibility */}
-        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 500, color: C.textMuted }}>Accessibility</p>
+        <SectionLabel>Accessibility</SectionLabel>
         <div style={{
-          border: `1px solid ${C.border}`, borderRadius: C.radiusMd, overflow: 'hidden',
-          marginBottom: 16, background: C.surfaceBubble, boxShadow: C.shadowSoft,
+          border: `1px solid ${C.border}`, borderRadius: 18, overflow: 'hidden',
+          marginBottom: 18, background: C.surfaceBubble, boxShadow: C.shadowCard,
         }}>
-          <SettingsRow label="Screen reader" right={<Toggle checked={screenReader} onChange={toggleScreenReader} />} />
-          <SettingsRow label="High contrast" right={<Toggle checked={highContrast} onChange={toggleHighContrast} />} border />
-          <SettingsRow label="Immersive reader" right={<Toggle checked={immersiveReader} onChange={v => {
+          <Row label="Screen reader" desc="Announce captured text" right={<Toggle checked={screenReader} onChange={toggleScreenReader} label="screen reader" />} />
+          <Row label="High contrast" desc="Boost page contrast" border right={<Toggle checked={highContrast} onChange={toggleHighContrast} label="high contrast" />} />
+          <Row label="Immersive reader" desc="Distraction-free reading" border right={<Toggle checked={immersiveReader} onChange={v => {
             setImmersiveReader(v)
             chrome.storage.local.set({ inlineFocusMode: String(v) })
             document.dispatchEvent(new CustomEvent('inline:focusMode', { detail: { enabled: v } }))
-          }} />} border />
+          }} label="immersive reader" />} />
         </div>
 
         {/* Language */}
+        <SectionLabel>Language</SectionLabel>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 16px', border: `1px solid ${C.border}`, borderRadius: C.radiusMd,
-          background: C.surfaceBubble, boxShadow: C.shadowSoft,
+          padding: '12px 14px', border: `1px solid ${C.border}`, borderRadius: 18,
+          background: C.surfaceBubble, boxShadow: C.shadowCard, marginBottom: 18,
         }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>Language</span>
-          <select
-            value={language}
-            onChange={e => setLanguage(e.target.value)}
-            style={{
-              padding: '8px 14px', border: `1px solid ${C.border}`, borderRadius: C.radiusPill,
-              fontSize: 12, color: C.text, background: C.inputBg, cursor: 'pointer',
-              outline: 'none', fontFamily: FONT, fontWeight: 500,
-            }}
-          >
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-            <option value="pt">Português</option>
-          </select>
+          <span style={{ fontSize: 13, fontWeight: 650, color: C.text }}>Interface language</span>
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+            <select
+              value={language}
+              onChange={e => setLanguage(e.target.value)}
+              aria-label="Interface language"
+              style={{
+                appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+                padding: '8px 30px 8px 14px', border: `1px solid ${C.border}`, borderRadius: C.radiusPill,
+                fontSize: 12, color: C.text, background: C.surfaceSunken, cursor: 'pointer',
+                outline: 'none', fontFamily: FONT, fontWeight: 600,
+              }}
+            >
+              <option value="en-US">English (US)</option>
+              <option value="en-GB">English (UK)</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+            </select>
+            <span style={{ position: 'absolute', right: 10, pointerEvents: 'none', color: C.textMuted, display: 'inline-flex' }}><IChevron /></span>
+          </div>
         </div>
 
         {/* Blocked sites */}
-        <p style={{ margin: '18px 0 10px', fontSize: 12, fontWeight: 500, color: C.textMuted }}>Blocked sites</p>
+        <SectionLabel>Blocked sites</SectionLabel>
         <div style={{
-          border: `1px solid ${C.border}`, borderRadius: C.radiusMd,
-          background: C.surfaceBubble, boxShadow: C.shadowSoft, padding: '12px 14px',
+          border: `1px solid ${C.border}`, borderRadius: 18,
+          background: C.surfaceBubble, boxShadow: C.shadowCard, padding: 14,
         }}>
           {blockedDomains.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 11 }}>
               {blockedDomains.map(d => (
                 <span key={d} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                  padding: '4px 10px', borderRadius: C.radiusPill,
-                  border: `1px solid ${C.border}`, background: C.inputBg,
-                  fontSize: 11, fontWeight: 500, color: C.text, fontFamily: FONT,
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  padding: '5px 6px 5px 11px', borderRadius: C.radiusPill,
+                  border: `1px solid ${C.border}`, background: C.surfaceSunken,
+                  fontSize: 11.5, fontWeight: 600, color: C.text, fontFamily: FONT,
                 }}>
                   {d}
-                  <button type="button" onClick={() => removeDomain(d)} style={{
-                    border: 'none', background: 'transparent', cursor: 'pointer',
-                    padding: 0, lineHeight: 1, fontSize: 13, color: C.textMuted, fontWeight: 500,
+                  <button type="button" onClick={() => removeDomain(d)} aria-label={`Unblock ${d}`} style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 16, height: 16, border: 'none', background: C.hoverBg, cursor: 'pointer',
+                    padding: 0, lineHeight: 1, fontSize: 12, color: C.textMuted, fontWeight: 700, borderRadius: '50%',
                   }}>×</button>
                 </span>
               ))}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <input
               value={newDomain}
               onChange={e => setNewDomain(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addDomain() }}
               placeholder="example.com"
+              aria-label="Domain to block"
               style={{
-                flex: 1, padding: '8px 14px', border: `1px solid ${C.border}`,
-                borderRadius: C.radiusPill, fontSize: 12, outline: 'none',
-                color: C.text, background: C.inputBg, fontFamily: FONT,
+                flex: 1, padding: '9px 14px', border: `1px solid ${C.border}`,
+                borderRadius: C.radiusPill, fontSize: 12.5, outline: 'none',
+                color: C.text, background: C.surfaceSunken, fontFamily: FONT,
               }}
             />
-            <button type="button" onClick={addDomain} style={{
-              padding: '8px 14px', borderRadius: C.radiusPill,
-              border: `1px solid ${C.border}`, background: C.bg,
-              fontSize: 12, fontWeight: 500, cursor: 'pointer',
-              color: C.text, fontFamily: FONT,
+            <button type="button" onClick={addDomain} aria-label="Block domain" style={{
+              padding: '9px 16px', borderRadius: C.radiusPill, border: 'none',
+              background: C.accent, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
+              fontFamily: FONT, boxShadow: '0 5px 14px -6px rgba(11,23,53,0.5)',
             }}>Add</button>
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 16px', borderTop: `1px solid ${C.divider}`,
-        background: C.surfaceMuted,
-      }}>
-        <button type="button" onClick={onOpenDashboard} style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          border: 'none', background: 'transparent', cursor: 'pointer',
-          fontSize: 13, fontWeight: 500, color: C.text, padding: '8px 10px',
-          borderRadius: C.radiusPill,
-          transition: 'background 0.15s',
-        }}>
-          All settings <IExtLink />
-        </button>
-        <button type="button" onClick={togglePause} style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 40, height: 40, borderRadius: C.radiusMd,
-          border: `1px solid ${C.border}`,
-          background: paused ? '#fef2f2' : C.surfaceBubble, cursor: 'pointer',
-          color: paused ? '#ef4444' : C.textMuted,
-          boxShadow: C.shadowSoft,
-        }}>
-          <IPause />
-        </button>
-      </div>
-    </div>
+    </PanelShell>
   )
 }
 
-function SettingsRow({ label, right, border }: { label: string; right: React.ReactNode; border?: boolean }) {
+function Row({ label, desc, right, border }: { label: string; desc?: string; right: React.ReactNode; border?: boolean }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '12px 16px',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+      padding: '13px 14px',
       ...(border ? { borderTop: `1px solid ${C.divider}` } : {}),
     }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{label}</span>
+      <span style={{ minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 13, fontWeight: 650, color: C.text, letterSpacing: '-0.01em' }}>{label}</span>
+        {desc && <span style={{ display: 'block', fontSize: 11, color: C.textLight }}>{desc}</span>}
+      </span>
       {right}
     </div>
   )
-}
-
-const hdrBtn: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 36, height: 36, border: 'none', borderRadius: C.radiusSm,
-  background: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0,
 }

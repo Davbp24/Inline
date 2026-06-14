@@ -1,34 +1,35 @@
 'use client'
 
-import { useState, useEffect, useTransition, useRef, Fragment, Suspense } from 'react'
+import { useState, useEffect, useTransition, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import PageHeader from '@/components/shell/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/actions/auth'
+import { createClient } from '@/lib/supabase/client'
+import { useConfirm, useToast } from '@/components/ui/notifications'
 import {
   DEFAULT_INLINE_VOICE_ID,
   INLINE_VOICE_PRESETS,
   normalizeInlineVoiceId,
 } from '@/lib/inlineVoicePresets'
 import {
-  Check, Eye, EyeOff,
+  Check, Mail,
   Play, Loader2, Plus, X, Globe, Shield,
-  GripVertical, ArrowRight, AlertTriangle, LogOut,
+  AlertTriangle, LogOut,
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Types & navigation (same shell pattern as workspace settings)
 // ---------------------------------------------------------------------------
-type Tab = 'general' | 'security' | 'notifications' | 'appearance' | 'integrations' | 'ai-voice' | 'extension' | 'danger'
+type Tab = 'general' | 'security' | 'notifications' | 'appearance' | 'ai-voice' | 'extension' | 'danger'
 
 const PROFILE_TABS: { id: Tab; label: string; danger?: boolean }[] = [
   { id: 'general', label: 'General' },
   { id: 'security', label: 'Security' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'appearance', label: 'Themes' },
-  { id: 'integrations', label: 'Apps & integrations' },
   { id: 'ai-voice', label: 'AI & Voice' },
   { id: 'extension', label: 'Extension' },
   { id: 'danger', label: 'Delete account', danger: true },
@@ -86,20 +87,6 @@ function ToggleRow({ label, description, checked, onChange }: { label: string; d
   )
 }
 
-function MaskedInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  const [show, setShow] = useState(false)
-  return (
-    <div className="relative">
-      <Input type={show ? 'text' : 'password'} value={value} onChange={e => onChange(e.target.value)}
-        placeholder={placeholder} className="pr-9 font-mono text-sm" />
-      <button type="button" onClick={() => setShow(p => !p)}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer">
-        {show ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-      </button>
-    </div>
-  )
-}
-
 function SaveBadge({ saved }: { saved: boolean }) {
   return saved ? (
     <span className="inline-flex items-center gap-1 text-xs text-accent font-medium">
@@ -114,26 +101,31 @@ function SaveBadge({ saved }: { saved: boolean }) {
 const PROFILE_ACCENT = '#6C91C2'
 
 function GeneralTab() {
-  const [name, setName] = useState('John Doe')
-  const [email, setEmail] = useState('john@example.com')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [saved, setSaved] = useState(false)
   const [pending, start] = useTransition()
   const fileRef = useRef<HTMLInputElement>(null)
   const [avatar, setAvatar] = useState<string | null>(null)
 
   useEffect(() => {
-    setName(localStorage.getItem('inline_profile_name') || 'John Doe')
-    setEmail(localStorage.getItem('inline_profile_email') || 'john@example.com')
-    const av = localStorage.getItem('inline_profile_avatar')
-    if (av) setAvatar(av)
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
+    const supabase = createClient()
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      setName(user.user_metadata?.full_name || user.user_metadata?.name || '')
+      setEmail(user.email ?? '')
+      setAvatar(user.user_metadata?.avatar_url ?? null)
+    })
   }, [])
 
   function handleSave() {
     start(async () => {
-      localStorage.setItem('inline_profile_name', name)
-      localStorage.setItem('inline_profile_email', email)
-      if (avatar) localStorage.setItem('inline_profile_avatar', avatar)
-      await new Promise(r => setTimeout(r, 400))
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
+      const supabase = createClient()
+      await supabase.auth.updateUser({
+        data: { full_name: name, avatar_url: avatar },
+      })
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     })
@@ -147,9 +139,11 @@ function GeneralTab() {
     reader.readAsDataURL(file)
   }
 
+  const initial = (name || email || 'U').charAt(0).toUpperCase()
+
   return (
     <div className="space-y-8">
-      <SectionCard title="Profile Identity" description="Customize your name, icon, and email.">
+      <SectionCard title="Profile Identity" description="Customize your name and icon.">
         <Row label="Icon / Logo">
           <div className="flex items-center gap-4">
             <div
@@ -159,7 +153,7 @@ function GeneralTab() {
             >
               {avatar
                 ? <img src={avatar} alt="avatar" className="h-full w-full object-cover" />
-                : name.charAt(0).toUpperCase()}
+                : initial}
             </div>
             <div>
               <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => fileRef.current?.click()}>
@@ -171,12 +165,15 @@ function GeneralTab() {
           </div>
         </Row>
 
-        <Row label="Name" hint="How you appear to teammates.">
+        <Row label="Name" hint="How your name appears across Inline.">
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
         </Row>
 
-        <Row label="Email" hint="Your login email address.">
-          <Input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@company.com" />
+        <Row label="Email" hint="Your login email address. Managed by your auth provider.">
+          <div className="flex items-center gap-2 pt-1.5">
+            <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">{email || 'Not set'}</span>
+          </div>
         </Row>
 
         <div className="flex items-center justify-between pt-1">
@@ -192,33 +189,12 @@ function GeneralTab() {
 }
 
 // ---------------------------------------------------------------------------
-// Security (connected accounts, password, 2FA, session)
+// Security (password + session)
 // ---------------------------------------------------------------------------
 function SecurityTab() {
-  const providers = [{ name: 'Google', icon: '🔵', connected: false }, { name: 'Microsoft', icon: '🟦', connected: true }] as const
-
   return (
     <div className="space-y-8">
-      <SectionCard title="Connected accounts" description="OAuth providers for single sign-on.">
-        <div className="space-y-0">
-          {providers.map((a, i) => (
-            <div key={a.name}>
-              {i > 0 && <div className="h-px bg-border" />}
-              <div className="flex items-center justify-between py-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">{a.icon}</span>
-                  <span className="font-medium text-foreground">{a.name}</span>
-                </div>
-                <Button variant={a.connected ? 'outline' : 'default'} size="sm" className="cursor-pointer">
-                  {a.connected ? 'Disconnect' : 'Connect'}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Password & 2FA" description="Protect your account with a strong password and optional two-factor authentication.">
+      <SectionCard title="Password" description="Update your password to keep your account secure.">
         <Row label="Password">
           <a
             href="/auth/reset-password"
@@ -226,9 +202,6 @@ function SecurityTab() {
           >
             Change password
           </a>
-        </Row>
-        <Row label="Two-factor auth" hint="Adds an extra security layer.">
-          <Button variant="outline" size="sm" className="cursor-pointer">Enable 2FA</Button>
         </Row>
       </SectionCard>
 
@@ -255,25 +228,24 @@ function SecurityTab() {
 // ---------------------------------------------------------------------------
 function AccountDangerTab() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [confirmText, setConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
-
-  useEffect(() => {
-    setEmail(localStorage.getItem('inline_profile_email') || '')
-  }, [])
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function handleDelete() {
-    if (!email || confirmText !== email) return
+    if (confirmText !== 'DELETE') return
     setDeleting(true)
+    setDeleteError(null)
     try {
-      localStorage.removeItem('inline_profile_name')
-      localStorage.removeItem('inline_profile_email')
-      localStorage.removeItem('inline_profile_avatar')
-      await new Promise(r => setTimeout(r, 600))
+      const res = await fetch('/api/account/delete', { method: 'POST' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(body?.error ?? 'Failed to delete account.')
+      }
       router.push('/')
-    } catch {
+    } catch (err) {
+      setDeleteError((err as Error).message)
       setDeleting(false)
     }
   }
@@ -283,18 +255,8 @@ function AccountDangerTab() {
       <SectionCard title="Danger Zone" description="These actions are permanent and cannot be undone.">
         <div className="flex items-center justify-between py-1">
           <div>
-            <p className="text-sm font-medium">Deactivate account</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Hide your profile and pause activity until you sign back in.</p>
-          </div>
-          <Button size="sm" variant="outline" className="cursor-pointer border-amber-300 text-amber-600 hover:bg-amber-50">
-            Deactivate
-          </Button>
-        </div>
-        <div className="h-px bg-border" />
-        <div className="flex items-center justify-between py-1">
-          <div>
             <p className="text-sm font-medium text-destructive">Delete account</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Permanently removes your profile and local preferences from this browser.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Permanently deletes your account and all personal data.</p>
           </div>
           <Button size="sm" variant="destructive" className="cursor-pointer" onClick={() => setShowDeleteModal(true)}>
             Delete
@@ -316,23 +278,29 @@ function AccountDangerTab() {
               <div>
                 <h3 className="text-sm font-semibold">Delete your account?</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  This action is irreversible for data stored locally in this browser.
+                  This action is irreversible. All workspaces you own and all personal data will be deleted.
                 </p>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <p className="text-xs text-muted-foreground">
-                Type <strong className="font-mono text-foreground">{email || 'your email'}</strong> to confirm:
+                Type <strong className="font-mono text-foreground">DELETE</strong> to confirm:
               </p>
               <Input
                 value={confirmText}
                 onChange={e => setConfirmText(e.target.value)}
-                placeholder={email || 'email@example.com'}
+                placeholder="DELETE"
                 className="font-mono text-sm"
                 autoFocus
               />
             </div>
+
+            {deleteError && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive" role="alert">
+                {deleteError}
+              </p>
+            )}
 
             <div className="flex gap-2 pt-1">
               <Button
@@ -350,7 +318,7 @@ function AccountDangerTab() {
                 variant="destructive"
                 size="sm"
                 className="flex-1 cursor-pointer"
-                disabled={!email || confirmText !== email || deleting}
+                disabled={confirmText !== 'DELETE' || deleting}
                 onClick={handleDelete}
               >
                 {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Delete account'}
@@ -453,42 +421,17 @@ function AppearanceTab() {
 // Notifications
 // ---------------------------------------------------------------------------
 function NotificationsTab() {
-  const [prefs, setPrefs] = useState({ product: true, weekly: false, push: true })
-
-  useEffect(() => {
-    setPrefs({
-      product: localStorage.getItem('inline_notif_product') !== 'false',
-      weekly:  localStorage.getItem('inline_notif_weekly') === 'true',
-      push:    localStorage.getItem('inline_notif_push') !== 'false',
-    })
-  }, [])
-
-  function flip(k: keyof typeof prefs) {
-    const next = { ...prefs, [k]: !prefs[k] }
-    setPrefs(next)
-    localStorage.setItem(`inline_notif_${k}`, String(next[k]))
-  }
-
-  const rows = [
-    { key: 'product' as const, label: 'Product updates',     desc: 'New features and improvements.' },
-    { key: 'weekly' as const,  label: 'Weekly digest',       desc: 'Summary of workspace activity.' },
-    { key: 'push' as const,    label: 'Browser notifications',desc: 'Toasts for captures and invites.' },
-  ]
-
   return (
     <div className="space-y-8">
-      <SectionCard title="Notifications" description="Choose how Inline communicates with you.">
-        {rows.map((r, i) => (
-          <Fragment key={r.key}>
-            {i > 0 && <div className="h-px bg-border" />}
-            <ToggleRow
-              label={r.label}
-              description={r.desc}
-              checked={prefs[r.key]}
-              onChange={() => flip(r.key)}
-            />
-          </Fragment>
-        ))}
+      <SectionCard
+        title="Notifications"
+        description="Email notifications aren't available yet."
+      >
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Inline doesn&apos;t send emails today. When notifications ship, you&apos;ll be
+          able to opt into product updates, weekly digests, and security alerts
+          from this page.
+        </p>
       </SectionCard>
     </div>
   )
@@ -498,7 +441,6 @@ function NotificationsTab() {
 // AI & Voice
 // ---------------------------------------------------------------------------
 function syncVoiceToChromeExtension(payload: {
-  elevenLabsKey: string
   voiceId: string
   stability: string
   similarity: string
@@ -519,11 +461,9 @@ function syncVoiceToChromeExtension(payload: {
 }
 
 function AIVoiceTab() {
-  const [openaiKey, setOpenaiKey] = useState('')
-  const [elevenKey, setElevenKey] = useState('')
   const [voiceId,   setVoiceId]   = useState(DEFAULT_INLINE_VOICE_ID)
   const [saved,     setSaved]     = useState(false)
-  const [pending,   start]        = useTransition()
+  const [, start]                 = useTransition()
   const [testState, setTest]      = useState<'idle' | 'playing'>('idle')
   const [autocomp,  setAutocomp]  = useState(true)
   const [voiceChat, setVoiceChat] = useState(false)
@@ -532,8 +472,10 @@ function AIVoiceTab() {
   const [similarity, setSimilarity] = useState(0.75)
 
   useEffect(() => {
-    setOpenaiKey(localStorage.getItem('inline_openai_key') || '')
-    setElevenKey(localStorage.getItem('inline_elevenlabs_key') || '')
+    // Legacy cleanup: API keys are server-managed now and must never live in
+    // browser storage.
+    localStorage.removeItem('inline_openai_key')
+    localStorage.removeItem('inline_elevenlabs_key')
     const rawVoice = localStorage.getItem('inline_voice_id')
     const normVoice = normalizeInlineVoiceId(rawVoice)
     setVoiceId(normVoice)
@@ -549,8 +491,6 @@ function AIVoiceTab() {
     start(async () => {
       const vid = normalizeInlineVoiceId(voiceId)
       setVoiceId(vid)
-      localStorage.setItem('inline_openai_key', openaiKey)
-      localStorage.setItem('inline_elevenlabs_key', elevenKey)
       localStorage.setItem('inline_voice_id', vid)
       localStorage.setItem('inline_autocomplete', String(autocomp))
       localStorage.setItem('inline_voice_chat', String(voiceChat))
@@ -560,8 +500,6 @@ function AIVoiceTab() {
       const _chrome = (typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).chrome : undefined) as (undefined | { storage?: { local?: { set: (v: Record<string, unknown>) => void } } })
       if (_chrome?.storage?.local) {
         _chrome.storage.local.set({
-          inlineOpenAIKey: openaiKey,
-          inlineElevenLabsKey: elevenKey,
           inlineVoiceId: vid,
           inlineScreenReader: String(screenReader),
           inlineVoiceStability: String(stability),
@@ -569,7 +507,6 @@ function AIVoiceTab() {
         })
       }
       syncVoiceToChromeExtension({
-        elevenLabsKey: elevenKey,
         voiceId: vid,
         stability: String(stability),
         similarity: String(similarity),
@@ -580,44 +517,67 @@ function AIVoiceTab() {
     })
   }
 
+  /** Play a preview of the selected voice.
+   *
+   * Resolution order — identical philosophy to the extension's
+   * `speakWithElevenLabs`:
+   *
+   *   1. POST `/api/tts` — the authenticated server proxy holds the only
+   *      ElevenLabs key (server env). No keys ever pass through the browser.
+   *   2. `window.speechSynthesis` — always-available browser voice, no
+   *      keys, no network. Guarantees the "Test voice" button never goes
+   *      silent.
+   */
   async function testVoice() {
     setTest('playing')
-    try {
-      if (elevenKey) {
-        const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'xi-api-key': elevenKey },
-          body: JSON.stringify({ text: 'Hello, this is your Inline voice assistant.', model_id: 'eleven_multilingual_v2', voice_settings: { stability, similarity_boost: similarity } }),
-        })
-        if (resp.ok) {
-          const blob = await resp.blob()
-          const url = URL.createObjectURL(blob)
-          const audio = new Audio(url)
-          audio.play()
-          audio.onended = () => { URL.revokeObjectURL(url); setTest('idle') }
-        } else setTest('idle')
-        return
-      }
+    const sampleText = 'Hello, this is your Inline voice assistant.'
 
+    try {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: 'Hello, this is your Inline voice assistant.',
+          text: sampleText,
           voiceId,
           stability,
           similarityBoost: similarity,
         }),
       })
+
       if (res.ok) {
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const audio = new Audio(url)
-        audio.play()
         audio.onended = () => { URL.revokeObjectURL(url); setTest('idle') }
-      } else setTest('idle')
-    } catch {
+        audio.onerror = () => { URL.revokeObjectURL(url); setTest('idle') }
+        void audio.play()
+        return
+      }
+
+      // Proxy failed (ElevenLabs rejected the key, server unreachable,
+      // etc.). Fall back to the browser's built-in voice so the user
+      // still hears a sample.
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        const utter = new SpeechSynthesisUtterance(sampleText)
+        utter.onend = () => setTest('idle')
+        utter.onerror = () => setTest('idle')
+        window.speechSynthesis.cancel()
+        window.speechSynthesis.speak(utter)
+        return
+      }
+
       setTest('idle')
+    } catch {
+      // Network or parse error — try browser synth as a last resort.
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        const utter = new SpeechSynthesisUtterance(sampleText)
+        utter.onend = () => setTest('idle')
+        utter.onerror = () => setTest('idle')
+        window.speechSynthesis.cancel()
+        window.speechSynthesis.speak(utter)
+      } else {
+        setTest('idle')
+      }
     }
   }
 
@@ -702,10 +662,30 @@ function AIVoiceTab() {
 // ---------------------------------------------------------------------------
 // Extension Config
 // ---------------------------------------------------------------------------
+function syncBlocklistToChromeExtension(blockedDomains: string[]): void {
+  const extId = process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID
+  if (!extId || typeof window === 'undefined') return
+  const w = window as unknown as {
+    chrome?: { runtime?: { sendMessage: (extensionId: string, message: unknown, responseCallback?: () => void) => void } }
+  }
+  try {
+    w.chrome?.runtime?.sendMessage(extId, {
+      type: 'INLINE_SYNC_BLOCKLIST',
+      payload: { blockedDomains },
+    }, () => { /* ignore lastError */ })
+  } catch {
+    /* not Chrome or extension unavailable */
+  }
+}
+
 function ExtensionTab() {
   const [blocklist, setBlocklist] = useState<string[]>([])
   const [newDomain, setNewDomain] = useState('')
   const [saved, setSaved] = useState(false)
+  const [cleared, setCleared] = useState(false)
+  const confirm = useConfirm()
+  const toast = useToast()
+  const extensionConfigured = Boolean(process.env.NEXT_PUBLIC_CHROME_EXTENSION_ID)
 
   useEffect(() => {
     try {
@@ -716,22 +696,47 @@ function ExtensionTab() {
 
   function persist(list: string[]) {
     localStorage.setItem('inline_blocklist', JSON.stringify(list))
-    const _chrome = (typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>).chrome : undefined) as (undefined | { storage?: { local?: { set: (v: Record<string, unknown>) => void } } })
-    if (_chrome?.storage?.local) _chrome.storage.local.set({ inlineBlocklist: list })
+    syncBlocklistToChromeExtension(list)
     setSaved(true)
     setTimeout(() => setSaved(false), 1800)
   }
 
   function add() {
-    const d = newDomain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+    const d = newDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
     if (!d || blocklist.includes(d)) return
     const next = [...blocklist, d]
     setBlocklist(next); setNewDomain(''); persist(next)
   }
 
+  async function clearLocalData() {
+    const ok = await confirm({
+      title: 'Clear local Inline preferences?',
+      description: 'This clears theme, voice, blocklist, and pins stored in this browser. Your captures on the server are not affected.',
+      confirmLabel: 'Clear preferences',
+      destructive: true,
+    })
+    if (!ok) return
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && (k.startsWith('inline_') || k.startsWith('inline-') || k.startsWith('wf-'))) keys.push(k)
+    }
+    keys.forEach(k => localStorage.removeItem(k))
+    setBlocklist([])
+    setCleared(true)
+    toast.success('Local preferences cleared')
+    setTimeout(() => setCleared(false), 2500)
+  }
+
   return (
     <div className="space-y-8">
-      <SectionCard title="Domain blocklist" description="Inline disables itself on these domains." action={<SaveBadge saved={saved} />}>
+      <SectionCard
+        title="Domain blocklist"
+        description={extensionConfigured
+          ? 'Inline disables itself on these domains. Synced to the extension automatically.'
+          : 'Inline disables itself on these domains. Set NEXT_PUBLIC_CHROME_EXTENSION_ID to sync this list to the extension, or manage it from the extension panel directly.'}
+        action={<SaveBadge saved={saved} />}
+      >
         <Row label="Add domain">
           <div className="flex gap-2">
             <Input value={newDomain} onChange={e => setNewDomain(e.target.value)}
@@ -748,7 +753,7 @@ function ExtensionTab() {
               <span className="font-mono">{d}</span>
             </div>
             <button type="button" onClick={() => { const n = blocklist.filter(b => b !== d); setBlocklist(n); persist(n) }}
-              className="text-muted-foreground hover:text-destructive cursor-pointer">
+              className="text-muted-foreground hover:text-destructive cursor-pointer" aria-label={`Remove ${d}`}>
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -767,64 +772,16 @@ function ExtensionTab() {
             </div>
           ))}
         </div>
-        <div className="pt-2">
-          <Button variant="outline" size="sm" className="cursor-pointer gap-2 text-destructive border-destructive/30 hover:bg-destructive/5">
+        <div className="pt-2 flex items-center gap-3">
+          <Button
+            variant="outline" size="sm"
+            className="cursor-pointer gap-2 text-destructive border-destructive/30 hover:bg-destructive/5"
+            onClick={clearLocalData}
+          >
             <Shield className="w-3.5 h-3.5" />Clear all local data
           </Button>
+          {cleared && <span className="text-xs font-medium text-accent">Local preferences cleared</span>}
         </div>
-      </SectionCard>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Integrations
-// ---------------------------------------------------------------------------
-function IntegrationsTab() {
-  const [rows, setRows] = useState([
-    { id: 'linkedin', name: 'LinkedIn',  connected: false, abbr: 'LI' },
-    { id: 'github',   name: 'GitHub',    connected: true,  abbr: 'GH' },
-    { id: 'slack',    name: 'Slack',     connected: false, abbr: 'SL' },
-    { id: 'notion',   name: 'Notion',    connected: false, abbr: 'NO' },
-  ])
-
-  return (
-    <div className="space-y-8">
-      <SectionCard title="Apps & integrations" description="Connect tools you already use.">
-        <ul className="space-y-2">
-          {rows.map(r => (
-            <li key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-3 py-3">
-              <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground/50" />
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground">
-                {r.abbr}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{r.name}</p>
-                <p className="text-xs text-muted-foreground">{r.connected ? 'Connected' : 'Not connected'}</p>
-              </div>
-              {r.connected ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer border-destructive/30 text-destructive hover:bg-destructive/5"
-                  onClick={() => setRows(p => p.map(x => x.id === r.id ? { ...x, connected: false } : x))}
-                >
-                  Unbind <X className="ml-1 h-3 w-3" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="cursor-pointer gap-1"
-                  onClick={() => setRows(p => p.map(x => x.id === r.id ? { ...x, connected: true } : x))}
-                >
-                  Connect <ArrowRight className="h-3 w-3" />
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
       </SectionCard>
     </div>
   )
@@ -835,13 +792,12 @@ function IntegrationsTab() {
 // ---------------------------------------------------------------------------
 const TAB_DESCRIPTIONS: Partial<Record<Tab, string>> = {
   general: 'Your name, icon, and email.',
-  security: 'Connected accounts, password, and session.',
+  security: 'Password and session.',
   notifications: 'Choose how Inline communicates with you.',
   appearance: 'Theme and text size for the dashboard.',
-  integrations: 'Connect tools you already use.',
   'ai-voice': 'Voice selection, tuning, and copilot options.',
   extension: 'Blocklist and extension preferences.',
-  danger: 'Permanently delete your account and local data.',
+  danger: 'Permanently delete your account and data.',
 }
 
 function PersonalSettingsPageInner() {
@@ -860,7 +816,6 @@ function PersonalSettingsPageInner() {
     notifications: <NotificationsTab />,
     'ai-voice':    <AIVoiceTab />,
     extension:     <ExtensionTab />,
-    integrations:  <IntegrationsTab />,
     danger:        <AccountDangerTab />,
   }
 

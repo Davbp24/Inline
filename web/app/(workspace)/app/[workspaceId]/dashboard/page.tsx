@@ -3,8 +3,9 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import {
   BarChart2, BookMarked, Globe, BrainCircuit, Flame,
-  Plus, Sparkles, ChevronRight,
+  Sparkles, ChevronRight,
 } from 'lucide-react'
+import NewDocumentButton from '@/components/dashboard/NewDocumentButton'
 import KpiCard from '@/components/dashboard/KpiCard'
 import CaptureChart from '@/components/dashboard/CaptureChart'
 import TopDomainsChart from '@/components/dashboard/TopDomainsChart'
@@ -123,13 +124,7 @@ export default async function WorkspaceDashboardPage({
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-foreground">Library Documents</h2>
-            <Link
-              href={`/app/${workspaceId}/folder/new`}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              New
-            </Link>
+            <NewDocumentButton workspaceId={workspaceId} />
           </div>
           <Suspense fallback={
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

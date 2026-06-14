@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PANEL as C, FONT } from '../lib/extensionTheme'
+import { PANEL as C, SIDEBAR as S, FONT } from '../lib/extensionTheme'
 
 interface Notebook {
   id: string
@@ -97,9 +97,10 @@ export default function NotebookSidebar({ onClose }: NotebookSidebarProps) {
   return (
     <div style={{
       position: 'fixed', left: 0, top: 0, bottom: 0,
-      width: 280, background: C.bg,
-      borderRadius: '0 20px 20px 0',
-      boxShadow: '4px 0 20px -8px rgba(32,28,24,0.12)',
+      width: 280, background: S.bg,
+      borderRight: `1px solid ${S.border}`,
+      borderRadius: '0 18px 18px 0',
+      boxShadow: '6px 0 28px -10px rgba(32,28,24,0.16)',
       fontFamily: FONT, zIndex: 2147483647,
       display: 'flex', flexDirection: 'column',
       overflow: 'hidden', pointerEvents: 'auto',
@@ -107,28 +108,38 @@ export default function NotebookSidebar({ onClose }: NotebookSidebarProps) {
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 16px 12px', background: C.headerBg,
-        borderBottom: `1px solid ${C.divider}`,
+        padding: '16px 14px 12px', background: 'transparent',
       }}>
-        <span style={{ fontSize: 15, fontWeight: 500, color: C.accent, letterSpacing: '-0.02em' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 15, fontWeight: 600, color: S.text, letterSpacing: '-0.01em' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 7, background: '#0B1735' }}>
+            <span style={{ display: 'block', width: 3, height: 11, borderRadius: 2, background: '#fff', transform: 'rotate(-12deg)' }} />
+          </span>
           Notebooks
         </span>
-        <button type="button" onClick={onClose} style={{
+        <button type="button" onClick={onClose} aria-label="Close" style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 30, height: 30, border: 'none', borderRadius: C.radiusSm,
-          background: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0,
-        }}><IClose /></button>
+          background: 'transparent', cursor: 'pointer', padding: 0,
+          transition: 'background 0.13s',
+        }}
+          onMouseEnter={e => (e.currentTarget.style.background = S.hover)}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        ><IClose /></button>
       </div>
 
       {/* Create button */}
-      <div style={{ padding: '12px 14px 4px' }}>
+      <div style={{ padding: '4px 12px 8px' }}>
         <button type="button" onClick={createNotebook} style={{
           display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-          padding: '10px 14px', border: `1px solid ${C.border}`,
-          borderRadius: C.radiusMd, background: C.surfaceBubble,
-          boxShadow: C.shadowSoft, cursor: 'pointer',
-          fontSize: 13, fontWeight: 500, color: C.text, fontFamily: FONT,
-        }}>
+          padding: '10px 14px', border: `1px solid ${S.border}`,
+          borderRadius: C.radiusMd, background: '#FFFFFF',
+          boxShadow: '0 1px 2px rgba(28,24,18,0.05)', cursor: 'pointer',
+          fontSize: 13, fontWeight: 500, color: S.text, fontFamily: FONT,
+          transition: 'background 0.13s',
+        }}
+          onMouseEnter={e => (e.currentTarget.style.background = '#FBFAF7')}
+          onMouseLeave={e => (e.currentTarget.style.background = '#FFFFFF')}
+        >
           <IPlus /> Create notebook
         </button>
       </div>
@@ -136,27 +147,27 @@ export default function NotebookSidebar({ onClose }: NotebookSidebarProps) {
       {/* List */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 14px 16px' }}>
         {domains.length === 0 && (
-          <p style={{ fontSize: 12, color: C.textLight, textAlign: 'center', marginTop: 32 }}>
-            No notebooks yet. Create one to get started!
+          <p style={{ fontSize: 12, color: S.textLight, textAlign: 'center', marginTop: 32, lineHeight: 1.6, padding: '0 12px' }}>
+            No notebooks yet.<br />Create one to get started.
           </p>
         )}
 
         {domains.map(domain => (
-          <div key={domain} style={{ marginBottom: 12 }}>
+          <div key={domain} style={{ marginBottom: 10 }}>
             <button
               type="button"
               onClick={() => setSelectedDomain(d => d === domain ? null : domain)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6, width: '100%',
-                padding: '6px 0', border: 'none', background: 'transparent',
-                cursor: 'pointer', fontSize: 11, fontWeight: 500, color: C.textMuted,
-                textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: FONT,
+                padding: '6px 6px', border: 'none', background: 'transparent',
+                cursor: 'pointer', fontSize: 11, fontWeight: 600, color: S.textMuted,
+                textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: FONT,
               }}
             >
               {domain}
               <span style={{
-                fontSize: 10, fontWeight: 500, color: C.textLight,
-                background: C.surfaceMuted, borderRadius: C.radiusPill,
+                fontSize: 10, fontWeight: 600, color: S.textMuted,
+                background: S.bgSubtle, borderRadius: C.radiusPill,
                 padding: '1px 7px',
               }}>
                 {grouped[domain].length}
@@ -167,11 +178,14 @@ export default function NotebookSidebar({ onClose }: NotebookSidebarProps) {
               grouped[domain].map(nb => (
                 <div key={nb.id} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 10px', marginBottom: 2,
+                  padding: '8px 8px', marginBottom: 2,
                   borderRadius: C.radiusSm, cursor: 'pointer',
                   transition: 'background 0.15s',
-                  background: selectedDomain === domain ? C.hoverBg : 'transparent',
-                }}>
+                  background: selectedDomain === domain ? S.active : 'transparent',
+                }}
+                  onMouseEnter={e => { if (selectedDomain !== domain) e.currentTarget.style.background = S.hover }}
+                  onMouseLeave={e => { if (selectedDomain !== domain) e.currentTarget.style.background = 'transparent' }}
+                >
                   <span style={{
                     width: 32, height: 32, borderRadius: 10,
                     background: nb.color + '22',

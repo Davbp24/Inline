@@ -2,24 +2,27 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /**
- * Nav links point at real marketing-page anchors. No fake product sub-menus —
- * the dropdown chevron was removed to match the simplified product surface.
+ * Fixed capsule navigation. Every link resolves to a real section id on the
+ * landing page or a real route. "Add to Chrome" routes to the install guide
+ * (no Chrome Web Store listing yet).
  */
 const NAV_LINKS = [
-  { label: 'Features',  href: '#features'  },
-  { label: 'Workspace', href: '#workspace' },
-  { label: 'Ask',       href: '#ask'       },
-  { label: 'Extension', href: '#install'   },
-  { label: 'Pricing',   href: '#pricing'   },
+  { label: 'Product',   href: '/#product'   },
+  { label: 'Extension', href: '/#extension' },
+  { label: 'Workspace', href: '/#workspace' },
+  { label: 'AI & RAG',  href: '/#rag'       },
+  { label: 'Security',  href: '/#security'  },
+  { label: 'FAQ',       href: '/#faq'       },
 ]
 
 /** Inline word-mark. Adapts to the current nav surface (dark hero vs cream scroll). */
 function InlineLogo({ onDark, className }: { onDark: boolean; className?: string }) {
   return (
-    <Link href="/" className={cn('flex items-center gap-2', className)}>
+    <Link href="/" className={cn('flex items-center gap-2', className)} aria-label="Inline home">
       <div
         className={cn(
           'flex size-8 shrink-0 items-center justify-center rounded-lg',
@@ -51,15 +54,12 @@ function InlineLogo({ onDark, className }: { onDark: boolean; className?: string
 
 export default function MarketingNav() {
   // `pastHero` is true once the navy hero section has scrolled fully behind the
-  // fixed nav. Until then we sit on the navy and need the light palette —
-  // flipping earlier makes the nav look washed out halfway down the hero.
+  // fixed nav. Until then we sit on the navy and need the light palette.
   const [pastHero, setPastHero] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    // Measured from a CSS custom property so we don't have to hardcode the nav
-    // height, but falls back to a sensible default.
     const NAV_HEIGHT = 72
-
     const hero = document.querySelector<HTMLElement>('[data-hero]')
 
     const update = () => {
@@ -68,7 +68,6 @@ export default function MarketingNav() {
         return
       }
       const rect = hero.getBoundingClientRect()
-      // The hero is "past" once its bottom edge is above the nav's bottom edge.
       setPastHero(rect.bottom <= NAV_HEIGHT)
     }
 
@@ -81,33 +80,40 @@ export default function MarketingNav() {
     }
   }, [])
 
-  // While we're still on the navy hero the nav is transparent and needs light
-  // text; once the user has actually scrolled past the hero we flip to the
-  // cream-glass dark palette.
-  const onDark = !pastHero
+  // Close the mobile menu on Escape.
+  useEffect(() => {
+    if (!mobileOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [mobileOpen])
+
+  const onDark = !pastHero && !mobileOpen
 
   return (
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
-        pastHero
-          ? 'bg-[#FDFBF7]/90 backdrop-blur-md border-b border-stone-200/60'
+        pastHero || mobileOpen
+          ? 'bg-[#FDFBF7]/92 backdrop-blur-md border-b border-stone-200/60'
           : 'bg-[#0B1735]',
       )}
     >
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 lg:px-10 py-3.5">
         <InlineLogo onDark={onDark} />
 
-        <ul className="hidden md:flex items-center gap-1">
+        <ul className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map(link => (
             <li key={link.href}>
               <Link
                 href={link.href}
                 className={cn(
-                  'inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-full transition-colors',
+                  'inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
                   onDark
-                    ? 'text-stone-200 hover:text-white'
-                    : 'text-stone-600 hover:text-[#1C1E26]',
+                    ? 'text-stone-200 hover:text-white focus-visible:outline-white/70'
+                    : 'text-stone-600 hover:text-[#1C1E26] focus-visible:outline-[#4B83C4]',
                 )}
               >
                 {link.label}
@@ -116,33 +122,80 @@ export default function MarketingNav() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3">
-          {/* Sign in — bordered pill, previously the "Book a demo" slot */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/auth/login"
             className={cn(
-              'inline-flex items-center justify-center rounded-full border px-5 py-2 text-sm font-medium transition-colors',
+              'hidden sm:inline-flex items-center justify-center rounded-full border px-5 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
               onDark
-                ? 'border-white/30 bg-transparent text-white hover:border-white/60 hover:bg-white/10'
-                : 'border-stone-300 bg-transparent text-stone-800 hover:border-stone-400 hover:bg-white',
+                ? 'border-white/30 bg-transparent text-white hover:border-white/60 hover:bg-white/10 focus-visible:outline-white/70'
+                : 'border-stone-300 bg-transparent text-stone-800 hover:border-stone-400 hover:bg-white focus-visible:outline-[#4B83C4]',
             )}
           >
             Sign in
           </Link>
-          {/* Primary CTA — filled pill */}
           <Link
-            href="/app/dashboard"
+            href="/install"
             className={cn(
-              'inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition-colors',
+              'inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
               onDark
-                ? 'bg-white text-[#0B1735] hover:bg-stone-100'
-                : 'bg-[#1C1E26] text-white hover:bg-stone-800',
+                ? 'bg-white text-[#0B1735] hover:bg-stone-100 focus-visible:outline-white/70'
+                : 'bg-[#1C1E26] text-white hover:bg-stone-800 focus-visible:outline-[#4B83C4]',
             )}
           >
-            Open your workspace
+            Add to Chrome
           </Link>
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen(v => !v)}
+            aria-expanded={mobileOpen}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            className={cn(
+              'inline-flex lg:hidden h-9 w-9 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+              onDark
+                ? 'text-white hover:bg-white/10 focus-visible:outline-white/70'
+                : 'text-[#1C1E26] hover:bg-stone-100 focus-visible:outline-[#4B83C4]',
+            )}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </nav>
+
+      {mobileOpen && (
+        <div className="lg:hidden border-t border-stone-200/60 bg-[#FDFBF7] px-6 pb-6 pt-2">
+          <ul className="flex flex-col">
+            {NAV_LINKS.map(link => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-3 py-3 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 hover:text-[#1C1E26]"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex flex-col gap-2 border-t border-stone-200/60 pt-4">
+            <Link
+              href="/auth/login"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center justify-center rounded-full border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-800 transition-colors hover:bg-white"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/app/dashboard"
+              onClick={() => setMobileOpen(false)}
+              className="inline-flex items-center justify-center rounded-full bg-[#1C1E26] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+            >
+              Open workspace
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useTransition, Fragment } from 'react'
+import { useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import PageHeader from '@/components/shell/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -61,32 +61,6 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
         {hint && <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{hint}</p>}
       </div>
       <div>{children}</div>
-    </div>
-  )
-}
-
-function ToggleRow({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-      </div>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        className={cn(
-          'relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
-          checked ? 'bg-primary' : 'bg-muted-foreground/30',
-        )}
-      >
-        <span
-          className={cn(
-            'absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-background ring-1 ring-border/60 transition-transform duration-200',
-            checked && 'translate-x-4',
-          )}
-        />
-      </button>
     </div>
   )
 }
@@ -162,7 +136,7 @@ function GeneralTab() {
           </div>
         </Row>
 
-        <Row label="Name" hint="How you appear to teammates.">
+        <Row label="Name" hint="How your name appears across Inline.">
           <Input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your name" />
         </Row>
 
@@ -256,64 +230,49 @@ function SecurityTab() {
 }
 
 function NotificationsTab() {
-  const [notifs, setNotifs] = useState({ emailUpdates: true, productNews: false, securityAlerts: true })
-  const [saved, setSaved] = useState(false)
-
-  function toggle(k: keyof typeof notifs) {
-    const next = { ...notifs, [k]: !notifs[k] }
-    setNotifs(next)
-    localStorage.setItem('inline_account_notifs', JSON.stringify(next))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1800)
-  }
-
-  useEffect(() => {
-    try {
-      const s = JSON.parse(localStorage.getItem('inline_account_notifs') || '{}')
-      setNotifs(p => ({ ...p, ...s }))
-    } catch { /* ignore */ }
-  }, [])
-
-  const rows = [
-    { key: 'emailUpdates' as const, label: 'Product updates', description: 'New features and improvements.' },
-    { key: 'productNews' as const, label: 'Product news', description: 'Announcements and blog posts.' },
-    { key: 'securityAlerts' as const, label: 'Security alerts', description: 'Sign-in from new devices and password changes.' },
-  ]
-
   return (
     <div className="space-y-8">
-      <SectionCard title="Notifications" description="Choose how Inline communicates with you.">
-        {rows.map((r, i) => (
-          <Fragment key={r.key}>
-            {i > 0 && <div className="h-px bg-border" />}
-            <ToggleRow
-              label={r.label}
-              description={r.description}
-              checked={notifs[r.key]}
-              onChange={() => toggle(r.key)}
-            />
-          </Fragment>
-        ))}
-        <div className="flex justify-end">
-          <SaveBadge saved={saved} />
-        </div>
+      <SectionCard
+        title="Notifications"
+        description="Email notifications aren't available yet."
+      >
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Inline doesn&apos;t send emails today. When notifications ship, you&apos;ll be
+          able to opt into product updates and security alerts from this page.
+        </p>
       </SectionCard>
     </div>
   )
 }
 
 function AppearanceTab() {
-  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system')
+  // Reads and writes the same `inline-theme` key used by ThemeScript and the
+  // sidebar ThemeToggle, so the choice applies immediately and persists.
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+
+  useEffect(() => {
+    const stored = (localStorage.getItem('inline-theme') as 'light' | 'dark' | null) ?? 'light'
+    setTheme(stored)
+  }, [])
+
+  function applyTheme(t: 'light' | 'dark') {
+    setTheme(t)
+    localStorage.setItem('inline-theme', t)
+    if (t === 'dark') document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
+    window.dispatchEvent(new CustomEvent('inline-theme-changed', { detail: t }))
+  }
 
   return (
     <div className="space-y-8">
-      <SectionCard title="Theme" description="Select your preferred appearance.">
+      <SectionCard title="Theme" description="Select your preferred appearance. Applies immediately across the workspace.">
         <div className="flex gap-3">
-          {(['system', 'light', 'dark'] as const).map(t => (
+          {(['light', 'dark'] as const).map(t => (
             <button
               key={t}
               type="button"
-              onClick={() => setTheme(t)}
+              onClick={() => applyTheme(t)}
+              aria-pressed={theme === t}
               className={cn(
                 'flex-1 cursor-pointer rounded-xl border-2 py-3 text-sm font-medium capitalize transition-all',
                 theme === t
@@ -335,27 +294,28 @@ function DangerTab() {
   const [showModal, setShowModal] = useState(false)
   const [confirmText, setConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   async function handleDelete() {
     if (confirmText !== 'DELETE') return
     setDeleting(true)
-    await new Promise(r => setTimeout(r, 600))
-    router.push('/')
+    setDeleteError(null)
+    try {
+      const res = await fetch('/api/account/delete', { method: 'POST' })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(body?.error ?? 'Failed to delete account.')
+      }
+      router.push('/')
+    } catch (err) {
+      setDeleteError((err as Error).message)
+      setDeleting(false)
+    }
   }
 
   return (
     <div className="space-y-8">
       <SectionCard title="Danger Zone" description="These actions are permanent and cannot be undone.">
-        <div className="flex items-center justify-between py-1">
-          <div>
-            <p className="text-sm font-medium">Deactivate account</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Hide your profile and pause activity until you sign back in.</p>
-          </div>
-          <Button size="sm" variant="outline" className="cursor-pointer border-amber-300 text-amber-600 hover:bg-amber-50">
-            Deactivate
-          </Button>
-        </div>
-        <div className="h-px bg-border" />
         <div className="flex items-center justify-between py-1">
           <div>
             <p className="text-sm font-medium text-destructive">Delete account</p>
@@ -397,6 +357,11 @@ function DangerTab() {
                 autoFocus
               />
             </div>
+            {deleteError && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive" role="alert">
+                {deleteError}
+              </p>
+            )}
             <div className="flex gap-2 pt-1">
               <Button
                 variant="outline"

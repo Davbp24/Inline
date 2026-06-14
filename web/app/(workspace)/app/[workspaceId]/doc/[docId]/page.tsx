@@ -22,6 +22,7 @@ export default function DocPage() {
   const [saved,     setSaved]     = useState(false)
   const [loading,   setLoading]   = useState(true)
   const [menuOpen,  setMenuOpen]  = useState(false)
+  const [copied,    setCopied]    = useState(false)
   const [folderName, setFolderName] = useState('Folder')
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -87,10 +88,16 @@ export default function DocPage() {
         <button
           type="button"
           className="h-7 px-3 rounded-lg text-xs font-medium text-slate-500 border border-slate-200 hover:border-slate-300 hover:text-slate-900 transition-colors cursor-pointer flex items-center gap-1.5"
-          onClick={() => { void navigator.clipboard.writeText(window.location.href) }}
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(window.location.href)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 1800)
+            } catch { /* clipboard unavailable */ }
+          }}
         >
           <Share2 className="w-3 h-3" />
-          Share
+          {copied ? 'Copied' : 'Share'}
         </button>
         <div className="relative" ref={menuRef}>
           <button

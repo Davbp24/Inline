@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap'
 import ActivityDetailPanel from '@/components/analytics/ActivityDetailPanel'
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  ResponsiveContainer, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, AreaChart, Area,
 } from 'recharts'
