@@ -1,10 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils'
 
 const EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
-/** 4-point sparkle star — matches the one in the marketing Hero. */
+/** 4-point sparkle star used across auth and marketing backgrounds. */
 function Sparkle({
   size = 14,
   className = '',
@@ -36,16 +37,21 @@ function Sparkle({
 }
 
 /**
- * Full-bleed navy "solar system" art used on the illustration side of auth pages.
- * Matches the marketing Hero: deep navy background, pastel-blue dashed orbits,
- * satellite planets, constellation dots, a sweeping dashed flight path, and sparkles.
+ * Full-bleed navy "solar system" art used on auth pages and the marketing hero.
+ * Deep navy background, pastel-blue dashed orbits, satellite planets, constellation
+ * dots, a sweeping dashed flight path, and sparkles.
  *
- * Pass an optional `tagline` to show a small editorial caption at the bottom.
+ * Pass an optional `tagline` for the auth-panel caption. Set `background` for hero
+ * use (full-bleed, no caption, slightly reframed for landscape).
  */
 export default function SolarSystemArt({
   tagline = 'Capture anywhere. Find everything.',
+  background = false,
+  className = '',
 }: {
   tagline?: string
+  background?: boolean
+  className?: string
 }) {
   // Constellation dots — deterministic so there's no hydration drift.
   // viewBox is 700 x 900 (portrait) to fit the tall right column.
@@ -68,24 +74,33 @@ export default function SolarSystemArt({
     { x: 270, y: 480, r: 1.2, o: 0.25 },
   ] as const
 
+  const showTagline = !background && Boolean(tagline)
+
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#0B1735]">
-      {/* Subtle noise overlay for texture — same vibe as the original auth illustration. */}
+    <div className={`relative h-full w-full overflow-hidden bg-[#0B1735] ${className}`}>
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className={cn(
+          'absolute inset-0',
+          background &&
+            'scale-[1.42] translate-y-[14%] opacity-75 [mask-image:radial-gradient(ellipse_62%_52%_at_50%_38%,transparent_22%,black_78%)]',
+        )}
         aria-hidden
-        style={{
-          backgroundImage:
-            'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")',
-        }}
-      />
+      >
+      {!background && (
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")',
+          }}
+        />
+      )}
 
       {/* Main solar-system SVG — fills the column. */}
       <svg
         viewBox="0 0 700 900"
         preserveAspectRatio="xMidYMid slice"
-        className="absolute inset-0 w-full h-full"
-        aria-hidden
+        className="absolute inset-0 h-full w-full"
       >
         {/* --- Concentric dashed rings (solar-system orbits), centered ~(350, 460) --- */}
         <g opacity="0.95">
@@ -229,17 +244,29 @@ export default function SolarSystemArt({
       </svg>
 
       {/* --- Sparkles layered in DOM so they can animate on entry and scale nicely --- */}
-      <Sparkle size={26} delay={0.9}  className="absolute top-[10%] left-[18%]" />
-      <Sparkle size={18} delay={1.05} className="absolute top-[16%] right-[12%]" />
-      <Sparkle size={14} delay={1.25} className="absolute top-[40%] left-[8%]" />
-      <Sparkle size={22} delay={1.45} className="absolute top-[34%] right-[8%]" />
-      <Sparkle size={16} delay={1.65} className="absolute top-[62%] left-[14%]" />
-      <Sparkle size={20} delay={1.85} className="absolute top-[74%] right-[18%]" />
-      <Sparkle size={12} delay={2.05} className="absolute top-[86%] left-[38%]" />
-      <Sparkle size={14} delay={2.25} className="absolute top-[52%] right-[32%]" />
+      {background ? (
+        <>
+          <Sparkle size={20} delay={0.9} className="absolute top-[8%] left-[12%]" />
+          <Sparkle size={16} delay={1.1} className="absolute top-[12%] right-[10%]" />
+          <Sparkle size={14} delay={1.3} className="absolute top-[72%] left-[10%]" />
+          <Sparkle size={18} delay={1.5} className="absolute top-[68%] right-[14%]" />
+        </>
+      ) : (
+        <>
+          <Sparkle size={26} delay={0.9}  className="absolute top-[10%] left-[18%]" />
+          <Sparkle size={18} delay={1.05} className="absolute top-[16%] right-[12%]" />
+          <Sparkle size={14} delay={1.25} className="absolute top-[40%] left-[8%]" />
+          <Sparkle size={22} delay={1.45} className="absolute top-[34%] right-[8%]" />
+          <Sparkle size={16} delay={1.65} className="absolute top-[62%] left-[14%]" />
+          <Sparkle size={20} delay={1.85} className="absolute top-[74%] right-[18%]" />
+          <Sparkle size={12} delay={2.05} className="absolute top-[86%] left-[38%]" />
+          <Sparkle size={14} delay={2.25} className="absolute top-[52%] right-[32%]" />
+        </>
+      )}
+      </div>
 
       {/* --- Editorial tagline sitting quietly at the bottom-left --- */}
-      {tagline && (
+      {showTagline && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

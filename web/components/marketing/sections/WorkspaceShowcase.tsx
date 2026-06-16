@@ -44,6 +44,69 @@ const ORBITS: Orbit[] = [
   { icon: FileText, title: 'Auto-recaps', x: 110, y: 360, size: 44 },
 ]
 
+const SECTION_STARS = [
+  { x: 6, y: 22, r: 1.2, o: 0.35 },
+  { x: 14, y: 58, r: 1, o: 0.28 },
+  { x: 22, y: 78, r: 1.3, o: 0.32 },
+  { x: 88, y: 16, r: 1.1, o: 0.3 },
+  { x: 72, y: 42, r: 0.9, o: 0.24 },
+  { x: 94, y: 68, r: 1.2, o: 0.3 },
+] as const
+
+/** 4-point sparkle — matches hero / auth accents. */
+function Sparkle({ size = 12, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 10 10" width={size} height={size} className={className} aria-hidden>
+      <path d="M5 0 L5.9 4.1 L10 5 L5.9 5.9 L5 10 L4.1 5.9 L0 5 L4.1 4.1 Z" fill="#C9DAF0" />
+    </svg>
+  )
+}
+
+/** Flat space accents across the full section — stars, arcs, no gradients. */
+function WorkspaceSpaceDecor() {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-1" aria-hidden>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+        {SECTION_STARS.map((s, i) => (
+          <circle key={i} cx={s.x} cy={s.y} r={s.r * 0.16} fill="#DCE8FA" fillOpacity={s.o} />
+        ))}
+      </svg>
+
+      <svg
+        viewBox="0 0 600 400"
+        preserveAspectRatio="xMidYMid slice"
+        className="absolute inset-0 h-full w-full opacity-70"
+      >
+        <ellipse
+          cx="120"
+          cy="210"
+          rx="200"
+          ry="120"
+          stroke="#8AACDB"
+          strokeOpacity="0.14"
+          strokeWidth="1"
+          strokeDasharray="3 10"
+          fill="none"
+        />
+        <path
+          d="M -20 320 C 80 260, 180 240, 280 280"
+          stroke="#B5CDEF"
+          strokeOpacity="0.16"
+          strokeWidth="1"
+          strokeDasharray="2 9"
+          fill="none"
+        />
+        <circle cx="48" cy="88" r="4" fill="#C9DAF0" fillOpacity="0.55" />
+        <circle cx="48" cy="88" r="10" stroke="#B5CDEF" strokeOpacity="0.25" strokeWidth="1" fill="none" />
+      </svg>
+
+      <Sparkle size={18} className="absolute left-[8%] top-[22%] opacity-80" />
+      <Sparkle size={12} className="absolute left-[18%] top-[62%] opacity-60" />
+      <Sparkle size={14} className="absolute right-[12%] top-[28%] opacity-70" />
+    </div>
+  )
+}
+
 /** Dashed concentric orbit rings centred toward the right of the stage. */
 function OrbitRings() {
   return (
@@ -53,14 +116,6 @@ function OrbitRings() {
       fill="none"
       aria-hidden
     >
-      <defs>
-        <radialGradient id="ws-orbit-glow" cx="62%" cy="44%" r="60%">
-          <stop offset="0%" stopColor="#8B6FE0" stopOpacity="0.20" />
-          <stop offset="45%" stopColor="#5566C9" stopOpacity="0.08" />
-          <stop offset="100%" stopColor="#0B1735" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="520" height="460" fill="url(#ws-orbit-glow)" />
       {[210, 152, 96].map((r, i) => (
         <ellipse
           key={r}
@@ -74,9 +129,20 @@ function OrbitRings() {
           strokeDasharray="2 9"
         />
       ))}
-      {/* small node accent on the inner ring */}
+      <circle cx="300" cy="225" r="28" fill="#1A2B57" />
+      <circle cx="300" cy="225" r="28" stroke="#B5CDEF" strokeOpacity="0.45" strokeWidth="1.25" fill="none" />
+      <circle cx="292" cy="216" r="9" fill="#8AACDB" fillOpacity="0.14" />
       <circle cx="396" cy="225" r="3.5" fill="#B5CDEF" fillOpacity="0.7" />
       <circle cx="300" cy="33" r="2.5" fill="#B5CDEF" fillOpacity="0.5" />
+      <circle cx="168" cy="312" r="4" fill="#C9DAF0" fillOpacity="0.75" />
+      <path
+        d="M 40 120 C 140 80, 260 90, 360 140"
+        stroke="#8AACDB"
+        strokeOpacity="0.2"
+        strokeWidth="1"
+        strokeDasharray="2 8"
+        fill="none"
+      />
     </svg>
   )
 }
@@ -98,15 +164,12 @@ function OrbitTile({ orbit, index }: { orbit: Orbit; index: number }) {
         transition={{ duration: 4 + index * 0.4, repeat: Infinity, ease: 'easeInOut' }}
         className={`group flex items-center justify-center rounded-2xl border backdrop-blur-sm transition-colors ${
           orbit.accent
-            ? 'border-white/20 bg-linear-to-br from-[#5b4bb8] to-[#1a2547]'
+            ? 'border-white/20 bg-[#1A2B57]'
             : 'border-white/12 bg-white/6 hover:bg-white/10'
         }`}
         style={{
           width: size,
           height: size,
-          boxShadow: orbit.accent
-            ? '0 10px 30px -8px rgba(139,111,224,0.45)'
-            : '0 6px 18px -8px rgba(0,0,0,0.5)',
         }}
         title={orbit.title}
       >
@@ -140,17 +203,12 @@ export default function WorkspaceShowcase() {
         </svg>
       </div>
 
-      {/* faint ambient glow */}
-      <div
-        className="pointer-events-none absolute -left-40 top-1/3 h-[460px] w-[460px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(123,103,210,0.16) 0%, transparent 70%)' }}
-        aria-hidden
-      />
+      <WorkspaceSpaceDecor />
 
       <div className="relative z-20 mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-8 lg:px-10">
         {/* Left: copy + CTA */}
         <Reveal>
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#9D8BE6]">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#B5CDEF]">
             The workspace
           </p>
           <h2 className="text-balance text-4xl font-semibold leading-[1.08] tracking-tight text-white md:text-[3.25rem]">

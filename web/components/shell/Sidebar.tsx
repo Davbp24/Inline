@@ -565,10 +565,10 @@ export default function Sidebar() {
           {!collapsed && (
             <div className="min-w-0 flex-1 overflow-hidden transition-[opacity,max-width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]">
               <Link href="/" className="flex cursor-pointer items-center gap-2 transition-opacity hover:opacity-80">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1C1E26]">
-                  <span className="block h-4 w-1 -rotate-12 rounded-full bg-white" />
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#1C1E26]">
+                  <span className="block h-3 w-0.5 -rotate-12 rounded-full bg-white" />
                 </div>
-                <span className="whitespace-nowrap text-[18px] font-bold tracking-tight text-stone-800 dark:text-white">
+                <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight text-stone-800 dark:text-white">
                   inline
                 </span>
               </Link>

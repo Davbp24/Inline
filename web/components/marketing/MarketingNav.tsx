@@ -60,24 +60,27 @@ export default function MarketingNav() {
 
   useEffect(() => {
     const NAV_HEIGHT = 72
-    const hero = document.querySelector<HTMLElement>('[data-hero]')
+    const hero = document.querySelector<HTMLElement>('main [data-hero]')
 
-    const update = () => {
-      if (!hero) {
-        setPastHero(window.scrollY > 8)
-        return
-      }
-      const rect = hero.getBoundingClientRect()
-      setPastHero(rect.bottom <= NAV_HEIGHT)
+    if (!hero) {
+      const onScroll = () => setPastHero(window.scrollY > NAV_HEIGHT)
+      onScroll()
+      window.addEventListener('scroll', onScroll, { passive: true })
+      return () => window.removeEventListener('scroll', onScroll)
     }
 
-    update()
-    window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
-    return () => {
-      window.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setPastHero(!entry.isIntersecting)
+      },
+      {
+        rootMargin: `-${NAV_HEIGHT}px 0px 0px 0px`,
+        threshold: 0,
+      },
+    )
+
+    observer.observe(hero)
+    return () => observer.disconnect()
   }, [])
 
   // Close the mobile menu on Escape.
@@ -98,7 +101,7 @@ export default function MarketingNav() {
         'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
         pastHero || mobileOpen
           ? 'bg-[#FDFBF7]/92 backdrop-blur-md border-b border-stone-200/60'
-          : 'bg-[#0B1735]',
+          : 'bg-transparent',
       )}
     >
       <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 lg:px-10 py-3.5">
