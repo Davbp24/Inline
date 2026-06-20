@@ -130,7 +130,7 @@ export default function Laser({ onClose }: LaserProps) {
         background: C.bg,
         border: `1px solid ${C.border}`,
         borderRadius: C.radiusPill,
-        boxShadow: C.shadow,
+        boxShadow: C.shadowOuter,
         fontFamily: FONT,
         userSelect: 'none',
       }}

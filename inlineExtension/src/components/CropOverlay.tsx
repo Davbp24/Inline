@@ -159,7 +159,7 @@ export default function CropOverlay({ screenshot, onClose }: CropOverlayProps) {
             padding: '8px 20px', borderRadius: C.radiusPill,
             border: 'none', background: C.accent, color: '#fff',
             fontSize: 13, fontWeight: 500, cursor: 'pointer',
-            fontFamily: FONT, boxShadow: C.shadow,
+            fontFamily: FONT, boxShadow: C.shadowOuter,
             opacity: analyzing ? 0.7 : 1,
           }}>
             {analyzing ? 'Analyzing…' : 'Analyze'}
@@ -168,7 +168,7 @@ export default function CropOverlay({ screenshot, onClose }: CropOverlayProps) {
             padding: '8px 20px', borderRadius: C.radiusPill,
             border: `1px solid ${C.border}`, background: C.bg, color: C.text,
             fontSize: 13, fontWeight: 500, cursor: 'pointer',
-            fontFamily: FONT, boxShadow: C.shadow,
+            fontFamily: FONT, boxShadow: C.shadowOuter,
           }}>
             Cancel
           </button>
@@ -183,7 +183,7 @@ export default function CropOverlay({ screenshot, onClose }: CropOverlayProps) {
             left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
             width: 300, maxHeight: 420, overflowY: 'auto',
             background: C.bg, border: `1px solid ${C.border}`,
-            borderRadius: C.radius, boxShadow: C.shadow,
+            borderRadius: C.radius, boxShadow: C.shadowOuter,
             fontFamily: FONT, pointerEvents: 'auto',
           }}
           onMouseDown={e => e.stopPropagation()}

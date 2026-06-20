@@ -288,7 +288,7 @@ export default function Handwriting({ onClose }: HandwritingProps) {
   const activeLabel = tools.find(t => t.id === tool)?.label ?? 'Pen'
 
   return (
-    <PanelShell title="Pen" subtitle="Handwrite & highlight freely" chip={activeLabel} width={312} onClose={onClose}>
+    <PanelShell title="Pen" subtitle="Handwrite & highlight freely" chip={activeLabel} width={290} onClose={onClose}>
       <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         {/* Tools */}
         <div>

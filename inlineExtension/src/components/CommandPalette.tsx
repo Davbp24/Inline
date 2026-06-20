@@ -161,7 +161,7 @@ export default function CommandPalette({ onClose, onAction }: CommandPaletteProp
         onKeyDown={handleKeyDown}
         style={{
           width: 480, maxWidth: 'calc(100vw - 32px)', maxHeight: 460,
-          background: C.bg, borderRadius: C.radius, boxShadow: C.shadow,
+          background: C.bg, borderRadius: C.radius, boxShadow: C.shadowOuter,
           border: `1px solid ${C.border}`,
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}

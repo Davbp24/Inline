@@ -56,8 +56,16 @@ function ensureHitArea(svg: SVGSVGElement): void {
   hit.setAttribute('width', '100%')
   hit.setAttribute('height', '100%')
   hit.setAttribute('fill', 'transparent')
-  hit.setAttribute('pointer-events', 'all')
+  hit.setAttribute('pointer-events', 'none')
   svg.insertBefore(hit, svg.firstChild)
+}
+
+export function setDrawHitTesting(enabled: boolean): void {
+  const svg = document.getElementById(CANVAS_ID) as unknown as SVGSVGElement | null
+  if (!svg) return
+  ensureHitArea(svg)
+  const hit = svg.querySelector<SVGRectElement>(`#${HIT_ID}`)
+  if (hit) hit.setAttribute('pointer-events', enabled ? 'all' : 'none')
 }
 
 function setId(el: Element, item: SavedShape) {

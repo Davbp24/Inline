@@ -79,7 +79,7 @@ export default function Settings({ onClose, onOpenDashboard }: SettingsProps) {
     <PanelShell
       title="Settings"
       subtitle="Global preferences"
-      width={372}
+      width={340}
       onClose={onClose}
       footer={
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>

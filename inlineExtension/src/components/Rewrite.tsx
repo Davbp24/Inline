@@ -164,7 +164,7 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
         title="Rewrite"
         subtitle="Reword your selection with AI"
         chip={hasSelection ? 'Selection' : undefined}
-        width={392}
+        width={358}
         onClose={onClose}
         footer={
           <div style={{ padding: '12px 16px 14px' }}>
@@ -230,7 +230,7 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
       title="Rewrite"
       subtitle={loading ? 'Rewriting…' : 'Review & apply'}
       chip={lastInstruction ? 'Custom' : (lastTask || undefined)}
-      width={400}
+      width={364}
       onClose={onClose}
       footer={!loading ? (
         <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

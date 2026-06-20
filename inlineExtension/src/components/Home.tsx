@@ -14,7 +14,7 @@ import CropOverlay from './CropOverlay'
 import Laser from './Laser'
 import SharePanel from './SharePanel'
 import Handwriting from './Handwriting'
-import { BRAND, FONT, PANEL as C } from '../lib/extensionTheme'
+import { BRAND_GRADIENT, FONT, PANEL as C } from '../lib/extensionTheme'
 import { isAiBusy } from '../lib/panelLock'
 import { ensurePanelKeyframes } from './panelKit'
 import { loadSettings } from '../lib/extensionSettings'
@@ -133,8 +133,8 @@ function BrandGlyph({ size = 22 }: { size?: number }) {
   return (
     <span style={{
       display: 'block',
-      width: Math.max(3, Math.round(size * 0.18)),
-      height: Math.round(size * 0.64),
+      width: Math.max(3, Math.round(size * 0.16)),
+      height: Math.round(size * 0.58),
       borderRadius: 2,
       background: '#FFFFFF',
       transform: 'rotate(-12deg)',
@@ -153,11 +153,11 @@ function Kbd({ children }: { children: React.ReactNode }) {
   )
 }
 
-const RAIL_TOP = 48
-const LAUNCHER = 46
-const DOCK_BTN = 38
-const DOCK_PAD = 6
-const PANEL_GAP = 14
+const RAIL_TOP = 38
+const LAUNCHER = 40
+const DOCK_BTN = 34
+const DOCK_PAD = 5
+const PANEL_GAP = 12
 const SMALL_SCREEN = 560
 
 interface HomeProps {
@@ -277,7 +277,7 @@ function RailButton({
         aria-pressed={active}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: DOCK_BTN, height: DOCK_BTN, borderRadius: 12, border: 'none', padding: 0,
+          width: DOCK_BTN, height: DOCK_BTN, borderRadius: 11, border: 'none', padding: 0,
           background: active ? C.accent : hov ? C.hoverBg : 'transparent',
           color: active ? '#FFFFFF' : C.textMuted,
           cursor: 'pointer', transition: 'background 0.14s, color 0.14s',
@@ -569,6 +569,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
       <AnimatePresence>
         {!hidden && activePanel && !smallScreen && (
           <motion.div
+            data-inline-interactive=""
             ref={panelWrapRef}
             key="panel-wrap"
             initial={{ opacity: 0 }}
@@ -591,6 +592,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
         {!hidden && activePanel && smallScreen && (
           <>
             <motion.div
+              data-inline-interactive=""
               key="scrim"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.16 }}
@@ -601,6 +603,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
               }}
             />
             <motion.div
+              data-inline-interactive=""
               ref={panelWrapRef}
               key="panel-sheet"
               initial={{ opacity: 0, y: 24, scale: 0.98 }}
@@ -621,6 +624,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
 
       {/* ─── Right rail: launcher (top) + vertical tool dock ─── */}
       <div
+        data-inline-interactive=""
         ref={colRef}
         style={{
           position: 'fixed', right: 16, top: RAIL_TOP,
@@ -638,12 +642,12 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={spring}
             style={{
-              pointerEvents: 'auto', width: 42, height: 42, borderRadius: 14,
-              background: BRAND, border: '1px solid rgba(255,255,255,0.10)',
+              pointerEvents: 'auto', width: 40, height: 40, borderRadius: 13,
+              background: BRAND_GRADIENT, border: '1px solid rgba(255,255,255,0.14)',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#FFFFFF', boxShadow: C.shadow, padding: 0,
+              color: '#FFFFFF', boxShadow: C.shadowOuter, padding: 0,
             }}
-          ><BrandGlyph size={22} /></motion.button>
+          ><BrandGlyph size={20} /></motion.button>
         ) : (
           <>
             {/* Launcher (master) with mode toast floating directly above it */}
@@ -711,16 +715,16 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                 whileTap={{ scale: 0.94 }}
                 transition={spring}
                 style={{
-                  position: 'relative', width: LAUNCHER, height: LAUNCHER, borderRadius: 16,
-                  background: dockOpen ? C.accent : BRAND,
+                  position: 'relative', width: LAUNCHER, height: LAUNCHER, borderRadius: 13,
+                  background: BRAND_GRADIENT,
                   border: `1px solid ${dockOpen ? C.accent : 'rgba(17,24,39,0.18)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', padding: 0, outline: 'none',
                   color: '#FFFFFF',
-                  boxShadow: C.shadow,
+                  boxShadow: C.shadowOuter,
                 }}
               >
-                <BrandGlyph size={24} />
+                <BrandGlyph size={21} />
               </motion.button>
             </div>
 
@@ -734,9 +738,9 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                   transition={spring}
                   style={{
                     pointerEvents: 'auto',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                     padding: DOCK_PAD, background: C.bg, border: `1px solid ${C.border}`,
-                    borderRadius: 18, boxShadow: C.shadow,
+                    borderRadius: 17, boxShadow: C.shadowOuter,
                     maxHeight: 'min(72vh, 640px)', overflowY: 'auto', overflowX: 'hidden',
                   }}
                 >
@@ -787,14 +791,14 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                   style={{
                     position: 'absolute',
                     right: 'calc(100% + 10px)',
-                    top: LAUNCHER + 12,
+                    top: LAUNCHER + 10,
                     pointerEvents: 'auto',
-                    width: 178,
-                    padding: 6,
-                    borderRadius: 16,
+                    width: 158,
+                    padding: 5,
+                    borderRadius: 15,
                     border: `1px solid ${C.border}`,
                     background: C.bg,
-                    boxShadow: C.shadow,
+                    boxShadow: C.shadowOuter,
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 2,
@@ -815,8 +819,8 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                           alignItems: 'center',
                           gap: 10,
                           width: '100%',
-                          minHeight: 34,
-                          padding: '7px 9px',
+                          minHeight: 32,
+                          padding: '6px 8px',
                           borderRadius: 10,
                           border: 'none',
                           background: isActive ? C.toneSelectedBg : 'transparent',

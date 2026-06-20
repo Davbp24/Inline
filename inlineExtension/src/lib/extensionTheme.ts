@@ -12,6 +12,7 @@ export const FONT =
 
 /** Deep navy brand colour — the launcher tile and every panel brand mark. */
 export const BRAND = '#0B1735' as const
+export const BRAND_GRADIENT = 'linear-gradient(145deg, #24386D 0%, #0B1735 58%, #071021 100%)' as const
 
 export const PANEL = {
   /* Warm, solid product surfaces — off-white panel, crisp white inner cards. */
@@ -25,6 +26,7 @@ export const PANEL = {
   divider: 'rgba(15, 18, 23, 0.07)',
   /* Layered, soft elevation — not heavy blur. */
   shadow: '0 1px 2px rgba(17, 24, 39, 0.08)',
+  shadowOuter: '0 18px 48px -28px rgba(15, 18, 23, 0.42), 0 8px 22px -18px rgba(15, 18, 23, 0.28)',
   shadowSoft: 'none',
   shadowCard: 'none',
   text: '#111318',
@@ -35,7 +37,7 @@ export const PANEL = {
   link: '#315A9F',
   hoverBg: 'rgba(15, 18, 23, 0.045)',
   toneSelectedBg: '#F0F3F8',
-  radius: 20,
+  radius: 18,
   radiusLg: 18,
   radiusMd: 12,
   radiusSm: 9,

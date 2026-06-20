@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { PANEL as C } from '../lib/extensionTheme'
 import { PanelShell, SectionLabel, Segmented } from './panelKit'
-import { ensureDrawCanvas, restoreDrawings, clearAllDrawings } from '../content/drawingsRestore'
+import { ensureDrawCanvas, restoreDrawings, clearAllDrawings, setDrawHitTesting } from '../content/drawingsRestore'
 
 type Tool = 'pen' | 'marker' | 'arrow' | 'rectangle' | 'ellipse' | 'eraser' | 'lasso'
 
@@ -90,16 +90,18 @@ export default function Draw({ onClose }: DrawProps) {
     // navigated between pages in a SPA), pull saved shapes again. It's a
     // cheap idempotent call.
     restoreDrawings()
-  }, [tool])
+  }, [])
 
   const activateCanvas = useCallback(() => {
     if (!canvasRef.current) return
     canvasRef.current.style.pointerEvents = 'all'
+    setDrawHitTesting(true)
     canvasRef.current.style.cursor = tool === 'eraser' ? 'cell' : tool === 'lasso' ? 'crosshair' : 'crosshair'
-  }, [])
+  }, [tool])
 
   const deactivateCanvas = useCallback(() => {
     if (!canvasRef.current) return
+    setDrawHitTesting(false)
     canvasRef.current.style.pointerEvents = 'none'
     canvasRef.current.style.cursor = ''
   }, [])
@@ -702,7 +704,7 @@ export default function Draw({ onClose }: DrawProps) {
   const activeLabel = tools.find(t => t.id === tool)?.label ?? 'Pen'
 
   return (
-    <PanelShell title="Draw" subtitle="Annotate directly on the page" chip={activeLabel} width={312} onClose={onClose}>
+    <PanelShell title="Draw" subtitle="Annotate directly on the page" chip={activeLabel} width={290} onClose={onClose}>
       <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         {/* Tools */}
         <div>

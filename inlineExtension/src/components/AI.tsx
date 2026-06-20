@@ -164,7 +164,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
         title="Ask Inline"
         subtitle={hasSelection ? 'Working with your selection' : 'Working with this page'}
         chip={hasSelection ? 'Selection' : 'Page'}
-        width={416}
+        width={372}
         onClose={onClose}
         footer={
           <div style={{ padding: '12px 16px 14px' }}>
@@ -267,7 +267,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
       title="Ask Inline"
       subtitle={loading ? 'Thinking…' : 'Here is your result'}
       chip={lastTask ? (lastInstruction ? 'Custom' : lastTask) : undefined}
-      width={400}
+      width={364}
       onClose={onClose}
       footer={!loading ? (
         <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>

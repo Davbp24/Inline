@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode, type CSSProperties } from 'react'
-import { PANEL as C, FONT, BRAND } from '../lib/extensionTheme'
+import { PANEL as C, FONT, BRAND_GRADIENT } from '../lib/extensionTheme'
 
 /**
  * Inline panel design system.
@@ -20,7 +20,7 @@ export function BrandMark({ size = 24, radius }: { size?: number; radius?: numbe
         position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: size, height: size, flexShrink: 0,
         borderRadius: radius ?? Math.round(size * 0.32),
-        background: BRAND,
+        background: BRAND_GRADIENT,
         border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
@@ -38,6 +38,29 @@ const ICloseGlyph = () => (
   </svg>
 )
 
+const IChevronDown = ({ open = false }: { open?: boolean }) => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.14s ease' }}
+  >
+    <path d="M4 6l4 4 4-4" />
+  </svg>
+)
+
+const IPanelGlyph = () => (
+  <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.7">
+    <rect x="4.25" y="2.75" width="9.5" height="12.5" rx="2.1" />
+    <path d="M7.1 5.6v6.8" strokeLinecap="round" />
+  </svg>
+)
+
 /** Custom close button — hover state, accessible label, never a native title. */
 export function CloseButton({ onClose, label = 'Close' }: { onClose: () => void; label?: string }) {
   const [hov, setHov] = useState(false)
@@ -50,7 +73,7 @@ export function CloseButton({ onClose, label = 'Close' }: { onClose: () => void;
       aria-label={label}
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 32, height: 32, borderRadius: 11, border: 'none', padding: 0,
+        width: 30, height: 30, borderRadius: 10, border: 'none', padding: 0,
         background: hov ? C.hoverBg : 'transparent',
         color: hov ? C.text : C.textMuted,
         cursor: 'pointer', transition: 'background 0.14s, color 0.14s', flexShrink: 0,
@@ -82,16 +105,18 @@ export interface PanelShellProps {
 export function PanelShell({
   title, subtitle, chip, width = 400, onClose, footer, headerActions, headerLeading, children, style,
 }: PanelShellProps) {
+  const [metaOpen, setMetaOpen] = useState(false)
+
   return (
     <div
       style={{
         width,
-        maxWidth: 'min(94vw, 460px)',
+        maxWidth: 'min(94vw, 430px)',
         maxHeight: 'calc(100vh - 64px)',
         background: C.bg,
         border: `1px solid ${C.border}`,
         borderRadius: C.radius,
-        boxShadow: C.shadow,
+        boxShadow: C.shadowOuter,
         fontFamily: FONT,
         overflow: 'hidden',
         display: 'flex',
@@ -101,32 +126,118 @@ export function PanelShell({
     >
       <header
         style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-        padding: '13px 14px 13px 16px',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          minHeight: 56,
+          padding: '0 12px',
           borderBottom: `1px solid ${C.divider}`,
+          background: C.headerBg,
           flexShrink: 0,
         }}
       >
-        {headerLeading}
-        <BrandMark size={24} />
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              fontSize: 16, fontWeight: 700, color: C.text, letterSpacing: '-0.02em', lineHeight: 1.1,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>{title}</span>
-            {chip && <Pill>{chip}</Pill>}
-          </div>
-          {subtitle && (
-            <div style={{
-              marginTop: 3, fontSize: 12, color: C.textMuted, letterSpacing: '-0.01em',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>{subtitle}</div>
-          )}
+        <div style={{ position: 'absolute', left: 12, display: 'flex', alignItems: 'center' }}>
+          {headerLeading}
         </div>
-        {headerActions}
+
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <BrandMark size={25} radius={8} />
+          <button
+            type="button"
+            onClick={() => setMetaOpen(v => !v)}
+            aria-label={metaOpen ? 'Hide panel details' : 'Show panel details'}
+            aria-expanded={metaOpen}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 22,
+              height: 22,
+              borderRadius: 8,
+              border: 'none',
+              background: 'transparent',
+              color: C.textMuted,
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <IChevronDown open={metaOpen} />
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {headerActions}
+          <button
+            type="button"
+            onClick={() => setMetaOpen(v => !v)}
+            aria-label="Panel details"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 30,
+              height: 30,
+              borderRadius: 10,
+              border: 'none',
+              background: 'transparent',
+              color: C.textMuted,
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <IPanelGlyph />
+          </button>
+        </div>
         <CloseButton onClose={onClose} />
       </header>
+
+      {metaOpen && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '9px 16px',
+          borderBottom: `1px solid ${C.divider}`,
+          background: C.bg,
+          flexShrink: 0,
+        }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: C.text,
+              letterSpacing: '-0.01em',
+              lineHeight: 1.2,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>{title}</div>
+            {subtitle && (
+              <div style={{
+                marginTop: 2,
+                fontSize: 11.5,
+                color: C.textMuted,
+                letterSpacing: '-0.01em',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}>{subtitle}</div>
+            )}
+          </div>
+          {chip && <Pill>{chip}</Pill>}
+        </div>
+      )}
 
       <div style={{
         display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1,

@@ -82,7 +82,7 @@ import cssText from './content.css?inline'
       .inline-toolbar, .inline-toolbar *,
       .inline-anchor, .inline-anchor *,
       .inline-modal-backdrop, .inline-modal-backdrop *,
-      [data-panel-host], [data-panel-host] * {
+      [data-inline-interactive], [data-inline-interactive] * {
         pointer-events: auto;
       }
       *::-webkit-scrollbar { display: none; }
