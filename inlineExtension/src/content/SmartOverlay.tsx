@@ -61,7 +61,7 @@ async function serverTask(
 }
 
 /* ─── Theme (Attio "New toolbar" — light) ─── */
-const DARK = '#1C1E26'              // primary text / accent on light surfaces
+const DARK = '#0B1735'              // primary text / accent on light surfaces
 const CREAM = '#FFFFFF'             // popups are clean white (Attio pages are white)
 const SURFACE = '#FFFFFF'
 const BORDER = 'rgba(15,18,23,0.09)'
@@ -152,7 +152,7 @@ function ToolTip({ label, show }: { label: string; show: boolean }) {
         pointerEvents: 'none',
         opacity: show ? 1 : 0,
         transition: 'opacity 0.12s ease, transform 0.12s ease',
-        boxShadow: '0 6px 18px rgba(0,0,0,0.28)',
+        boxShadow: 'none',
         zIndex: 2147483647,
       }}
     >

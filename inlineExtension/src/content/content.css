@@ -2,18 +2,18 @@
 .sticky-note {
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1.5px solid #d6d3d1;
+  border: 1px solid rgba(17, 24, 39, 0.12);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
   user-select: none;
-  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  transition: border-color 0.15s, transform 0.1s;
+  box-shadow: none;
 }
 
 .sticky-note:hover {
-  border-color: #a8a29e;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
+  border-color: rgba(17, 24, 39, 0.20);
+  box-shadow: none;
 }
 
 /* ─── Header drag bar ─── */
@@ -22,7 +22,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 10px 7px;
-  border-bottom: 1px solid rgba(214,211,209,0.6);
+  border-bottom: 1px solid rgba(17,24,39,0.08);
   touch-action: none;
   flex-shrink: 0;
 }
@@ -39,7 +39,7 @@
   flex: 1;
   font-size: 12px;
   font-weight: 700;
-  color: #1C1E26;
+  color: #111318;
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
@@ -184,18 +184,18 @@
   height: 42px;
   border-radius: 50%;
   background: #FFFFFF;
-  color: #666;
-  border: 1px solid rgba(0,0,0,0.08);
+  color: #5d6470;
+  border: 1px solid rgba(17,24,39,0.12);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
-  box-shadow: 0 2px 12px -2px rgba(0,0,0,0.1);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  box-shadow: none;
 }
 
 .launcher-eye:hover {
   background: #FAFAFA;
-  color: #1C1E26;
-  border-color: rgba(0,0,0,0.12);
-  box-shadow: 0 4px 16px -4px rgba(0,0,0,0.14);
+  color: #111318;
+  border-color: rgba(17,24,39,0.20);
+  box-shadow: none;
 }
 
 .launcher-add {
@@ -207,17 +207,17 @@
   min-width: 48px;
   height: 48px;
   border-radius: 9999px;
-  background: #1C1E26;
+  background: #111318;
   color: #ffffff;
   cursor: pointer;
-  transition: background 0.15s, width 0.2s ease, box-shadow 0.15s;
-  box-shadow: 0 4px 16px -4px rgba(28,30,38,0.25);
+  transition: background 0.15s, width 0.2s ease;
+  box-shadow: none;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
 }
 
 .launcher-add:hover {
-  background: #2a2d38;
-  box-shadow: 0 6px 20px -4px rgba(28,30,38,0.3);
+  background: #13244d;
+  box-shadow: none;
 }
 
 .launcher-add:active {

@@ -41,9 +41,9 @@ export default function Highlighter({ onClose }: HighlighterProps) {
                 style={{
                   height: 44, borderRadius: 14, background: value, cursor: 'pointer',
                   border: on ? `2.5px solid ${C.accent}` : `1px solid rgba(17,19,33,0.08)`,
-                  boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
-                  transform: on ? 'translateY(-2px)' : 'none',
-                  transition: 'transform 0.15s ease, box-shadow 0.15s, border-color 0.15s',
+                  boxShadow: 'none',
+                  transform: 'none',
+                  transition: 'border-color 0.15s',
                   padding: 0,
                 }}
               />

@@ -305,7 +305,7 @@ const ghostBtn: React.CSSProperties = {
 const primaryBtn: React.CSSProperties = {
   padding: '9px 20px', borderRadius: C.radiusPill, border: 'none',
   background: C.accent, color: '#fff', fontSize: 12.5, fontWeight: 700,
-  cursor: 'pointer', fontFamily: FONT, boxShadow: '0 6px 16px -6px rgba(11,23,53,0.5)',
+  cursor: 'pointer', fontFamily: FONT, boxShadow: 'none',
 }
 const iconBtn: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',

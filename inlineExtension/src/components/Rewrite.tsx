@@ -239,7 +239,7 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
           {!inserted ? (
             <button type="button" onClick={handleInsert} aria-label="Insert into page" style={primaryBtn}>Insert</button>
           ) : (
-            <button type="button" onClick={handleUndo} aria-label="Undo insert" style={{ ...primaryBtn, background: '#DC2626', boxShadow: '0 6px 16px -6px rgba(220,38,38,0.5)' }}>Undo</button>
+            <button type="button" onClick={handleUndo} aria-label="Undo insert" style={{ ...primaryBtn, background: '#DC2626', boxShadow: 'none' }}>Undo</button>
           )}
           <button type="button" onClick={handleSpeak} aria-label={speaking ? 'Stop speaking' : 'Speak'} style={{ ...iconBtn, marginLeft: 'auto' }}>{speaking ? <IVolumeOff /> : <IVolume />}</button>
           <button type="button" onClick={handleCopy} aria-label="Copy" style={iconBtn}><ICopy /></button>
@@ -296,7 +296,7 @@ const ghostBtn: React.CSSProperties = {
 const primaryBtn: React.CSSProperties = {
   padding: '9px 20px', borderRadius: C.radiusPill, border: 'none',
   background: C.accent, color: '#fff', fontSize: 12.5, fontWeight: 700,
-  cursor: 'pointer', fontFamily: FONT, boxShadow: '0 6px 16px -6px rgba(11,23,53,0.5)',
+  cursor: 'pointer', fontFamily: FONT, boxShadow: 'none',
 }
 const iconBtn: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',

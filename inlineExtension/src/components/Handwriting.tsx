@@ -6,7 +6,7 @@ import { ensureHandwritingCanvas, restoreHandwriting } from '../content/handwrit
 type HWTool = 'pen' | 'highlighter' | 'eraser'
 
 const COLORS = [
-  '#1C1E26', '#dc2626', '#2563eb', '#16a34a', '#f59e0b',
+  '#1C1E26', '#b42318', '#315a9f', '#0f7b6c', '#b7791f',
   '#7c3aed', '#ec4899', '#06b6d4', '#ea580c', '#78716c',
 ]
 
@@ -97,8 +97,12 @@ export default function Handwriting({ onClose }: HandwritingProps) {
     const canvas = canvasRef.current
     if (!canvas) return
     canvas.style.pointerEvents = 'auto'
-    return () => { canvas.style.pointerEvents = 'none' }
-  }, [])
+    canvas.style.cursor = tool === 'eraser' ? 'cell' : 'crosshair'
+    return () => {
+      canvas.style.pointerEvents = 'none'
+      canvas.style.cursor = ''
+    }
+  }, [tool])
 
   const renderStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
     const pts = stroke.points
@@ -192,8 +196,12 @@ export default function Handwriting({ onClose }: HandwritingProps) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+    const canvasEl = canvas
 
     function onPointerDown(e: PointerEvent) {
+      e.preventDefault()
+      e.stopPropagation()
+      try { canvasEl.setPointerCapture(e.pointerId) } catch { /* unsupported */ }
       drawing.current = true
       const pressure = e.pressure > 0 ? e.pressure : 0.5
       currentStroke.current = {
@@ -207,6 +215,8 @@ export default function Handwriting({ onClose }: HandwritingProps) {
 
     function onPointerMove(e: PointerEvent) {
       if (!drawing.current || !currentStroke.current) return
+      e.preventDefault()
+      e.stopPropagation()
       const pressure = e.pressure > 0 ? e.pressure : 0.5
       currentStroke.current.points.push({ x: e.clientX, y: e.clientY, pressure })
 
@@ -222,8 +232,11 @@ export default function Handwriting({ onClose }: HandwritingProps) {
       })
     }
 
-    function onPointerUp() {
+    function onPointerUp(e: PointerEvent) {
       if (!drawing.current || !currentStroke.current) return
+      e.preventDefault()
+      e.stopPropagation()
+      try { canvasEl.releasePointerCapture(e.pointerId) } catch { /* unsupported */ }
       drawing.current = false
       if (currentStroke.current.points.length > 0) {
         strokes.current = [...strokes.current, currentStroke.current]
@@ -233,16 +246,16 @@ export default function Handwriting({ onClose }: HandwritingProps) {
       persistData()
     }
 
-    canvas.addEventListener('pointerdown', onPointerDown)
-    canvas.addEventListener('pointermove', onPointerMove)
-    canvas.addEventListener('pointerup', onPointerUp)
-    canvas.addEventListener('pointerleave', onPointerUp)
+    canvasEl.addEventListener('pointerdown', onPointerDown)
+    canvasEl.addEventListener('pointermove', onPointerMove)
+    canvasEl.addEventListener('pointerup', onPointerUp)
+    canvasEl.addEventListener('pointerleave', onPointerUp)
 
     return () => {
-      canvas.removeEventListener('pointerdown', onPointerDown)
-      canvas.removeEventListener('pointermove', onPointerMove)
-      canvas.removeEventListener('pointerup', onPointerUp)
-      canvas.removeEventListener('pointerleave', onPointerUp)
+      canvasEl.removeEventListener('pointerdown', onPointerDown)
+      canvasEl.removeEventListener('pointermove', onPointerMove)
+      canvasEl.removeEventListener('pointerup', onPointerUp)
+      canvasEl.removeEventListener('pointerleave', onPointerUp)
     }
   }, [tool, color, thickness, renderStroke, renderAllStrokes, persistData])
 
@@ -295,8 +308,8 @@ export default function Handwriting({ onClose }: HandwritingProps) {
                     background: on ? C.accent : C.surfaceBubble,
                     color: on ? '#fff' : C.textMuted,
                     cursor: 'pointer', fontSize: 12, fontWeight: 650,
-                    boxShadow: on ? '0 5px 14px -5px rgba(11,23,53,0.5)' : C.shadowSoft,
-                    transition: 'background 0.14s, box-shadow 0.14s, border-color 0.14s, color 0.14s',
+                    boxShadow: 'none',
+                    transition: 'background 0.14s, border-color 0.14s, color 0.14s',
                   }}
                 >{t.icon}</button>
               )
@@ -342,9 +355,9 @@ export default function Handwriting({ onClose }: HandwritingProps) {
                   style={{
                     height: 34, borderRadius: 12, background: c, cursor: 'pointer', padding: 0,
                     border: on ? `2.5px solid ${C.accent}` : '1px solid rgba(17,19,33,0.08)',
-                    boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
-                    transform: on ? 'translateY(-2px)' : 'none',
-                    transition: 'transform 0.13s ease, box-shadow 0.13s',
+                    boxShadow: 'none',
+                    transform: 'none',
+                    transition: 'border-color 0.13s',
                   }}
                 />
               )
@@ -355,7 +368,7 @@ export default function Handwriting({ onClose }: HandwritingProps) {
         {/* Actions */}
         <div style={{ display: 'flex', gap: 9 }}>
           <button type="button" onClick={handleClear} aria-label="Clear all" style={actionBtn}>Clear all</button>
-          <button type="button" onClick={handleExport} aria-label="Export PNG" style={{ ...actionBtn, background: C.accent, color: '#fff', border: 'none', boxShadow: '0 5px 14px -6px rgba(11,23,53,0.5)' }}>Export PNG</button>
+          <button type="button" onClick={handleExport} aria-label="Export PNG" style={{ ...actionBtn, background: C.accent, color: '#fff', border: 'none', boxShadow: 'none' }}>Export PNG</button>
         </div>
       </div>
     </PanelShell>

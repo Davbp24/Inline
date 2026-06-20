@@ -15,19 +15,49 @@
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const CANVAS_ID = 'inline-draw-canvas'
+const HIT_ID = 'inline-draw-hit-area'
 
 type SavedShape = Record<string, unknown>
 
 /** Create the fixed-position SVG canvas if it doesn't already exist. */
 export function ensureDrawCanvas(): SVGSVGElement {
   const existing = document.getElementById(CANVAS_ID)
-  if (existing) return existing as unknown as SVGSVGElement
+  if (existing) {
+    const svg = existing as unknown as SVGSVGElement
+    ensureHitArea(svg)
+    return svg
+  }
   const svg = document.createElementNS(SVG_NS, 'svg')
   svg.id = CANVAS_ID
   svg.style.cssText =
-    'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483640;pointer-events:none;'
+    'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2147483640;pointer-events:none;touch-action:none;'
+  svg.setAttribute('width', String(window.innerWidth))
+  svg.setAttribute('height', String(window.innerHeight))
+  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+  ensureHitArea(svg)
   document.body.appendChild(svg)
+  window.addEventListener('resize', () => {
+    svg.setAttribute('width', String(window.innerWidth))
+    svg.setAttribute('height', String(window.innerHeight))
+    svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+  })
   return svg
+}
+
+function ensureHitArea(svg: SVGSVGElement): void {
+  svg.setAttribute('width', String(window.innerWidth))
+  svg.setAttribute('height', String(window.innerHeight))
+  svg.setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+  if (svg.querySelector(`#${HIT_ID}`)) return
+  const hit = document.createElementNS(SVG_NS, 'rect')
+  hit.id = HIT_ID
+  hit.setAttribute('x', '0')
+  hit.setAttribute('y', '0')
+  hit.setAttribute('width', '100%')
+  hit.setAttribute('height', '100%')
+  hit.setAttribute('fill', 'transparent')
+  hit.setAttribute('pointer-events', 'all')
+  svg.insertBefore(hit, svg.firstChild)
 }
 
 function setId(el: Element, item: SavedShape) {

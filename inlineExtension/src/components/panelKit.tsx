@@ -13,19 +13,19 @@ import { PANEL as C, FONT, BRAND } from '../lib/extensionTheme'
 /* ─────────────────────────  Brand + chrome  ───────────────────────── */
 
 /** The Inline brand glyph (slanted tick) inside a navy rounded tile. */
-export function BrandMark({ size = 30, radius }: { size?: number; radius?: number }) {
+export function BrandMark({ size = 24, radius }: { size?: number; radius?: number }) {
   return (
     <span
       style={{
         position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: size, height: size, flexShrink: 0,
-        borderRadius: radius ?? Math.round(size * 0.34),
-        background: `linear-gradient(155deg, #1A2C57 0%, ${BRAND} 62%)`,
-        boxShadow: '0 4px 12px -4px rgba(11,23,53,0.55), inset 0 1px 0 rgba(255,255,255,0.14)',
+        borderRadius: radius ?? Math.round(size * 0.32),
+        background: BRAND,
+        border: '1px solid rgba(255,255,255,0.08)',
       }}
     >
       <span style={{
-        width: Math.max(2, Math.round(size * 0.12)), height: Math.round(size * 0.5),
+        width: Math.max(2, Math.round(size * 0.13)), height: Math.round(size * 0.48),
         borderRadius: 2, background: '#FFFFFF', transform: 'rotate(-12deg)',
       }} />
     </span>
@@ -102,13 +102,13 @@ export function PanelShell({
       <header
         style={{
           display: 'flex', alignItems: 'center', gap: 12,
-          padding: '15px 14px 15px 18px',
+        padding: '13px 14px 13px 16px',
           borderBottom: `1px solid ${C.divider}`,
           flexShrink: 0,
         }}
       >
         {headerLeading}
-        <BrandMark size={32} />
+        <BrandMark size={24} />
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{
@@ -195,9 +195,7 @@ export function ActionTile({
         color: disabled ? C.textLight : C.text,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.7 : 1,
-        boxShadow: hov && !disabled ? C.shadowCard : C.shadowSoft,
-        transform: hov && !disabled ? 'translateY(-1px)' : 'none',
-        transition: 'transform 0.14s, box-shadow 0.14s, border-color 0.14s',
+        transition: 'background 0.14s, border-color 0.14s',
         fontFamily: FONT,
       }}
     >
@@ -238,7 +236,7 @@ export function Chip({
         color: active ? '#fff' : disabled ? C.textLight : C.text,
         fontSize: 11.5, fontWeight: 600, fontFamily: FONT, letterSpacing: '-0.01em',
         cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.7 : 1,
-        boxShadow: active ? '0 4px 12px -4px rgba(11,23,53,0.4)' : 'none',
+        boxShadow: 'none',
         transition: 'background 0.14s, border-color 0.14s, color 0.14s',
       }}
     >{label}</button>
@@ -267,8 +265,8 @@ export function Segmented<T extends string>({
               background: active ? C.surfaceBubble : 'transparent',
               color: active ? C.text : C.textMuted,
               fontSize: 12, fontWeight: active ? 700 : 600, fontFamily: FONT, letterSpacing: '-0.01em',
-              cursor: 'pointer', boxShadow: active ? C.shadowCard : 'none',
-              transition: 'background 0.14s, color 0.14s, box-shadow 0.14s',
+              cursor: 'pointer',
+              transition: 'background 0.14s, color 0.14s',
             }}
           >{o.label}</button>
         )
@@ -295,7 +293,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       <span style={{
         position: 'absolute', top: 3, left: checked ? 21 : 3,
         width: 20, height: 20, borderRadius: '50%', background: '#fff', display: 'block',
-        boxShadow: '0 1px 3px rgba(17,19,33,0.25)',
+        boxShadow: 'none',
         transition: 'left 0.22s cubic-bezier(0.4,0,0.2,1)',
       }} />
     </button>
@@ -317,7 +315,7 @@ export function Checkbox({ checked, onChange, label }: { checked: boolean; onCha
         display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
         padding: '9px 11px', borderRadius: 13, border: `1px solid ${hov ? C.borderStrong : C.border}`,
         background: C.surfaceBubble, cursor: 'pointer', fontFamily: FONT,
-        boxShadow: C.shadowSoft, transition: 'border-color 0.14s',
+        transition: 'border-color 0.14s, background 0.14s',
       }}
     >
       <span style={{
@@ -360,8 +358,8 @@ export function Composer({
     <div style={{
       border: `1.5px solid ${focus ? C.accent : C.border}`,
       borderRadius: 18, background: disabled ? C.surfaceMuted : C.surfaceBubble,
-      boxShadow: focus ? '0 0 0 4px rgba(11,23,53,0.07)' : C.shadowSoft,
-      padding: '10px 10px 8px 14px', transition: 'border-color 0.14s, box-shadow 0.14s',
+      boxShadow: 'none',
+      padding: '10px 10px 8px 14px', transition: 'border-color 0.14s, background 0.14s',
     }}>
       <textarea
         value={value}
@@ -398,8 +396,8 @@ export function Composer({
             background: canSend ? C.accent : C.surfaceSunken,
             color: canSend ? '#fff' : C.textLight,
             cursor: canSend ? 'pointer' : 'not-allowed', flexShrink: 0,
-            boxShadow: canSend ? '0 4px 12px -4px rgba(11,23,53,0.5)' : 'none',
-            transition: 'background 0.14s, box-shadow 0.14s',
+            boxShadow: 'none',
+            transition: 'background 0.14s',
           }}
         ><ISendGlyph /></button>
       </div>

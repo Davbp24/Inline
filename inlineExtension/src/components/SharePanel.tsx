@@ -87,7 +87,7 @@ export default function SharePanel({ onClose }: SharePanelProps) {
               opacity: loading ? 0.75 : 1, transition: 'opacity 0.15s',
               letterSpacing: '-0.01em', display: 'inline-flex', alignItems: 'center',
               justifyContent: 'center', gap: 9, fontFamily: FONT,
-              boxShadow: '0 8px 20px -8px rgba(11,23,53,0.5)',
+              boxShadow: 'none',
             }}
           >
             {loading && <Spinner size={15} />}

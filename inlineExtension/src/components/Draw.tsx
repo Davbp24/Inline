@@ -6,7 +6,7 @@ import { ensureDrawCanvas, restoreDrawings, clearAllDrawings } from '../content/
 type Tool = 'pen' | 'marker' | 'arrow' | 'rectangle' | 'ellipse' | 'eraser' | 'lasso'
 
 const COLORS = [
-  '#1C1E26', '#dc2626', '#2563eb', '#16a34a', '#f59e0b',
+  '#1C1E26', '#b42318', '#315a9f', '#0f7b6c', '#b7791f',
   '#7c3aed', '#ec4899', '#06b6d4', '#ea580c', '#78716c',
 ]
 
@@ -90,19 +90,21 @@ export default function Draw({ onClose }: DrawProps) {
     // navigated between pages in a SPA), pull saved shapes again. It's a
     // cheap idempotent call.
     restoreDrawings()
-  }, [])
+  }, [tool])
 
   const activateCanvas = useCallback(() => {
     if (!canvasRef.current) return
-    canvasRef.current.style.pointerEvents = 'auto'
+    canvasRef.current.style.pointerEvents = 'all'
+    canvasRef.current.style.cursor = tool === 'eraser' ? 'cell' : tool === 'lasso' ? 'crosshair' : 'crosshair'
   }, [])
 
   const deactivateCanvas = useCallback(() => {
     if (!canvasRef.current) return
     canvasRef.current.style.pointerEvents = 'none'
+    canvasRef.current.style.cursor = ''
   }, [])
 
-  useEffect(() => { activateCanvas(); return deactivateCanvas }, [activateCanvas, deactivateCanvas])
+  useEffect(() => { activateCanvas(); return deactivateCanvas }, [activateCanvas, deactivateCanvas, tool])
 
   /* ─── Drawing handlers ─── */
   useEffect(() => {
@@ -241,6 +243,8 @@ export default function Draw({ onClose }: DrawProps) {
     }
 
     function start(e: PointerEvent) {
+      e.preventDefault()
+      e.stopPropagation()
       // If the user made a lasso selection and then switched to the eraser,
       // treat the first eraser click as "delete the whole selection". This
       // is the natural way to wipe a batch of drawings AND any text/content
@@ -285,7 +289,7 @@ export default function Draw({ onClose }: DrawProps) {
         pathData.current = `M${e.clientX} ${e.clientY}`
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
         path.setAttribute('d', pathData.current)
-        path.setAttribute('stroke', '#2563eb')
+        path.setAttribute('stroke', '#315a9f')
         path.setAttribute('stroke-width', '1.5')
         path.setAttribute('fill', 'none')
         path.setAttribute('stroke-dasharray', '6 3')
@@ -352,6 +356,8 @@ export default function Draw({ onClose }: DrawProps) {
     }
 
     function move(e: PointerEvent) {
+      e.preventDefault()
+      e.stopPropagation()
       if (tool === 'eraser' && eraserMode === 'pixel' && eraserDown.current) {
         pixelErase(e.clientX, e.clientY)
         return
@@ -519,6 +525,8 @@ export default function Draw({ onClose }: DrawProps) {
     }
 
     function end() {
+      // Pointer-up may happen while the transparent SVG hit layer is active;
+      // keep it inside the drawing mode instead of leaking to the host page.
       if (tool === 'eraser' && eraserMode === 'pixel') {
         eraserDown.current = false
         persistDrawData()
@@ -579,7 +587,7 @@ export default function Draw({ onClose }: DrawProps) {
             border.setAttribute('y', String(gMinY - 4))
             border.setAttribute('width', String(gMaxX - gMinX + 8))
             border.setAttribute('height', String(gMaxY - gMinY + 8))
-            border.setAttribute('stroke', '#2563eb')
+            border.setAttribute('stroke', '#315a9f')
             border.setAttribute('stroke-width', '1.5')
             border.setAttribute('stroke-dasharray', '5 3')
             border.setAttribute('fill', 'none')
@@ -652,6 +660,8 @@ export default function Draw({ onClose }: DrawProps) {
 
     function erase(e: PointerEvent) {
       if (tool !== 'eraser' || eraserMode !== 'object') return
+      e.preventDefault()
+      e.stopPropagation()
       const el = document.elementFromPoint(e.clientX, e.clientY)
       if (el && el.hasAttribute('data-inline-draw')) el.remove()
       if (el?.parentElement && el.parentElement.hasAttribute('data-inline-draw')) el.parentElement.remove()
@@ -712,8 +722,8 @@ export default function Draw({ onClose }: DrawProps) {
                     background: on ? C.accent : C.surfaceBubble,
                     color: on ? '#fff' : C.textMuted,
                     cursor: 'pointer',
-                    boxShadow: on ? '0 5px 14px -5px rgba(11,23,53,0.5)' : C.shadowSoft,
-                    transition: 'background 0.14s, box-shadow 0.14s, border-color 0.14s, color 0.14s',
+                    boxShadow: 'none',
+                    transition: 'background 0.14s, border-color 0.14s, color 0.14s',
                   }}
                 >{t.icon}</button>
               )
@@ -769,9 +779,9 @@ export default function Draw({ onClose }: DrawProps) {
                   style={{
                     height: 34, borderRadius: 12, background: c, cursor: 'pointer', padding: 0,
                     border: on ? `2.5px solid ${C.accent}` : '1px solid rgba(17,19,33,0.08)',
-                    boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
-                    transform: on ? 'translateY(-2px)' : 'none',
-                    transition: 'transform 0.13s ease, box-shadow 0.13s',
+                    boxShadow: 'none',
+                    transform: 'none',
+                    transition: 'border-color 0.13s',
                   }}
                 />
               )

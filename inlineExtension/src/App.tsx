@@ -73,7 +73,7 @@ function App() {
       >
         {INLINE_VOICE_PRESETS.map(v => (
           <option key={v.id} value={v.id}>
-            {v.name} — {v.subtitle}
+            {v.name} - {v.subtitle}
           </option>
         ))}
       </select>
@@ -100,7 +100,7 @@ function App() {
         className="popup-link-btn"
         onClick={() => { window.open(dashboardUrl + '/app/dashboard', '_blank') }}
       >
-        Open Inline dashboard ↗
+        Open Inline dashboard
       </button>
 
       <button
@@ -122,7 +122,7 @@ function App() {
             placeholder="http://localhost:3000"
           />
           <label className="popup-label" htmlFor="popup-token">
-            Access token <span className="popup-hint-inline">(synced automatically — manual override)</span>
+            Access token <span className="popup-hint-inline">(synced automatically - manual override)</span>
           </label>
           <input
             id="popup-token"

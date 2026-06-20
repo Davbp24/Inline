@@ -69,6 +69,8 @@ export default function Notes({
   const [size, setSize] = useState({ w: initialW, h: initialH })
   const bodyRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{ ox: number; oy: number } | null>(null)
+  const latestPosRef = useRef(pos)
+  const latestSizeRef = useRef(size)
 
   const author = 'You'
   const timestamp = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -83,14 +85,19 @@ export default function Notes({
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current) return
-    setPos({ x: e.clientX - dragRef.current.ox, y: e.clientY - dragRef.current.oy })
+    const next = {
+      x: Math.max(8, Math.min(window.innerWidth - 48, e.clientX - dragRef.current.ox)),
+      y: Math.max(8, Math.min(window.innerHeight - 48, e.clientY - dragRef.current.oy)),
+    }
+    latestPosRef.current = next
+    setPos(next)
   }, [])
 
   const onPointerUp = useCallback(() => {
     if (!dragRef.current) return
     dragRef.current = null
-    onUpdate?.({ x: pos.x, y: pos.y })
-  }, [onUpdate, pos])
+    onUpdate?.(latestPosRef.current)
+  }, [onUpdate])
 
   /* ─── Resize ─── */
   const onResizeDown = useCallback((e: React.MouseEvent) => {
@@ -102,12 +109,13 @@ export default function Notes({
         w: Math.max(240, sw + ev.clientX - sx),
         h: Math.max(180, sh + ev.clientY - sy),
       }
+      latestSizeRef.current = latest
       setSize(latest)
     }
     const up = () => {
       window.removeEventListener('mousemove', move)
       window.removeEventListener('mouseup', up)
-      onUpdate?.({ w: latest.w, h: latest.h })
+      onUpdate?.(latestSizeRef.current)
     }
     window.addEventListener('mousemove', move)
     window.addEventListener('mouseup', up)

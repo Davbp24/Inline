@@ -165,7 +165,7 @@ function attachRemoveHandler(mark: HTMLElement, id: string): void {
     'width:18px', 'height:18px', 'border-radius:9999px',
     'background:#1C1E26', 'color:#fff', 'font:600 11px/18px system-ui,sans-serif',
     'text-align:center', 'cursor:pointer', 'user-select:none',
-    'box-shadow:0 1px 3px rgba(0,0,0,0.25)', 'z-index:2147483646',
+    'box-shadow:none', 'z-index:2147483646',
   ].join(';')
 
   // Ensure the mark can host absolutely-positioned children.

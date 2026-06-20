@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useLayoutEffect, useRef, Fragment } from 'react'
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Rewrite from './Rewrite'
 import AI from './AI'
@@ -119,29 +119,35 @@ const IEyeOff = () => (
     <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" />
   </svg>
 )
-const IEye = () => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+const IMore = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="1.5" />
+    <circle cx="19" cy="12" r="1.5" />
+    <circle cx="5" cy="12" r="1.5" />
   </svg>
 )
 
 /** The Inline brand glyph — the slanted tick from the web wordmark, in white. */
+/** Small dark keycap used inside the launcher tooltip. */
 function BrandGlyph({ size = 22 }: { size?: number }) {
   return (
     <span style={{
-      display: 'block', width: Math.round(size * 0.22), height: size,
-      borderRadius: 2, background: '#FFFFFF', transform: 'rotate(-12deg)',
+      display: 'block',
+      width: Math.max(3, Math.round(size * 0.18)),
+      height: Math.round(size * 0.64),
+      borderRadius: 2,
+      background: '#FFFFFF',
+      transform: 'rotate(-12deg)',
     }} />
   )
 }
 
-/** Small dark keycap used inside the launcher tooltip. */
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       minWidth: 15, height: 15, padding: '0 3px', borderRadius: 4,
-      background: 'rgba(255,255,255,0.16)', color: 'rgba(255,255,255,0.92)',
+      background: C.surfaceMuted, color: C.textMuted, border: `1px solid ${C.border}`,
       fontSize: 9.5, fontWeight: 700, lineHeight: 1,
     }}>{children}</span>
   )
@@ -182,13 +188,20 @@ const TOOL_DEFS: Record<string, { icon: React.ReactNode; label: string }> = {
   settings: { icon: <ISettings />, label: 'Settings' },
 }
 
-/** Tools grouped into segments separated by hairline dividers. */
-const DOCK_GROUPS: string[][] = [
-  ['ai', 'rewrite'],
-  ['highlighter', 'notes', 'draw', 'handwriting', 'stamps'],
-  ['search', 'screenshot', 'laser', 'layers'],
-  ['share', 'settings'],
+type DockGroupId = 'annotate' | 'utility'
+
+const DOCK_PRIMARY: ({ type: 'tool'; id: Exclude<PanelId, null> } | { type: 'group'; id: DockGroupId; icon: React.ReactNode; label: string })[] = [
+  { type: 'tool', id: 'ai' },
+  { type: 'tool', id: 'rewrite' },
+  { type: 'group', id: 'annotate', icon: <IHighlight />, label: 'Annotate' },
+  { type: 'tool', id: 'search' },
+  { type: 'group', id: 'utility', icon: <IMore />, label: 'More tools' },
 ]
+
+const DOCK_FLYOUTS: Record<DockGroupId, Exclude<PanelId, null>[]> = {
+  annotate: ['highlighter', 'notes', 'draw', 'handwriting', 'stamps'],
+  utility: ['screenshot', 'laser', 'layers', 'share', 'settings'],
+}
 
 /** Tools that swap content into the main docked panel. */
 const PANEL_TOOLS = new Set<string>(['ai', 'rewrite', 'search', 'settings', 'highlighter', 'draw', 'handwriting', 'stamps', 'layers', 'share'])
@@ -214,6 +227,12 @@ function RailDivider() {
   return <span style={{ height: 1, width: 22, background: C.divider, margin: '4px 0', flexShrink: 0 }} />
 }
 
+function requestHaptic() {
+  try {
+    navigator.vibrate?.(12)
+  } catch { /* unavailable */ }
+}
+
 /** A single rail icon button with a custom navy tooltip to its left. */
 function RailButton({
   icon, label, active, suppressTip, onClick,
@@ -235,16 +254,16 @@ function RailButton({
             style={{
               position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)',
               marginRight: 12, whiteSpace: 'nowrap', pointerEvents: 'none',
-              background: BRAND, color: '#fff', fontSize: 11.5, fontWeight: 600,
+              background: C.surfaceBubble, color: C.text, fontSize: 11.5, fontWeight: 600,
               padding: '6px 11px', borderRadius: 9, letterSpacing: '-0.01em', lineHeight: 1,
-              boxShadow: '0 8px 22px -8px rgba(11,23,53,0.55)',
+              border: `1px solid ${C.border}`,
             }}
           >
             {label}
             <span style={{
               position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)',
               width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
-              borderLeft: `6px solid ${BRAND}`,
+              borderLeft: `6px solid ${C.surfaceBubble}`,
             }} />
           </motion.span>
         )}
@@ -259,10 +278,10 @@ function RailButton({
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: DOCK_BTN, height: DOCK_BTN, borderRadius: 12, border: 'none', padding: 0,
-          background: active ? BRAND : hov ? C.hoverBg : 'transparent',
+          background: active ? C.accent : hov ? C.hoverBg : 'transparent',
           color: active ? '#FFFFFF' : C.textMuted,
           cursor: 'pointer', transition: 'background 0.14s, color 0.14s',
-          boxShadow: active ? '0 5px 14px -5px rgba(11,23,53,0.55)' : 'none',
+          boxShadow: 'none',
         }}
       >{icon}</button>
     </div>
@@ -278,6 +297,8 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
   const [laserActive, setLaserActive] = useState(false)
   const [hidden, setHidden] = useState(false)
+  const [dockOpen, setDockOpen] = useState(false)
+  const [openGroup, setOpenGroup] = useState<DockGroupId | null>(null)
   const [launcherHover, setLauncherHover] = useState(false)
 
   /* Main-panel geometry — the panel is anchored to the LEFT of the launcher,
@@ -369,6 +390,9 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
    */
   const runTool = useCallback((id: PanelId) => {
     if (!id) return
+    requestHaptic()
+    setDockOpen(true)
+    setOpenGroup(null)
     if (id === 'notes') { spawnNote(); return }
     if (id === 'screenshot') { captureScreenshot(); return }
     if (id === 'laser') { setLaserActive(p => !p); return }
@@ -377,7 +401,12 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
 
   /** The launcher opens the flagship Ask Inline surface (or toggles it shut). */
   const toggleLauncher = useCallback(() => {
-    setActivePanel(p => (p === 'ai' ? null : 'ai'))
+    requestHaptic()
+    setDockOpen(v => {
+      const next = !v
+      if (!next) setOpenGroup(null)
+      return next
+    })
   }, [])
 
   const toggleHidden = useCallback(() => {
@@ -385,6 +414,8 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
       const next = !h
       if (next) {
         closePanel(); setLaserActive(false); setScreenshotUrl(null)
+        setDockOpen(false)
+        setOpenGroup(null)
         document.dispatchEvent(new CustomEvent('inline:hideAll', { detail: { hidden: true } }))
       } else {
         document.dispatchEvent(new CustomEvent('inline:hideAll', { detail: { hidden: false } }))
@@ -397,7 +428,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ hidden: boolean }>).detail
       setHidden(detail.hidden)
-      if (detail.hidden) { closePanel(); setLaserActive(false); setScreenshotUrl(null) }
+    if (detail.hidden) { closePanel(); setLaserActive(false); setScreenshotUrl(null); setDockOpen(false); setOpenGroup(null) }
     }
     document.addEventListener('inline:hideAll', handler)
     return () => document.removeEventListener('inline:hideAll', handler)
@@ -469,7 +500,8 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
       case 'screenshot': captureScreenshot(); break
       case 'laser': setLaserActive(p => !p); break
       case 'notebooks': openDashboard(); break
-      case 'collapse': case 'pause': toggleHidden(); break
+      case 'collapse': setDockOpen(v => { const next = !v; if (!next) setOpenGroup(null); return next }); break
+      case 'pause': toggleHidden(); break
     }
     setCmdPaletteOpen(false)
   }, [runTool, spawnNote, captureScreenshot, toggleHidden])
@@ -607,11 +639,11 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
             transition={spring}
             style={{
               pointerEvents: 'auto', width: 42, height: 42, borderRadius: 14,
-              background: '#FFFFFF', border: `1px solid ${C.border}`,
+              background: BRAND, border: '1px solid rgba(255,255,255,0.10)',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: C.textMuted, boxShadow: C.shadow, padding: 0,
+              color: '#FFFFFF', boxShadow: C.shadow, padding: 0,
             }}
-          ><IEye /></motion.button>
+          ><BrandGlyph size={22} /></motion.button>
         ) : (
           <>
             {/* Launcher (master) with mode toast floating directly above it */}
@@ -628,12 +660,12 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                     style={{
                       position: 'absolute', bottom: 'calc(100% + 9px)', right: 0,
                       pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 7,
-                      background: BRAND, color: '#fff', padding: '6px 12px', borderRadius: 11,
+                      background: C.surfaceBubble, color: C.text, padding: '6px 12px', borderRadius: 11,
                       fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em', whiteSpace: 'nowrap',
-                      boxShadow: '0 10px 26px -8px rgba(11,23,53,0.55)',
+                      border: `1px solid ${C.border}`,
                     }}
                   >
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5BE49B', boxShadow: '0 0 0 3px rgba(91,228,155,0.28)' }} />
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16A34A' }} />
                     {modeLabel}
                   </motion.div>
                 )}
@@ -641,7 +673,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
 
               {/* Launcher hover tooltip */}
               <AnimatePresence>
-                {launcherHover && !activePanel && (
+                {launcherHover && !dockOpen && !activePanel && (
                   <motion.div
                     initial={{ opacity: 0, x: 8, scale: 0.94 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -650,17 +682,17 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                     style={{
                       position: 'absolute', right: '100%', marginRight: 13,
                       display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
-                      background: BRAND, color: '#fff', padding: '7px 12px', borderRadius: 10,
+                      background: C.surfaceBubble, color: C.text, padding: '7px 12px', borderRadius: 10,
                       fontSize: 11.5, fontWeight: 600, letterSpacing: '-0.01em', pointerEvents: 'none',
-                      boxShadow: '0 10px 26px -8px rgba(11,23,53,0.55)',
+                      border: `1px solid ${C.border}`,
                     }}
                   >
-                    <span>Ask Inline</span>
+                    <span>Open Inline tools</span>
                     <span style={{ display: 'inline-flex', gap: 3 }}><Kbd>⌘</Kbd><Kbd>⇧</Kbd><Kbd>K</Kbd></span>
                     <span style={{
                       position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)',
                       width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent',
-                      borderLeft: `6px solid ${BRAND}`,
+                      borderLeft: `6px solid ${C.surfaceBubble}`,
                     }} />
                   </motion.div>
                 )}
@@ -671,8 +703,8 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                 onClick={toggleLauncher}
                 onMouseEnter={() => setLauncherHover(true)}
                 onMouseLeave={() => setLauncherHover(false)}
-                aria-label="Ask Inline"
-                aria-expanded={activePanel === 'ai'}
+                aria-label={dockOpen ? 'Close Inline tools' : 'Open Inline tools'}
+                aria-expanded={dockOpen}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.05 }}
@@ -680,58 +712,130 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                 transition={spring}
                 style={{
                   position: 'relative', width: LAUNCHER, height: LAUNCHER, borderRadius: 16,
-                  background: BRAND, border: '1px solid rgba(255,255,255,0.12)',
+                  background: dockOpen ? C.accent : BRAND,
+                  border: `1px solid ${dockOpen ? C.accent : 'rgba(17,24,39,0.18)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', padding: 0, outline: 'none',
-                  boxShadow: activePanel === 'ai'
-                    ? '0 0 0 3px rgba(11,23,53,0.16), 0 14px 32px -10px rgba(11,23,53,0.55)'
-                    : '0 14px 32px -10px rgba(11,23,53,0.55), 0 2px 6px -2px rgba(0,0,0,0.3)',
+                  color: '#FFFFFF',
+                  boxShadow: C.shadow,
                 }}
               >
-                <span style={{
-                  position: 'absolute', inset: 0, borderRadius: 16, pointerEvents: 'none',
-                  background: 'linear-gradient(155deg, rgba(255,255,255,0.16), rgba(255,255,255,0) 55%)',
-                }} />
-                <BrandGlyph size={22} />
+                <BrandGlyph size={24} />
               </motion.button>
             </div>
 
             {/* Vertical tool dock — always present, the persistent right rail */}
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={spring}
-              style={{
-                pointerEvents: 'auto',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                padding: DOCK_PAD, background: C.bg, border: `1px solid ${C.border}`,
-                borderRadius: 20, boxShadow: C.shadow,
-                maxHeight: 'min(72vh, 640px)', overflowY: 'auto', overflowX: 'hidden',
-              }}
-            >
-              {DOCK_GROUPS.map((group, gi) => (
-                <Fragment key={gi}>
-                  {gi > 0 && <RailDivider />}
-                  {group.map((id) => {
-                    const def = TOOL_DEFS[id]
-                    const isActive = id === 'laser' ? laserActive : activePanel === id
+            <AnimatePresence>
+              {dockOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={spring}
+                  style={{
+                    pointerEvents: 'auto',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    padding: DOCK_PAD, background: C.bg, border: `1px solid ${C.border}`,
+                    borderRadius: 18, boxShadow: C.shadow,
+                    maxHeight: 'min(72vh, 640px)', overflowY: 'auto', overflowX: 'hidden',
+                  }}
+                >
+                  {DOCK_PRIMARY.map((item) => {
+                    if (item.type === 'tool') {
+                      const def = TOOL_DEFS[item.id]
+                      const isActive = item.id === 'laser' ? laserActive : activePanel === item.id
+                      return (
+                        <RailButton
+                          key={item.id}
+                          icon={def.icon}
+                          label={def.label}
+                          active={isActive}
+                          suppressTip={isActive}
+                          onClick={() => runTool(item.id)}
+                        />
+                      )
+                    }
+                    const groupActive = openGroup === item.id || DOCK_FLYOUTS[item.id].some(id => id === 'laser' ? laserActive : activePanel === id)
                     return (
                       <RailButton
-                        key={id}
-                        icon={def.icon}
-                        label={def.label}
-                        active={isActive}
-                        suppressTip={isActive}
-                        onClick={() => runTool(id as PanelId)}
+                        key={item.id}
+                        icon={item.icon}
+                        label={item.label}
+                        active={groupActive}
+                        suppressTip={groupActive}
+                        onClick={() => {
+                          requestHaptic()
+                          setOpenGroup(g => g === item.id ? null : item.id)
+                        }}
                       />
                     )
                   })}
-                </Fragment>
-              ))}
-              <RailDivider />
-              <RailButton icon={<INotebook />} label="Notebooks" active={false} onClick={() => { openDashboard() }} />
-              <RailButton icon={<IEyeOff />} label="Hide Inline" active={false} onClick={toggleHidden} />
-            </motion.div>
+                  <RailDivider />
+                  <RailButton icon={<INotebook />} label="Notebooks" active={false} onClick={() => { requestHaptic(); openDashboard() }} />
+                  <RailButton icon={<IEyeOff />} label="Hide Inline" active={false} onClick={toggleHidden} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {dockOpen && openGroup && (
+                <motion.div
+                  key={openGroup}
+                  initial={{ opacity: 0, x: 8, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 8, scale: 0.98 }}
+                  transition={{ duration: 0.14, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    right: 'calc(100% + 10px)',
+                    top: LAUNCHER + 12,
+                    pointerEvents: 'auto',
+                    width: 178,
+                    padding: 6,
+                    borderRadius: 16,
+                    border: `1px solid ${C.border}`,
+                    background: C.bg,
+                    boxShadow: C.shadow,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  {DOCK_FLYOUTS[openGroup].map((id) => {
+                    const def = TOOL_DEFS[id]
+                    const isActive = id === 'laser' ? laserActive : activePanel === id
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => runTool(id)}
+                        aria-label={def.label}
+                        aria-pressed={isActive}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          width: '100%',
+                          minHeight: 34,
+                          padding: '7px 9px',
+                          borderRadius: 10,
+                          border: 'none',
+                          background: isActive ? C.toneSelectedBg : 'transparent',
+                          color: isActive ? C.text : C.textMuted,
+                          cursor: 'pointer',
+                          fontFamily: FONT,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ display: 'inline-flex', color: isActive ? C.accent : C.textMuted }}>{def.icon}</span>
+                        <span>{def.label}</span>
+                      </button>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
       </div>

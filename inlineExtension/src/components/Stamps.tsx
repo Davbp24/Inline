@@ -30,7 +30,7 @@ export default function Stamps({ onClose }: StampsProps) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           margin: '14px 18px 0', padding: '10px 14px', borderRadius: 14,
           background: C.accent, color: '#fff', fontFamily: FONT,
-          boxShadow: '0 8px 20px -8px rgba(11,23,53,0.5)',
+          boxShadow: 'none',
         }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, fontWeight: 600 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#5BE49B' }} />
@@ -64,9 +64,8 @@ export default function Stamps({ onClose }: StampsProps) {
                   background: on ? C.accent : C.surfaceBubble,
                   color: on ? '#fff' : C.text,
                   cursor: 'pointer', padding: 0, fontFamily: FONT,
-                  boxShadow: on ? '0 6px 16px -6px rgba(11,23,53,0.4)' : C.shadowSoft,
-                  transform: on ? 'translateY(-2px)' : 'none',
-                  transition: 'transform 0.14s, background 0.14s, border-color 0.14s, color 0.14s',
+                  boxShadow: 'none',
+                  transition: 'background 0.14s, border-color 0.14s, color 0.14s',
                 }}
               >{sym}</button>
             )

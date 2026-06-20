@@ -190,7 +190,7 @@ export default function Settings({ onClose, onOpenDashboard }: SettingsProps) {
             <button type="button" onClick={addDomain} aria-label="Block domain" style={{
               padding: '9px 16px', borderRadius: C.radiusPill, border: 'none',
               background: C.accent, color: '#fff', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
-              fontFamily: FONT, boxShadow: '0 5px 14px -6px rgba(11,23,53,0.5)',
+              fontFamily: FONT, boxShadow: 'none',
             }}>Add</button>
           </div>
         </div>
