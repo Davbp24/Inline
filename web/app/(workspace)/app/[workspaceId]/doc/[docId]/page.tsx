@@ -167,16 +167,11 @@ export default function DocPage() {
             placeholder="Untitled"
           />
 
-          {/* 3. Metadata */}
-          <p className="text-sm text-slate-500 font-mono mb-8">
-            {workspaceId} · {doc.folderId}
-          </p>
-
-          {/* 4. Back navigation */}
+          {/* 3. Back navigation */}
           <button
             type="button"
             onClick={() => router.push(`/app/${workspaceId}/folder/${doc.folderId}`)}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mt-2 mb-8 cursor-pointer w-max"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mt-3 mb-8 cursor-pointer w-max"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             All documents in {folderName}

@@ -46,12 +46,12 @@ const DEFAULT_ICON_KEYS = ['Megaphone', 'Package', 'TrendingUp', 'FolderKanban',
 const DEFAULT_COLORS    = ['#f43f5e', '#6C91C2', '#f59e0b', '#5FA8A1', '#a855f7']
 
 const FEATURES = [
-  { href: (ws: string) => `/app/${ws}/dashboard`,  icon: LayoutDashboard, label: 'Dashboard'       },
-  { href: (ws: string) => `/app/${ws}/history`,    icon: Clock,           label: 'History'         },
+  { href: (ws: string) => `/app/${ws}/dashboard`,  icon: LayoutDashboard, label: 'Home'            },
+  { href: (ws: string) => `/app/${ws}/history`,    icon: Clock,           label: 'Captures'        },
   { href: (ws: string) => `/app/${ws}/analytics`,  icon: BarChart2,       label: 'Analytics'       },
   { href: (ws: string) => `/app/${ws}/workflows`,  icon: Zap,             label: 'Workflows'       },
-  { href: (ws: string) => `/app/${ws}/map`,         icon: Map,             label: 'Map'             },
-  { href: (ws: string) => `/app/${ws}/graph`,       icon: Share2,          label: 'Graph'           },
+  { href: (ws: string) => `/app/${ws}/map`,         icon: Map,             label: 'Spatial map'     },
+  { href: (ws: string) => `/app/${ws}/graph`,       icon: Share2,          label: 'Knowledge graph' },
   { href: (ws: string) => `/app/${ws}/settings`,    icon: Settings,        label: 'Settings'        },
 ]
 
@@ -603,7 +603,7 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('inline-open-cmd'))}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-stone-50 border border-stone-200/60 cursor-pointer hover:border-stone-200 transition-colors text-left dark:bg-[#10214A] dark:border-[#263E7A] dark:hover:border-[#355199]"
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white border border-stone-200/70 shadow-[0_1px_2px_rgba(28,30,38,0.08)] cursor-pointer hover:border-stone-300 transition-colors text-left dark:bg-[#10214A] dark:border-[#263E7A] dark:hover:border-[#355199]"
             >
               <Search className="w-3.5 h-3.5 text-stone-400 shrink-0 dark:text-[#9BBCE5]" />
               <span className="flex-1 text-xs text-stone-400 select-none dark:text-[#9BBCE5]">Search…</span>

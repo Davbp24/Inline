@@ -318,16 +318,16 @@ export default function WorkspaceChatPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.985 }}
             transition={{ duration: PANEL_DURATION, ease: EASE }}
-            className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-[0_12px_40px_-12px_rgba(28,30,38,0.18)]"
+            className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-[0_18px_48px_-18px_rgba(28,30,38,0.28)]"
             style={{ maxHeight: 420, willChange: 'transform, opacity' }}
           >
-            <div className="flex items-center justify-between border-b border-border bg-[#FAF5EE] px-4 py-2.5">
+            <div className="flex items-center justify-between border-b border-border bg-card px-4 py-2.5">
               <div className="flex min-w-0 items-center gap-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1C1E26]/10">
                   <Bot className="h-3.5 w-3.5 text-[#1C1E26]" />
                 </div>
                 <span className="truncate text-xs font-semibold tracking-tight text-foreground">
-                  Inline
+                  Ask Inline
                 </span>
                 <span className="shrink-0 rounded-md bg-white/80 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
                   {wsId}
@@ -376,7 +376,7 @@ export default function WorkspaceChatPanel() {
                 <div className="flex flex-col items-center gap-2 py-6 text-center">
                   <Sparkles className="h-6 w-6 text-muted-foreground/40" />
                   <p className="text-xs text-muted-foreground">
-                    Ask about your web captures, highlights, and library — the same context you saved on each page.
+                    Ask about your captures, highlights, and documents. Answers use the workspace context you saved.
                   </p>
                   {[
                     'What did I clip or highlight this week?',
@@ -483,7 +483,7 @@ export default function WorkspaceChatPanel() {
 
       <div
         className={cn(
-          'flex w-full items-center gap-2 rounded-2xl border border-border bg-card/95 px-4 py-2.5 shadow-[0_4px_24px_-8px_rgba(28,30,38,0.12)] backdrop-blur-md transition-[border-radius,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          'flex w-full items-center gap-2 rounded-2xl border border-border bg-card/95 px-4 py-2.5 shadow-[0_12px_36px_-20px_rgba(28,30,38,0.32)] backdrop-blur-md transition-[border-radius,border-color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
           open && 'rounded-t-none border-t-0',
         )}
       >
@@ -494,7 +494,7 @@ export default function WorkspaceChatPanel() {
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKey}
           onFocus={() => !open && setOpen(true)}
-          placeholder="Ask Inline…"
+          placeholder="Ask anything across this workspace..."
           className="flex-1 border-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/70"
           disabled={loading}
           aria-label="Message Inline assistant"

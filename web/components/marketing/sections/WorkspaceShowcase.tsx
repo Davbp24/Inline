@@ -35,9 +35,9 @@ type Orbit = {
 
 const ORBITS: Orbit[] = [
   { icon: MessageSquareText, title: 'Ask Inline', x: 250, y: 70, size: 56, accent: true },
-  { icon: LayoutDashboard, title: 'Dashboard', x: 410, y: 120, size: 50 },
+  { icon: LayoutDashboard, title: 'Home', x: 410, y: 120, size: 50 },
   { icon: Library, title: 'Library', x: 150, y: 175, size: 48 },
-  { icon: History, title: 'History', x: 330, y: 215, size: 52 },
+  { icon: History, title: 'Captures', x: 330, y: 215, size: 52 },
   { icon: BarChart3, title: 'Analytics', x: 470, y: 250, size: 46 },
   { icon: Map, title: 'Map', x: 235, y: 300, size: 48 },
   { icon: Share2, title: 'Graph', x: 388, y: 350, size: 50 },
@@ -199,7 +199,7 @@ export default function WorkspaceShowcase() {
       {/* ── Bottom curve: cream (RagSection) rising up into the dark ── */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 overflow-hidden" style={{ height: 120 }} aria-hidden>
         <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="absolute bottom-0 block w-full" style={{ height: 120 }}>
-          <path d="M0,120 L0,74 C420,10 1020,10 1440,74 L1440,120 Z" fill="#FDFBF7" />
+          <path d="M0,120 L0,74 C420,10 1020,10 1440,74 L1440,120 Z" fill="#FFFFFF" />
         </svg>
       </div>
 
@@ -224,10 +224,10 @@ export default function WorkspaceShowcase() {
             grounded in the context you saved.
           </p>
           <Link
-            href="/app/dashboard"
+            href="/app/ws-1/dashboard"
             className="mt-9 inline-flex items-center justify-center rounded-full border border-white/25 bg-white/4 px-7 py-3 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
           >
-            Open your workspace
+            Open workspace
           </Link>
         </Reveal>
 

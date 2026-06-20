@@ -316,7 +316,7 @@ function DangerTab({ workspaceId, workspaceName }: { workspaceId: string; worksp
     localStorage.setItem('inline-workspaces', JSON.stringify(workspaces.filter(w => w.id !== workspaceId)))
     localStorage.setItem('inline-archived-workspaces', JSON.stringify([...readArchivedWorkspaces().filter(w => w.id !== workspaceId), target]))
     notifyWorkspacesChanged()
-    router.push('/app/dashboard')
+    router.push('/app')
   }
 
   function handleRestore(id: string) {
@@ -337,7 +337,7 @@ function DangerTab({ workspaceId, workspaceName }: { workspaceId: string; worksp
       const workspaces = readStoredWorkspaces()
       localStorage.setItem('inline-workspaces', JSON.stringify(workspaces.filter(w => w.id !== workspaceId)))
       notifyWorkspacesChanged()
-      router.push('/app/dashboard')
+      router.push('/app')
     } catch { setDeleting(false) }
   }
 

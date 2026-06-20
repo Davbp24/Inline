@@ -58,6 +58,22 @@ const MENU_MOTION = {
   transition: { duration: 0.1, ease: 'easeOut' as const },
 }
 
+function decodeHtmlEntities(value: string): string {
+  if (typeof window === 'undefined') return value
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = value
+  return textarea.value
+}
+
+function normalizeEditorContent(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return value
+  const looksLikeEscapedHtml =
+    /&lt;(p|h[1-6]|ul|ol|li|blockquote|pre|table|img|div|br)\b/i.test(trimmed) ||
+    /&lt;\/(p|h[1-6]|ul|ol|li|blockquote|pre|table|div)&gt;/i.test(trimmed)
+  return looksLikeEscapedHtml ? decodeHtmlEntities(value) : value
+}
+
 /* ─── Insert-block catalogue ─── */
 type InsertItem = {
   section: string
@@ -133,7 +149,7 @@ function focusSelectionInBlock(editor: Editor, blockEl: HTMLElement | null) {
 /* ─────────────────────────────────────────────────────────────────────────── */
 export default function FolderDocumentEditor({ content, onChange, className }: Props) {
   const wrapperRef      = useRef<HTMLDivElement>(null)
-  const lastContent     = useRef(content)
+  const lastContent     = useRef(normalizeEditorContent(content))
   const hoverTimer      = useRef<ReturnType<typeof setTimeout> | null>(null)
   const editorRef       = useRef<Editor | null>(null)
   const imageInputRef   = useRef<HTMLInputElement>(null)
@@ -178,7 +194,7 @@ export default function FolderDocumentEditor({ content, onChange, className }: P
       Image.configure({ inline: false, allowBase64: true }),
       Underline,
     ],
-    content,
+    content: normalizeEditorContent(content),
     onUpdate({ editor }) {
       const html = editor.getHTML()
       if (html !== lastContent.current) {
@@ -253,9 +269,10 @@ export default function FolderDocumentEditor({ content, onChange, className }: P
   /* Sync external content */
   useEffect(() => {
     if (!editor) return
-    if (content !== lastContent.current) {
-      lastContent.current = content
-      editor.commands.setContent(content)
+    const normalized = normalizeEditorContent(content)
+    if (normalized !== lastContent.current) {
+      lastContent.current = normalized
+      editor.commands.setContent(normalized)
     }
   }, [editor, content])
 

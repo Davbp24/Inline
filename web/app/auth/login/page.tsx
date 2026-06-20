@@ -28,7 +28,7 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    router.push('/app/dashboard')
+    router.push('/app/ws-1/dashboard')
     router.refresh()
   }
 

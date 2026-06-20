@@ -133,7 +133,7 @@ export default function ExtensionShowcase() {
 
           {/* Three-state mockup column on a soft page backdrop */}
           <Reveal delay={0.1}>
-            <div className="relative rounded-3xl border border-stone-200/80 bg-[#FAF5EE] p-6 md:p-8">
+            <div className="relative rounded-3xl border border-stone-200/80 bg-[#F7F7F5] p-6 md:p-8">
               <div className="absolute inset-x-8 top-6 space-y-2 opacity-50" aria-hidden>
                 <div className="h-2 rounded bg-stone-200/80 w-3/4" />
                 <div className="h-2 rounded bg-stone-200/80 w-full" />

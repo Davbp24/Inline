@@ -101,7 +101,7 @@ export default function RightContextPanel() {
       style={{ transform: 'translateZ(0)' }}
     >
       {/* Header tabs */}
-      <div className="flex h-[52px] shrink-0 items-center gap-1 border-b border-border bg-[#FAF5EE] px-3">
+      <div className="flex h-[52px] shrink-0 items-center gap-1 border-b border-border bg-card px-3">
         {(['activity', 'insights'] as const).map(t => (
           <button
             key={t}

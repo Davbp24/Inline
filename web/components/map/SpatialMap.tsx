@@ -73,7 +73,7 @@ interface SpatialMapProps {
 export default function SpatialMap({
   coordinates: serverCoordinates,
   storageKey = 'inline-map-pins',
-  backHref = '/app/dashboard',
+  backHref = '/app/ws-1/dashboard',
 }: SpatialMapProps) {
   const [mounted, setMounted] = useState(false)
   const [userPins, setUserPins] = useState<MapCoordinate[]>([])

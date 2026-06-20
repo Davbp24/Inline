@@ -10,14 +10,14 @@ const LINK_COLUMNS: { section: string; items: { label: string; href: string }[] 
     items: [
       { label: 'Overview',  href: '/#product' },
       { label: 'Extension', href: '/#extension' },
-      { label: 'AI & RAG',  href: '/#rag' },
+      { label: 'AI search', href: '/#rag' },
       { label: 'FAQ',       href: '/#faq' },
     ],
   },
   {
     section: 'Workspace',
     items: [
-      { label: 'Open workspace', href: '/app/dashboard' },
+      { label: 'Open workspace', href: '/app/ws-1/dashboard' },
       { label: 'Sign in',        href: '/auth/login' },
       { label: 'Create account', href: '/auth/register' },
     ],

@@ -15,13 +15,13 @@ const MILESTONES = [
   },
   {
     icon: Award,
-    title: 'Won Blackstone\u2019s \u201cBest Unique Project\u201d',
-    body: 'Inline received the \u201cBest Unique Project\u201d award at the program\u2019s judged showcase.',
+    title: 'Recognized as a unique project',
+    body: 'Inline received a judged showcase award for its extension, workspace, and retrieval experience.',
   },
   {
     icon: Presentation,
     title: 'Demoed live to industry representatives',
-    body: 'The working prototype was presented at a live industry demo to representatives from Blackstone and NextEra.',
+    body: 'The working prototype was presented live to a panel of industry guests and technical reviewers.',
   },
 ]
 
@@ -36,7 +36,7 @@ export default function CredibilitySection() {
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {MILESTONES.map((m, i) => (
             <Reveal key={m.title} delay={i * 0.06}>
-              <div className="h-full rounded-2xl border border-stone-200/80 bg-[#FDFBF7] p-6 text-center">
+              <div className="h-full rounded-2xl border border-stone-200/80 bg-white p-6 text-center">
                 <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#C9DAF0] bg-[#EBF1F7] text-[#4B83C4]">
                   <m.icon className="h-4.5 w-4.5" aria-hidden />
                 </div>
@@ -48,7 +48,7 @@ export default function CredibilitySection() {
         </div>
         <Reveal delay={0.15}>
           <p className="mt-6 text-center text-xs text-stone-400">
-            Organizations named above judged or attended program events. They are not customers, sponsors, or users of Inline.
+            Program guests and reviewers are not customers, sponsors, or users of Inline.
           </p>
         </Reveal>
       </div>

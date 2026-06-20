@@ -100,7 +100,7 @@ export default function FeatureBento() {
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((f, i) => (
             <Reveal key={f.title} delay={Math.min(i * 0.04, 0.25)} className={f.span}>
-              <div className="h-full rounded-2xl border border-stone-200/80 bg-[#FDFBF7] p-6 transition-colors hover:border-stone-300">
+              <div className="h-full rounded-2xl border border-stone-200/80 bg-white p-6 transition-colors hover:border-stone-300">
                 <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-xl ${f.tint} text-[#1C1E26]`}>
                   <f.icon className="h-4.5 w-4.5" aria-hidden />
                 </div>

@@ -822,7 +822,7 @@ function PersonalSettingsPageInner() {
   return (
     <>
       <PageHeader
-        crumbs={[{ label: 'Account', href: '/app/dashboard' }, { label: 'Settings' }]}
+        crumbs={[{ label: 'Account', href: '/app/ws-1/dashboard' }, { label: 'Settings' }]}
       />
 
       <div className="px-6 pb-12">

@@ -76,16 +76,16 @@ function ChatMock() {
 
 export default function RagSection() {
   return (
-    <section id="rag" className="relative scroll-mt-24 overflow-hidden bg-[#FDFBF7] py-24 md:py-32">
+    <section id="rag" className="relative scroll-mt-24 overflow-hidden bg-white py-24 md:py-32">
       <OrbitAccent className="absolute -right-24 -top-24 h-[420px] w-[420px]" />
       <div className="relative mx-auto max-w-6xl px-6 lg:px-10">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <div>
             <SectionHeading
               align="left"
-              eyebrow="AI & RAG"
+              eyebrow="AI search"
               title="Ask AI across your saved web memory"
-              lede="Not prompt-stuffing — real retrieval. Inline searches your captures by meaning and grounds every answer in the sources it found."
+              lede="Ask a question in plain language. Inline searches your saved captures by meaning and grounds every answer in the sources it found."
             />
             <div className="mt-10 space-y-7">
               {PIPELINE.map((step, i) => (

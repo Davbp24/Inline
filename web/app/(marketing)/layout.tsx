@@ -21,7 +21,7 @@ export default function MarketingLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className={`${dmSans.variable} ${caveat.variable} ${dmSans.className} bg-[#FDFBF7] text-[#1C1E26] min-h-screen antialiased`}>
+    <div className={`${dmSans.variable} ${caveat.variable} ${dmSans.className} bg-white text-[#1C1E26] min-h-screen antialiased`}>
       <MarketingNav />
       <main>{children}</main>
       <MarketingFooter />

@@ -43,7 +43,7 @@ const STEPS = [
 
 export default function InstallPage() {
   return (
-    <div className="bg-[#FDFBF7] min-h-screen">
+    <div className="bg-white min-h-screen">
       {/* Navy header band keeps the celestial identity */}
       <section data-hero className="bg-[#0B1735] pt-36 pb-20 px-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8AACDB] mb-3">
@@ -78,7 +78,7 @@ export default function InstallPage() {
           ))}
         </ol>
 
-        <div className="mt-10 rounded-2xl border border-stone-200/80 bg-[#FAF5EE] p-6">
+        <div className="mt-10 rounded-2xl border border-stone-200/80 bg-[#F7F7F5] p-6">
           <h2 className="text-sm font-semibold text-[#1C1E26]">Running the full stack locally</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-stone-600">
             The extension talks to the Inline web app (port 3000) and the annotation

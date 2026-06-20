@@ -11,10 +11,10 @@ import { cn } from '@/lib/utils'
  * (no Chrome Web Store listing yet).
  */
 const NAV_LINKS = [
-  { label: 'Product',   href: '/#product'   },
+  { label: 'How it works', href: '/#product'   },
   { label: 'Extension', href: '/#extension' },
   { label: 'Workspace', href: '/#workspace' },
-  { label: 'AI & RAG',  href: '/#rag'       },
+  { label: 'AI search', href: '/#rag'       },
   { label: 'Security',  href: '/#security'  },
   { label: 'FAQ',       href: '/#faq'       },
 ]
@@ -100,7 +100,7 @@ export default function MarketingNav() {
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
         pastHero || mobileOpen
-          ? 'bg-[#FDFBF7]/92 backdrop-blur-md border-b border-stone-200/60'
+          ? 'bg-white/92 backdrop-blur-md border-b border-stone-200/60'
           : 'bg-transparent',
       )}
     >
@@ -167,7 +167,7 @@ export default function MarketingNav() {
       </nav>
 
       {mobileOpen && (
-        <div className="lg:hidden border-t border-stone-200/60 bg-[#FDFBF7] px-6 pb-6 pt-2">
+        <div className="lg:hidden border-t border-stone-200/60 bg-white px-6 pb-6 pt-2">
           <ul className="flex flex-col">
             {NAV_LINKS.map(link => (
               <li key={link.href}>
@@ -190,7 +190,7 @@ export default function MarketingNav() {
               Sign in
             </Link>
             <Link
-              href="/app/dashboard"
+              href="/app/ws-1/dashboard"
               onClick={() => setMobileOpen(false)}
               className="inline-flex items-center justify-center rounded-full bg-[#1C1E26] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
             >

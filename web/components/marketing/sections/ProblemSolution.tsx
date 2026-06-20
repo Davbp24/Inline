@@ -50,7 +50,7 @@ const SOLUTIONS = [
 
 export default function ProblemSolution() {
   return (
-    <section id="product" className="scroll-mt-24 bg-[#FDFBF7] py-24 md:py-32">
+    <section id="product" className="scroll-mt-24 bg-white py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <SectionHeading
           eyebrow="The problem"

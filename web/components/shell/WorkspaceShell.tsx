@@ -16,7 +16,7 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
 
   return (
     <ChatPanelProvider>
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="flex h-screen overflow-hidden bg-white">
         <Sidebar />
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
           <WorkspaceActivityPanelToggle />

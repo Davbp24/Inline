@@ -18,12 +18,12 @@ import {
 } from 'lucide-react'
 
 const NAV_COMMANDS = [
-  { label: 'Dashboard',       icon: LayoutDashboard, href: '/app/dashboard', shortcut: 'G D' },
-  { label: 'History',         icon: Clock,           href: '/app/history',   shortcut: 'G H' },
-  { label: 'Analytics',       icon: BarChart3,       href: '/app/analytics', shortcut: ''    },
-  { label: 'Map View',        icon: Map,             href: '/app/map',       shortcut: 'G M' },
-  { label: 'Knowledge Graph', icon: Share2,          href: '/app/graph',     shortcut: 'G G' },
-  { label: 'Settings',        icon: Settings,        href: '/app/settings',  shortcut: ''    },
+  { label: 'Home',            icon: LayoutDashboard, path: 'dashboard', shortcut: 'G D' },
+  { label: 'Captures',        icon: Clock,           path: 'history',   shortcut: 'G H' },
+  { label: 'Analytics',       icon: BarChart3,       path: 'analytics', shortcut: ''    },
+  { label: 'Spatial map',     icon: Map,             path: 'map',       shortcut: 'G M' },
+  { label: 'Knowledge graph', icon: Share2,          path: 'graph',     shortcut: 'G G' },
+  { label: 'Settings',        icon: Settings,        path: 'settings',  shortcut: ''    },
 ]
 
 const ACTION_COMMANDS = [
@@ -43,7 +43,7 @@ type SearchResult = {
 
 function getWorkspaceId(pathname: string | null): string {
   const m = pathname?.match(/\/app\/(ws-[^/]+)/)
-  return m ? m[1] : ''
+  return m ? m[1] : 'ws-1'
 }
 
 export default function CommandPalette() {
@@ -124,7 +124,7 @@ export default function CommandPalette() {
     [router],
   )
 
-  const historyBase = workspaceId ? `/app/${workspaceId}/history` : '/app/history'
+  const historyBase = `/app/${workspaceId}/history`
 
   return (
     <CommandDialog open={open} onOpenChange={v => { setOpen(v); if (!v) setQuery('') }}>
@@ -185,7 +185,7 @@ export default function CommandPalette() {
             {NAV_COMMANDS.map(item => {
               const Icon = item.icon
               return (
-                <CommandItem key={item.label} onSelect={() => run(item.href)}>
+                <CommandItem key={item.label} onSelect={() => run(`/app/${workspaceId}/${item.path}`)}>
                   <Icon className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span>{item.label}</span>
                   {item.shortcut && (

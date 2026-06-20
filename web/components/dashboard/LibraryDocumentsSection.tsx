@@ -13,10 +13,10 @@ import {
 } from '@/lib/dashboard-favorites'
 
 const PASTEL_BGS = [
-  'bg-[#F5EDE3] dark:bg-[#15285C]',
-  'bg-[#FDECC8] dark:bg-[#1B326D]',
-  'bg-[#F1F1EF] dark:bg-[#17296B]',
-  'bg-[#E7E5E4] dark:bg-[#1E3878]',
+  'bg-card dark:bg-[#15285C]',
+  'bg-card dark:bg-[#1B326D]',
+  'bg-card dark:bg-[#17296B]',
+  'bg-card dark:bg-[#1E3878]',
 ]
 
 function relativeTime(ts: number) {
@@ -154,7 +154,7 @@ function DocLibraryCard({
   return (
     <div className={cn(
       'relative rounded-2xl p-5 flex flex-col justify-between h-40',
-      'border border-transparent transition-colors hover:border-border',
+      'border border-border transition-colors hover:border-stone-400/50',
       bg,
     )}>
       <button

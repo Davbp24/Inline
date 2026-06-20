@@ -63,7 +63,7 @@
      Muted:         #78716c (stone-500)
      Surface:       #F5EDE3  |  Border: #d6d3d1 (stone-300)
   */
-  --background:                 #FDFBF7;
+  --background:                 #FFFFFF;
   --foreground:                 #1C1E26;
   --card:                       #FFFFFF;
   --card-foreground:            #1C1E26;
@@ -73,14 +73,14 @@
   --primary-hover:              #13151B;
   --primary-light:              #F7F6F3;
   --primary-foreground:         #FFFFFF;
-  --secondary:                  #F5EDE3;
+  --secondary:                  #F7F7F5;
   --secondary-foreground:       #1C1E26;
-  --muted:                      #F0EBE3;
+  --muted:                      #F4F4F2;
   --muted-foreground:           #78716c;
-  --accent:                     #F0EBE3;
+  --accent:                     #F4F4F2;
   --accent-light:               #F7F6F3;
   --accent-foreground:          #1C1E26;
-  --highlight:                  #FDECC8;
+  --highlight:                  #F8F0D8;
   --destructive:                #EB5757;
   --destructive-foreground:     #FFFFFF;
   --border:                     #d6d3d1;

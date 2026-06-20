@@ -15,8 +15,8 @@ const FAQS: { q: string; a: string }[] = [
     a: 'The extension runs on standard web pages over http and https. It renders inside an isolated Shadow DOM so it doesn\u2019t collide with page styles. Browser-internal pages (like chrome:// pages and the Web Store) don\u2019t allow extensions to run. You can also disable Inline on specific sites.',
   },
   {
-    q: 'How does the RAG (ask-your-workspace) feature work?',
-    a: 'When you save captures and documents, Inline chunks the text and stores vector embeddings in Postgres (pgvector), scoped to your account. When you ask a question, it embeds the query, retrieves the most similar chunks from your workspace, and asks the model to answer only from those sources. Answers come with source cards; if your workspace isn\u2019t indexed yet, the panel says it is answering from recent captures only.',
+    q: 'How does AI search work?',
+    a: 'When you save captures and documents, Inline indexes that content inside your account. When you ask a question, it finds the most relevant saved context in your workspace and answers only from those sources. Answers include source cards, and the panel clearly says when it is answering from recent captures only.',
   },
   {
     q: 'Where are my annotations stored?',
@@ -38,13 +38,13 @@ const FAQS: { q: string; a: string }[] = [
 
 export default function FaqSection() {
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#FDFBF7] py-24 md:py-32">
+    <section id="faq" className="scroll-mt-24 bg-white py-24 md:py-32">
       <div className="mx-auto max-w-3xl px-6 lg:px-10">
         <SectionHeading eyebrow="FAQ" title="Questions, answered plainly" />
         <Reveal className="mt-12" delay={0.08}>
           <div className="divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white">
             {FAQS.map(f => (
-              <details key={f.q} className="group px-6 py-4 open:bg-[#FDFBF7]/60">
+              <details key={f.q} className="group px-6 py-4 open:bg-[#F7F7F5]">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-[#1C1E26] [&::-webkit-details-marker]:hidden">
                   {f.q}
                   <span

@@ -404,7 +404,7 @@ export default function AccountSettingsPage() {
 
   return (
     <>
-      <PageHeader crumbs={[{ label: 'Account', href: '/app/dashboard' }, { label: 'Settings' }]} />
+      <PageHeader crumbs={[{ label: 'Account', href: '/app/ws-1/dashboard' }, { label: 'Settings' }]} />
 
       <div className="px-6 pb-12">
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Account Settings</h1>
