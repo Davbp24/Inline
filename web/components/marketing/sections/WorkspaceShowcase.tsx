@@ -6,10 +6,9 @@ import {
   MessageCircle,
   Library,
   BarChart3,
-  Map,
-  Share2,
   FileText,
   LayoutDashboard,
+  Settings,
   type LucideIcon,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -39,9 +38,8 @@ const ORBITS: Orbit[] = [
   { icon: Library, title: 'Library', x: 150, y: 175, size: 48 },
   { icon: History, title: 'Captures', x: 330, y: 215, size: 52 },
   { icon: BarChart3, title: 'Analytics', x: 470, y: 250, size: 46 },
-  { icon: Map, title: 'Map', x: 235, y: 300, size: 48 },
-  { icon: Share2, title: 'Graph', x: 388, y: 350, size: 50 },
-  { icon: FileText, title: 'Auto-recaps', x: 110, y: 360, size: 44 },
+  { icon: FileText, title: 'Auto-recaps', x: 235, y: 300, size: 48 },
+  { icon: Settings, title: 'Settings', x: 388, y: 350, size: 50 },
 ]
 
 const SECTION_STARS = [
@@ -217,7 +215,7 @@ export default function WorkspaceShowcase() {
           </h2>
           <p className="mt-6 max-w-md text-base leading-relaxed text-stone-300/90">
             Highlights, notes, rewrites, and recaps stay attached to the page — then
-            roll up into one workspace you can search, chart, map, and ask.
+            roll up into one workspace you can search, chart, and ask.
           </p>
           <p className="mt-4 max-w-md text-base leading-relaxed text-stone-400">
             Every surface below is a real page in the app — connected, searchable, and

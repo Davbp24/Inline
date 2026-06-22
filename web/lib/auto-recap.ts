@@ -15,7 +15,7 @@
  */
 
 import type { Note } from './types'
-import { prettyNotePreview } from './note-preview'
+import { stripHtml } from './utils'
 import {
   loadFolderDocuments,
   upsertFolderDocument,
@@ -67,22 +67,6 @@ function groupNotesByPageUrl(notes: Note[]): Record<string, Note[]> {
   }, {})
 }
 
-function tagLabel(tag: string): string {
-  return tag
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase())
-}
-
-function sectionKeyFor(note: Note): string {
-  const priority = [
-    'summary', 'rephrase', 'shorten', 'rewrite', 'ai',
-    'drawing', 'handwriting', 'highlight', 'sticky', 'anchor',
-    'paper-note', 'stamp', 'clip',
-  ]
-  for (const p of priority) if (note.tags?.includes(p)) return p
-  return note.type || 'Other'
-}
-
 function htmlEscape(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -90,60 +74,148 @@ function htmlEscape(s: string): string {
     .replace(/>/g, '&gt;')
 }
 
-/** Build a clean Tiptap-compatible HTML recap. */
-function composeRecapHtml(workspaceTitle: string, pageUrl: string, notes: Note[]): string {
-  const pageTitle = titleOf(notes, pageUrl)
-  const domain = domainOf(pageUrl)
-  const first = notes.reduce((acc, n) => (n.createdAt < acc ? n.createdAt : acc), notes[0].createdAt)
-  const last = notes.reduce((acc, n) => {
-    const ts = n.updatedAt ?? n.createdAt
-    return ts > acc ? ts : acc
-  }, notes[0].updatedAt ?? notes[0].createdAt)
+function formatRecapMinute(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'numeric',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
 
-  const buckets: Record<string, Note[]> = {}
-  for (const n of notes) {
-    const k = sectionKeyFor(n)
-    ;(buckets[k] = buckets[k] ?? []).push(n)
+function stripMarkdownHeaderPrefix(text: string): string {
+  return text
+    .replace(/^\*\*([a-z0-9-]+)\*\*\s*/i, '')
+    .replace(/^>\s*/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** Lowercase, unobtrusive label for what the user did. */
+function actionLabelFor(note: Note): string {
+  const tags = note.tags ?? []
+  const aiTag = ['summary', 'rephrase', 'shorten', 'rewrite', 'ai'].find(t => tags.includes(t))
+  if (aiTag) return aiTag === 'ai' ? 'AI' : aiTag
+  const featureTag = [
+    'highlight', 'sticky', 'anchor', 'paper-note',
+    'drawing', 'handwriting', 'stamp', 'clip',
+  ].find(t => tags.includes(t))
+  if (featureTag) return featureTag.replace(/-/g, ' ')
+  if (note.type === 'ai-summary') return 'summary'
+  return (note.type || 'capture').replace(/-/g, ' ')
+}
+
+function cleanNoteBody(note: Note): string {
+  return stripMarkdownHeaderPrefix(stripHtml(note.content ?? ''))
+}
+
+function describeDrawing(note: Note): string | null {
+  if (!note.tags?.includes('drawing') && note.type !== 'canvas') return null
+  const raw = note.content ?? ''
+  try {
+    const obj = JSON.parse(raw) as { type?: string; points?: unknown[] }
+    const kinds: Record<string, string> = {
+      path: 'pen stroke', line: 'line', rect: 'rectangle',
+      arrow: 'arrow', ellipse: 'ellipse',
+    }
+    const kind = obj.type ? kinds[obj.type] ?? obj.type : 'sketch'
+    const pts = Array.isArray(obj.points) ? obj.points.length : 0
+    return pts > 0 ? `Drawing (${kind}, ${pts} points)` : `Drawing (${kind})`
+  } catch {
+    return 'Drawing'
+  }
+}
+
+function describeHandwriting(note: Note): string | null {
+  if (!note.tags?.includes('handwriting')) return null
+  const m = /([0-9]+)\s+handwriting/i.exec(note.content ?? '')
+  return m ? `Handwriting (${m[1]} points)` : 'Handwriting'
+}
+
+function positionHint(note: Note): string | null {
+  const isAnchor = note.type === 'anchor' || note.tags?.includes('anchor')
+  if (!isAnchor) return null
+  const parts: string[] = []
+  if (note.x != null || note.y != null) {
+    parts.push(`pinned at ${Math.round(note.x ?? 0)}%, ${Math.round(note.y ?? 0)}%`)
+  }
+  if (note.lat != null && note.lng != null) {
+    parts.push(`location ${note.lat.toFixed(4)}, ${note.lng.toFixed(4)}`)
+  }
+  return parts.length ? parts.join(' · ') : null
+}
+
+function recapEntryHtml(note: Note): string {
+  const ts = formatRecapMinute(note.updatedAt ?? note.createdAt)
+  const action = actionLabelFor(note)
+  const context = note.pageContext?.trim() ?? ''
+  const body = cleanNoteBody(note)
+  const drawing = describeDrawing(note)
+  const handwriting = describeHandwriting(note)
+  const position = positionHint(note)
+
+  let html = `<p><em>${htmlEscape(ts)} · ${htmlEscape(action)}</em></p>`
+
+  if (context && context !== body) {
+    html += `<blockquote><p>${htmlEscape(context)}</p></blockquote>`
   }
 
-  const ORDER = ['summary', 'rephrase', 'shorten', 'rewrite', 'ai',
-    'highlight', 'sticky', 'anchor', 'paper-note',
-    'drawing', 'handwriting', 'stamp', 'clip']
-  const sectionKeys = [
-    ...ORDER.filter(k => buckets[k]?.length),
-    ...Object.keys(buckets).filter(k => !ORDER.includes(k)),
-  ]
+  if (drawing) {
+    html += `<p>${htmlEscape(drawing)}</p>`
+    if (body && !body.startsWith('{')) html += `<p>${htmlEscape(body)}</p>`
+  } else if (handwriting) {
+    html += `<p>${htmlEscape(handwriting)}</p>`
+    if (body && !/^\d+\s+handwriting/i.test(body)) html += `<p>${htmlEscape(body)}</p>`
+  } else if (body) {
+    html += `<p>${htmlEscape(body)}</p>`
+  } else if (!context) {
+    html += `<p><em>Empty capture</em></p>`
+  }
 
+  if (position) {
+    html += `<p><em>${htmlEscape(position)}</em></p>`
+  }
+
+  return html + '<hr>'
+}
+
+/** Build a clean Tiptap-compatible HTML recap. */
+function composeRecapHtml(_workspaceTitle: string, _pageUrl: string, notes: Note[]): string {
+  const pageTitle = titleOf(notes, _pageUrl)
+  const domain = domainOf(_pageUrl)
+  const sorted = [...notes].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  )
+  const first = sorted[0]?.createdAt ?? notes[0].createdAt
+  const lastNote = sorted[sorted.length - 1] ?? notes[0]
+  const last = lastNote.updatedAt ?? lastNote.createdAt
   const totalCount = notes.length
-  const typeSummary = sectionKeys
-    .map(k => `${buckets[k].length} ${tagLabel(k)}`)
-    .join(' · ')
 
-  const overviewLines = [
-    `Captured <strong>${totalCount}</strong> item${totalCount === 1 ? '' : 's'} on <strong>${htmlEscape(pageTitle)}</strong> (<code>${htmlEscape(domain)}</code>).`,
-    `${htmlEscape(typeSummary)}.`,
-    `First interaction: ${new Date(first).toLocaleString()}. Most recent: ${new Date(last).toLocaleString()}.`,
-  ]
-
-  const head =
-    `<h1>${htmlEscape(pageTitle)}</h1>` +
-    `<p><em>Auto-generated recap for ${htmlEscape(workspaceTitle)}.</em> ` +
-    `<a href="${htmlEscape(pageUrl)}" target="_blank" rel="noreferrer">Open source page ↗</a></p>` +
+  const overview =
     `<h2>Overview</h2>` +
-    `<p>${overviewLines.join(' ')}</p>`
+    `<p>${totalCount} capture${totalCount === 1 ? '' : 's'} from ` +
+    `<strong>${htmlEscape(pageTitle)}</strong> (${htmlEscape(domain)}). ` +
+    `${formatRecapMinute(first)} – ${formatRecapMinute(last)}.</p>` +
+    `<h2>Activity</h2>`
 
-  const sectionsHtml = sectionKeys.map(key => {
-    const items = buckets[key]
-    const heading = tagLabel(key)
-    const rows = items.map(n => {
-      const stamp = new Date(n.updatedAt ?? n.createdAt).toLocaleString()
-      const preview = htmlEscape(prettyNotePreview(n))
-      return `<li><strong>${stamp}</strong> — ${preview}</li>`
-    }).join('')
-    return `<h2>${htmlEscape(heading)}</h2><ul>${rows}</ul>`
-  }).join('')
+  const entries = sorted.map(recapEntryHtml).join('')
+  return overview + entries
+}
 
-  return head + sectionsHtml
+/** Remove legacy duplicate &lt;h1&gt; from stored recap HTML (title lives on the document). */
+export function stripRecapLeadingTitle(html: string): string {
+  return html.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/i, '')
+}
+
+/** Strip duplicate meta block shown in the page header (legacy + new recaps). */
+export function normalizeRecapContent(html: string): string {
+  let out = stripRecapLeadingTitle(html)
+  out = out.replace(
+    /^\s*<p>\s*<em>\s*Auto-generated recap[\s\S]*?<\/p>\s*/i,
+    '',
+  )
+  return out.trim()
 }
 
 /** Find an existing recap for a given page url. */
@@ -192,7 +264,7 @@ export function ensurePageRecaps(
       }, 0)
       const shouldRegen =
         sourceNewest > existing.updatedAt ||
-        now - existing.updatedAt > RECAP_REGEN_INTERVAL_MS
+        (!existing.recapStale && now - existing.updatedAt > RECAP_REGEN_INTERVAL_MS)
       if (shouldRegen) {
         upsertFolderDocument({
           ...existing,

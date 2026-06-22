@@ -52,3 +52,11 @@ export function stripHtml(html: string): string {
 
   return out.replace(/\s+/g, ' ').trim()
 }
+
+/** Plain-text document preview for cards and lists (strips HTML, then truncates). */
+export function previewText(content: string, max = 140): string {
+  const clean = stripHtml(content)
+  if (!clean) return ''
+  if (clean.length <= max) return clean
+  return `${clean.slice(0, max - 1).trimEnd()}…`
+}

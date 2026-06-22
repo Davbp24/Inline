@@ -236,7 +236,7 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
    * Every time the dashboard mounts it posts the current Supabase access token
    * and the active workspace id so the extension can save notes under the same
    * user without the user ever pasting a token into the popup. This is what
-   * makes History / Analytics / Graph populate from extension captures.
+   * makes History / Analytics populate from extension captures.
    */
   if (message?.type === 'INLINE_SYNC_AUTH') {
     const p = message.payload as {

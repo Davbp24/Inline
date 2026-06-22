@@ -4,9 +4,7 @@ import {
   FileText,
   PenLine,
   Volume2,
-  Share2,
   BarChart3,
-  Map,
   Library,
   Search,
 } from 'lucide-react'
@@ -53,25 +51,11 @@ const FEATURES = [
     tint: 'bg-[#EBF1F7]',
   },
   {
-    icon: Share2,
-    title: 'Connections',
-    body: 'See pages, domains, and notes connect into one map of your research.',
-    span: 'lg:col-span-2',
-    tint: 'bg-[#E8F0EC]',
-  },
-  {
     icon: BarChart3,
     title: 'Analytics',
     body: 'Capture trends over time, by type and by site.',
-    span: '',
+    span: 'lg:col-span-2',
     tint: 'bg-[#FEF3C7]',
-  },
-  {
-    icon: Map,
-    title: 'Places',
-    body: 'Captures with place data, plotted on a real map.',
-    span: '',
-    tint: 'bg-[#E8F0EC]',
   },
   {
     icon: Library,

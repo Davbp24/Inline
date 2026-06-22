@@ -1,6 +1,6 @@
 /**
  * Save an AI result (summary / rephrase / shorten / custom) to the user's
- * History / Analytics / Graph so activity is never lost. Writes are routed
+ * History / Analytics so activity is never lost. Writes are routed
  * through the background service worker's CLIP_TO_WORKSPACE handler which
  * hits Next.js /api/clip — that route scopes the row to the authenticated
  * user (Bearer JWT) or userId fallback.
