@@ -30,7 +30,7 @@ body {
 .popup-brand-icon {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 50%;
   background: #12203f;
   display: flex;
   align-items: center;

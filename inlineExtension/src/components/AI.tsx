@@ -9,6 +9,7 @@ import { saveAIResultToHistory } from '../lib/historyApi'
 import { buildAIInsertMark } from '../lib/insertBadge'
 import { GUEST_AI_LIMIT, reserveAiPrompt } from '../lib/aiAccess'
 import { PanelShell, Spinner, SectionLabel, ActionTile, Chip, Composer } from './panelKit'
+import FormattedAiText from './FormattedAiText'
 import { setAiBusy } from '../lib/panelLock'
 
 const ICopy = () => (
@@ -367,19 +368,17 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
     >
       <div style={{ padding: '20px 24px' }}>
         <div style={{
-          fontSize: 14,
-          lineHeight: 1.625,
-          color: C.text,
           minHeight: 80,
           maxHeight: 320,
           overflowY: 'auto',
-          whiteSpace: 'pre-wrap',
         }}>
           {loading ? (
-            <p style={{ margin: 0, fontStyle: 'italic', color: C.textMuted }}>
+            <p style={{ margin: 0, fontStyle: 'italic', color: C.textMuted, fontSize: 14, lineHeight: 1.625 }}>
               Putting together the best answer — one moment, Inline…
             </p>
-          ) : result}
+          ) : result ? (
+            <FormattedAiText text={result} />
+          ) : null}
         </div>
       </div>
     </PanelShell>

@@ -77,6 +77,14 @@
   margin: 0.5em 0;
 }
 
+.folder-document-editor .ProseMirror ul:not([data-type="taskList"]) {
+  list-style-type: disc;
+}
+
+.folder-document-editor .ProseMirror ol {
+  list-style-type: decimal;
+}
+
 .folder-document-editor .ProseMirror ul:not([data-type="taskList"]) li,
 .folder-document-editor .ProseMirror ol li {
   display: list-item;
@@ -194,6 +202,42 @@
   margin-top: 0.25rem;
 }
 
+.auto-recap-document .ProseMirror h3 {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0.875rem 0 0.35rem;
+}
+
+.auto-recap-document .ProseMirror ul.recap-bullets {
+  margin: 0.25rem 0 0.875rem;
+  padding-left: 1.35rem;
+  list-style-type: disc;
+  list-style-position: outside;
+}
+
+.auto-recap-document .ProseMirror ul.recap-bullets li {
+  display: list-item;
+  margin: 0.4rem 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.auto-recap-document .ProseMirror ul.recap-bullets li p {
+  margin: 0;
+}
+
+.auto-recap-document .ProseMirror blockquote.recap-quote {
+  margin: 0.25rem 0 0.625rem;
+}
+
+.auto-recap-document .ProseMirror .recap-entry {
+  margin-bottom: 0.25rem;
+}
+
 .auto-recap-document .ProseMirror p > em:only-child {
   font-size: 0.75rem;
   font-style: normal;
@@ -226,3 +270,16 @@
 .auto-recap-document .ProseMirror hr:last-child {
   display: none;
 }
+
+.folder-document-editor .ProseMirror h1.doc-outline-flash,
+.folder-document-editor .ProseMirror h2.doc-outline-flash,
+.folder-document-editor .ProseMirror h3.doc-outline-flash,
+.folder-document-editor .ProseMirror pre.doc-outline-flash,
+.folder-document-editor .ProseMirror blockquote.doc-outline-flash,
+.folder-document-editor .ProseMirror [data-recap-entry].doc-outline-flash {
+  outline: 2px solid rgba(75, 131, 196, 0.35);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+  transition: outline-color 0.3s ease;
+}
+

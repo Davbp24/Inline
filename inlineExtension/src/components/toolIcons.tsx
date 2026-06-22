@@ -252,7 +252,7 @@ export function ToolIconTile({
         justifyContent: 'center',
         width: size,
         height: size,
-        borderRadius: C.radiusSm,
+        borderRadius: TOOL_TILE.radius,
         background: TOOL_TILE.bg,
         border: `1px solid ${active ? TOOL_TILE.borderActive : TOOL_TILE.border}`,
         color: TOOL_TILE.fg,

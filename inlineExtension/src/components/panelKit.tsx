@@ -15,13 +15,13 @@ import { PANEL as C, CHAT, FONT, BRAND_GRADIENT } from '../lib/extensionTheme'
 /* ─────────────────────────  Brand + chrome  ───────────────────────── */
 
 /** The Inline brand glyph (slanted tick) inside a navy rounded tile. */
-export function BrandMark({ size = 24, radius }: { size?: number; radius?: number }) {
+export function BrandMark({ size = 24, radius }: { size?: number; radius?: number | string }) {
   return (
     <span
       style={{
         position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: size, height: size, flexShrink: 0,
-        borderRadius: radius ?? Math.round(size * 0.32),
+        borderRadius: radius ?? '50%',
         background: BRAND_GRADIENT,
         border: '1px solid rgba(255,255,255,0.08)',
       }}
@@ -122,7 +122,7 @@ export function PanelShell({
             ? <InlineChatBadge size={24} iconSize={13} />
             : tool
               ? <ToolHeaderIcon tool={tool} size={24} />
-              : <BrandMark size={24} radius={8} />}
+              : <BrandMark size={24} />}
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{
               fontSize: 14,

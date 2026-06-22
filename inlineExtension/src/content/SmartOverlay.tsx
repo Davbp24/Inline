@@ -14,6 +14,7 @@ import { fetchViaBackground } from '../lib/backgroundFetch'
 import { buildAIInsertMark } from '../lib/insertBadge'
 import { saveAIReplacement } from './aiReplacements'
 import { TOOLBAR as TB, HIGHLIGHT_SWATCHES, FONT, PANEL as C } from '../lib/extensionTheme'
+import FormattedAiText from '../components/FormattedAiText'
 import { GUEST_AI_LIMIT, reserveAiPrompt } from '../lib/aiAccess'
 
 type Pt = { x: number; y: number }
@@ -987,7 +988,7 @@ export default function SmartOverlay() {
           </div>
           {aiResult.loading
             ? <p style={{ color: '#6B7280', margin: 0 }}>Thinking…</p>
-            : <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: DARK, lineHeight: 1.5, fontFamily: FONT }}>{aiResult.body}</pre>}
+            : <FormattedAiText text={aiResult.body} style={{ fontSize: 12, lineHeight: 1.5, color: DARK }} />}
           {!aiResult.loading && aiResult.body && (
             <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'flex-end' }}>
               <button type="button"

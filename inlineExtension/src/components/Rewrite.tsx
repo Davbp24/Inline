@@ -9,6 +9,7 @@ import { buildAIInsertMark } from '../lib/insertBadge'
 import { saveAIReplacement } from '../content/aiReplacements'
 import { GUEST_AI_LIMIT, reserveAiPrompt } from '../lib/aiAccess'
 import { PanelShell, Spinner, SectionLabel, ActionTile, Chip, Segmented, Composer } from './panelKit'
+import FormattedAiText from './FormattedAiText'
 import { setAiBusy } from '../lib/panelLock'
 
 const ICopy = () => (
@@ -264,16 +265,16 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
       <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{
           padding: 15, border: `1px solid ${C.border}`, borderRadius: 16,
-          fontSize: 13.5, lineHeight: 1.7, color: C.text, minHeight: 80,
+          minHeight: 80,
           background: C.surfaceBubble, boxShadow: 'none',
-          maxHeight: 280, overflowY: 'auto', whiteSpace: 'pre-wrap',
+          maxHeight: 280, overflowY: 'auto',
         }}>
           {loading ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: C.textMuted, fontSize: 13.5, lineHeight: 1.7 }}>
               <Spinner size={16} /><span style={{ fontStyle: 'italic' }}>Generating...</span>
             </span>
           ) : showDiff && result ? (
-            <span>
+            <span style={{ fontSize: 13.5, lineHeight: 1.7, color: C.text }}>
               {computeWordDiff(selectedText, result).map((p, i) =>
                 p.type === 'del' ? (
                   <span key={i} style={{ color: '#ef4444', textDecoration: 'line-through', background: 'rgba(239,68,68,0.1)' }}>{p.text}</span>
@@ -284,7 +285,9 @@ export default function Rewrite({ selectedText, originalRange, onClose }: Rewrit
                 )
               )}
             </span>
-          ) : result}
+          ) : result ? (
+            <FormattedAiText text={result} style={{ fontSize: 13.5, lineHeight: 1.7 }} />
+          ) : null}
         </div>
 
         {!loading && (

@@ -280,7 +280,7 @@ export default function CommandPalette({ onClose, onAction }: CommandPaletteProp
           padding: '9px 14px', borderTop: `1px solid ${C.divider}`, background: C.surfaceBubble,
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11, color: C.textLight }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: 5, background: '#0B1735' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', background: '#0B1735' }}>
               <span style={{ display: 'block', width: 2, height: 8, borderRadius: 2, background: '#fff', transform: 'rotate(-12deg)' }} />
             </span>
             Inline

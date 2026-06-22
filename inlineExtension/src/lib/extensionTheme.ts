@@ -29,6 +29,8 @@ export const TOOL_TILE = {
   border: 'rgba(18, 32, 63, 0.22)',
   borderActive: 'rgba(75, 131, 196, 0.45)',
   activeRing: '0 0 0 2px rgba(75, 131, 196, 0.18)',
+  /** Fully round navy icon buttons in panel popups. */
+  radius: '50%',
 } as const
 
 export const PANEL = {
