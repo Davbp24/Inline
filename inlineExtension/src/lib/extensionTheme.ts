@@ -22,6 +22,15 @@ export const CHAT = {
   destructive: '#EB5757',
 } as const
 
+/** Navy tile behind tool icons — matches the web chat badge. */
+export const TOOL_TILE = {
+  bg: '#12203f',
+  fg: '#FFFFFF',
+  border: 'rgba(18, 32, 63, 0.22)',
+  borderActive: 'rgba(75, 131, 196, 0.45)',
+  activeRing: '0 0 0 2px rgba(75, 131, 196, 0.18)',
+} as const
+
 export const PANEL = {
   bg: '#FFFFFF',
   headerBg: '#FFFFFF',

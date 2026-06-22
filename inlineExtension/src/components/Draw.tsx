@@ -708,7 +708,7 @@ export default function Draw({ onClose }: DrawProps) {
   const activeLabel = tools.find(t => t.id === tool)?.label ?? 'Pen'
 
   return (
-    <PanelShell title="Draw" subtitle="Annotate directly on the page" chip={activeLabel} width={290} onClose={onClose}>
+    <PanelShell title="Draw" subtitle="Annotate directly on the page" chip={activeLabel} width={290} tool="draw" onClose={onClose}>
       <div style={{ padding: '16px 18px 18px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         {/* Tools */}
         <div>

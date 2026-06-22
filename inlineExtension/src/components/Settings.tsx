@@ -106,6 +106,7 @@ export default function Settings({ onClose, onOpenDashboard }: SettingsProps) {
       title="Settings"
       subtitle="Global preferences"
       width={340}
+      tool="settings"
       onClose={onClose}
       footer={
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>

@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode, type CSSProperties } from 'react'
 import { InlineChatBadge } from './InlineChatIcon'
+import { ToolHeaderIcon, type ToolId } from './toolIcons'
 import { PANEL as C, CHAT, FONT, BRAND_GRADIENT } from '../lib/extensionTheme'
 
 /**
@@ -74,6 +75,8 @@ export interface PanelShellProps {
   headerLeading?: ReactNode
   /** Use the canonical chat badge instead of the brand mark in the header. */
   useChatBrand?: boolean
+  /** Tool-specific header icon (matches dock / flyout). */
+  tool?: ToolId
   children: ReactNode
   style?: CSSProperties
 }
@@ -83,7 +86,7 @@ export interface PanelShellProps {
  * soft layered shadow, and a confident branded header with a custom close.
  */
 export function PanelShell({
-  title, subtitle, chip, width = 360, onClose, footer, headerActions, headerLeading, useChatBrand, children, style,
+  title, subtitle, chip, width = 360, onClose, footer, headerActions, headerLeading, useChatBrand, tool, children, style,
 }: PanelShellProps) {
   return (
     <div
@@ -115,7 +118,11 @@ export function PanelShell({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
           {headerLeading}
-          {useChatBrand ? <InlineChatBadge size={24} iconSize={13} /> : <BrandMark size={24} radius={8} />}
+          {useChatBrand
+            ? <InlineChatBadge size={24} iconSize={13} />
+            : tool
+              ? <ToolHeaderIcon tool={tool} size={24} />
+              : <BrandMark size={24} radius={8} />}
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{
               fontSize: 14,
@@ -230,7 +237,7 @@ export function ActionTile({
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 30, height: 30, borderRadius: C.radiusSm, flexShrink: 0,
           background: disabled ? C.surfaceSunken : C.surfaceMuted,
-          color: disabled ? C.textLight : C.accent,
+          color: disabled ? C.textLight : C.text,
         }}>{icon}</span>
       )}
       <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>

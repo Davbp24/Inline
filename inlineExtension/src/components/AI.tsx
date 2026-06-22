@@ -223,7 +223,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
         chip={hasSelection ? 'Selection' : 'Page'}
         width={342}
         onClose={onClose}
-        useChatBrand
+        tool="ai"
       >
         <div style={{ padding: '20px 20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{
@@ -239,9 +239,9 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
                 justifyContent: 'center',
                 width: 28,
                 height: 28,
-                borderRadius: 9,
+                borderRadius: C.radiusSm,
                 background: C.surfaceMuted,
-                color: C.accent,
+                color: C.textMuted,
                 flexShrink: 0,
               }}><IGlobe /></span>
               <span style={{ minWidth: 0 }}>
@@ -348,7 +348,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
       chip={lastTask ? (lastInstruction ? 'Custom' : lastTask) : undefined}
       width={342}
       onClose={onClose}
-      useChatBrand
+      tool="ai"
       footer={!loading ? (
         <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 7 }}>
           <button type="button" onClick={() => { setResult(null); setCopied(false) }} aria-label="Back" style={ghostBtn}>Back</button>

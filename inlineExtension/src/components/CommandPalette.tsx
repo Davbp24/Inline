@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PANEL as C, CHAT, FONT } from '../lib/extensionTheme'
-import { InlineChatIcon } from './InlineChatIcon'
+import { IconAi, ToolIconTile } from './toolIcons'
 
 type Category = 'action' | 'annotate' | 'app' | 'toolbar'
 
@@ -23,7 +23,7 @@ const IRewrite = () => (
     <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
   </svg>
 )
-const IAi = () => <InlineChatIcon size={16} />
+const IAi = () => <IconAi />
 const INotes = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
@@ -250,15 +250,9 @@ export default function CommandPalette({ onClose, onAction }: CommandPaletteProp
                     textAlign: 'left', transition: 'background 0.1s',
                   }}
                 >
-                  <span style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    width: 30, height: 30, borderRadius: C.radiusSm, flexShrink: 0,
-                    background: selected ? C.bg : C.surfaceMuted,
-                    border: `1px solid ${C.border}`,
-                    color: C.textMuted,
-                  }}>
+                  <ToolIconTile size={30} active={selected}>
                     {action.icon}
-                  </span>
+                  </ToolIconTile>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: C.text }}>{action.label}</span>
                     {action.hint && (

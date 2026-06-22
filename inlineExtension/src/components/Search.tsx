@@ -119,7 +119,7 @@ export default function Search({ onClose }: SearchProps) {
   }
 
   return (
-    <PanelShell title="Search" subtitle="Find your notes & annotations" width={332} onClose={onClose} style={{ height: 'min(520px, calc(100vh - 64px))' }}>
+    <PanelShell title="Search" subtitle="Find your notes & annotations" width={332} tool="search" onClose={onClose} style={{ height: 'min(520px, calc(100vh - 64px))' }}>
       {/* Search input + scope */}
       <div style={{ padding: '16px 18px 12px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{

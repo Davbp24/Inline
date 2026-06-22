@@ -749,7 +749,7 @@ export default function WorkspaceChatPanel() {
                     <p className="text-sm text-muted-foreground">
                       Ready to help across this workspace.
                     </p>
-                    <div className="border-l border-border pl-5">
+                    <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-semibold text-foreground">
                           Start with a clear next step
