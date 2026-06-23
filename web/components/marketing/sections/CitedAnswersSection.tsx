@@ -3,18 +3,9 @@ import { Reveal } from '@/components/marketing/primitives/Reveal'
 import { SectionLink } from '@/components/marketing/SectionLink'
 import { SourceCardRow } from '@/components/shell/SourceCard'
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
-import { DEMO_BRIDGE_SOURCES, DEMO_WORKSPACE_ID } from '@/components/marketing/productMocks/sampleData'
+import { DEMO_BRIDGE_SOURCES, DEMO_TOP_DOMAINS, DEMO_WORKSPACE_ID } from '@/components/marketing/productMocks/sampleData'
 
-const DOMAINS = [
-  'en.wikipedia.org',
-  'engineering.org',
-  'medium.com',
-  'arxiv.org',
-  'stackoverflow.com',
-  'notion.so',
-  'docs.google.com',
-  'reddit.com',
-] as const
+const DOMAINS = DEMO_TOP_DOMAINS
 
 export default function CitedAnswersSection() {
   return (

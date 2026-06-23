@@ -156,6 +156,12 @@ export default function InstallPage() {
           >
             Privacy policy
           </Link>
+          <Link
+            href="/terms"
+            className="inline-flex items-center justify-center rounded-full border border-stone-300 px-7 py-3 text-sm font-medium text-stone-800 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]"
+          >
+            Terms of service
+          </Link>
         </div>
 
         <details className="mt-12 rounded-2xl border border-stone-200/80 bg-[#F7F7F5] p-6">

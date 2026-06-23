@@ -300,6 +300,9 @@ export default function PrivacyPage() {
           <Link href="/privacy" className="font-medium text-[#12203f] underline underline-offset-4">
             Privacy Policy
           </Link>
+          <Link href="/terms" className="font-medium text-[#12203f] underline underline-offset-4">
+            Terms of Service
+          </Link>
           <Link href="/install" className="font-medium text-[#12203f] underline underline-offset-4">
             Install extension
           </Link>

@@ -5,6 +5,7 @@ import {
   ExtensionSectionLabel,
 } from '@/components/marketing/productMocks/ExtensionPanelShellMock'
 import { cn } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
 const QUICK_ACTIONS = [
   { label: 'Summarize', desc: 'Key points' },
@@ -38,7 +39,7 @@ export default function ExtensionAskPanelIdleMock({ className }: ExtensionAskPan
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">Cable-stayed bridge design</p>
-              <p className="truncate text-xs text-muted-foreground">engineering.org</p>
+              <p className="truncate text-xs text-muted-foreground">{DEMO_DOMAIN}</p>
             </div>
           </div>
         </div>
@@ -79,7 +80,7 @@ export function ExtensionPageRecapPanelMock({ className }: { className?: string 
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">Cable-stayed bridge design</p>
-              <p className="truncate text-xs text-muted-foreground">engineering.org</p>
+              <p className="truncate text-xs text-muted-foreground">{DEMO_DOMAIN}</p>
             </div>
           </div>
         </div>

@@ -4,17 +4,18 @@ import {
   ExtensionSegmentedMock,
 } from '@/components/marketing/productMocks/ExtensionPanelShellMock'
 import { cn, formatDisplayTitle } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
 const RESULTS = [
   {
     title: 'Cable-stayed bridge design',
     snippet: 'Towers carry deck loads directly through stay cables rather than anchorages…',
-    url: 'engineering.org',
+    url: DEMO_DOMAIN,
   },
   {
     title: 'Suspension bridge',
     snippet: 'The deck hangs from main cables anchored at both ends…',
-    url: 'en.wikipedia.org',
+    url: DEMO_DOMAIN,
   },
 ] as const
 

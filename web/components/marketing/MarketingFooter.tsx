@@ -33,6 +33,7 @@ const LINK_COLUMNS: { section: string; items: { label: string; href: string | Se
     items: [
       { label: 'Install the extension', href: '/install' },
       { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
     ],
   },
 ]

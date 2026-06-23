@@ -20,6 +20,7 @@ import LibraryDocumentsMock from '@/components/marketing/productMocks/LibraryDoc
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
 import { product } from '@/components/marketing/marketingSurfaces'
 import { cn } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
 type WorkspaceDashboardPreviewMockProps = {
   className?: string
@@ -43,13 +44,13 @@ const ACTIVITY_FEED = [
   {
     icon: Sparkles,
     label: 'Recap update approved',
-    sub: 'engineering.org · Cable-stayed bridge design',
+    sub: `${DEMO_DOMAIN} · Cable-stayed bridge design`,
     time: '2h ago',
   },
   {
     icon: FileText,
     label: 'Highlight saved',
-    sub: 'Bridge load distribution · medium.com',
+    sub: `Bridge load distribution · ${DEMO_DOMAIN}`,
     time: '5h ago',
   },
   {

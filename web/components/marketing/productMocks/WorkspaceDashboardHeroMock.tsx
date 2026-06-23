@@ -26,6 +26,7 @@ import {
   MockTopDomainsChart,
 } from '@/components/marketing/productMocks/DashboardChartMocks'
 import { cn } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
 const NAV = [
   { label: 'Home', icon: Home, active: true },
@@ -77,7 +78,7 @@ const ACTIVITY_FEED = [
   {
     icon: FileText,
     label: 'Highlight saved',
-    sub: 'engineering.org · Cable-stayed bridge design',
+    sub: `${DEMO_DOMAIN} · Cable-stayed bridge design`,
     time: '2h ago',
   },
   {

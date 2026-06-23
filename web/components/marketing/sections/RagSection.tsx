@@ -2,6 +2,7 @@ import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
 import { Database, SearchCheck, Quote, FileStack } from 'lucide-react'
 import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
 import { formatDisplayTitle } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 import { mktPanelMock } from '@/components/marketing/marketingSurfaces'
 
 /**
@@ -50,7 +51,7 @@ function ChatMock() {
         <div className="max-w-[88%]">
           <p className="text-[11px] leading-relaxed text-[#78716c]">
             You highlighted that suspension decks hang from main cables anchored at both ends [1], and
-            your recap of the engineering article notes cable-stayed towers take the load directly
+            your recap of the example article notes cable-stayed towers take the load directly
             [2].
           </p>
           <p className="mb-1 mt-2 text-[8px] font-semibold uppercase tracking-wider text-[#78716c]">
@@ -58,8 +59,8 @@ function ChatMock() {
           </p>
           <div className="flex gap-2">
             {[
-              { ref: 1, type: 'Capture', title: 'Bridge — Wikipedia', domain: 'en.wikipedia.org' },
-              { ref: 2, type: 'Recap', title: 'Cable-stayed design', domain: 'engineering.org' },
+              { ref: 1, type: 'Capture', title: 'Bridge overview', domain: DEMO_DOMAIN },
+              { ref: 2, type: 'Recap', title: 'Cable-stayed design', domain: DEMO_DOMAIN },
             ].map(s => (
               <div
                 key={s.ref}

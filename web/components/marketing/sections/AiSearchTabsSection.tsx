@@ -25,7 +25,7 @@ const SCENARIOS: { id: string; label: string; scenario: WorkspaceChatScenario }[
     id: 'recap',
     label: 'Recap lookup',
     scenario: {
-      userMessage: 'Summarize everything I captured on the bridge engineering article.',
+      userMessage: 'Summarize everything I captured on the example-website.com article.',
       assistantMessage:
         'The article covers load paths, tower geometry, and construction trade-offs. Your auto-recap was last updated today and links four highlights and two sticky notes from the page.',
       sources: DEMO_BRIDGE_SOURCES.slice(0, 2),
@@ -36,11 +36,11 @@ const SCENARIOS: { id: string; label: string; scenario: WorkspaceChatScenario }[
     label: 'Cross-page ask',
     scenario: {
       userMessage:
-        'Compare what I saved about bridges across Wikipedia and the engineering article.',
+        'Compare what I saved about bridges across two pages on example-website.com.',
       assistantMessage:
-        'Wikipedia captures focus on suspension mechanics — decks hanging from anchored cables. Your engineering article highlights emphasize cable-stayed towers carrying loads directly, with a shorter construction timeline.',
+        'One page focuses on suspension mechanics — decks hanging from anchored cables. Your other captures emphasize cable-stayed towers carrying loads directly, with a shorter construction timeline.',
       sources: DEMO_BRIDGE_SOURCES,
-      recencyNote: 'Searching captures across 2 domains in your workspace.',
+      recencyNote: 'Searching captures across example-website.com in your workspace.',
     },
   },
 ]
