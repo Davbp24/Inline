@@ -3,7 +3,7 @@ import {
   ExtensionPanelShellMock,
   ExtensionSegmentedMock,
 } from '@/components/marketing/productMocks/ExtensionPanelShellMock'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 
 const RESULTS = [
   {
@@ -53,7 +53,7 @@ export default function ExtensionSearchPanelMock({ className }: ExtensionSearchP
             key={result.title}
             className="rounded-2xl border border-border bg-[#F7F7F5] px-3.5 py-3"
           >
-            <p className="text-[12.5px] font-bold tracking-tight text-foreground">{result.title}</p>
+            <p className="text-[12.5px] font-bold tracking-tight text-foreground">{formatDisplayTitle(result.title)}</p>
             <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">{result.snippet}</p>
             <p className="mt-1.5 truncate text-[10.5px] text-muted-foreground/80">{result.url}</p>
           </div>

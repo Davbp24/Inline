@@ -7,6 +7,7 @@ import ExportButton from '@/components/shell/ExportButton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchNotes, fetchRecapsByPageUrl } from '@/lib/data'
 import { getWorkspaceName } from '@/lib/workspaces'
+import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
 
 export const metadata: Metadata = { title: 'History' }
 
@@ -53,15 +54,16 @@ export default async function WorkspaceHistoryPage({
   params: Promise<{ workspaceId: string }>
   searchParams: Promise<{ q?: string }>
 }) {
-  const { workspaceId } = await params
+  const { workspaceId: routeSegment } = await params
   const q = (await searchParams)?.q
+  const workspaceId = resolveWorkspaceId(routeSegment)
   const workspaceName = getWorkspaceName(workspaceId)
 
   return (
     <div className="min-h-full bg-white dark:bg-[#0A1430]">
       <PageHeader
         crumbs={[
-          { label: workspaceName, href: `/app/${workspaceId}/dashboard` },
+          { label: workspaceName, href: workspacePath(workspaceId, 'dashboard') },
           { label: 'History' },
         ]}
         action={

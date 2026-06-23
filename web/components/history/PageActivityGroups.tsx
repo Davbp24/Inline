@@ -2,6 +2,8 @@ import Link from 'next/link'
 import type { Note, NoteType } from '@/lib/types'
 import { ExternalLink, FileText, Globe } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { formatDisplayTitle } from '@/lib/utils'
+import { workspacePath } from '@/lib/workspace-routes'
 
 interface PageActivityGroupsProps {
   notes: Note[]
@@ -30,7 +32,7 @@ function domainOf(url: string): string {
 
 function titleOf(notes: Note[], pageUrl: string): string {
   const withTitle = notes.find(n => n.pageTitle && n.pageTitle.trim())
-  return withTitle?.pageTitle?.trim() || domainOf(pageUrl)
+  return formatDisplayTitle(withTitle?.pageTitle?.trim() || domainOf(pageUrl))
 }
 
 function mostRecent(notes: Note[]): string {
@@ -120,7 +122,7 @@ export default function PageActivityGroups({
                 </span>
                 {recap ? (
                   <Link
-                    href={recap.href ?? `/app/${workspaceId}/library/${recap.id}`}
+                    href={recap.href ?? workspacePath(workspaceId, 'library', recap.id)}
                     className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                   >
                     <FileText className="w-3.5 h-3.5" />

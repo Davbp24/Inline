@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import {
   Loader2, ExternalLink, Trash2, Copy, ArrowLeft,
 } from 'lucide-react'
@@ -17,9 +17,12 @@ import DocumentViewHeader from '@/components/documents/DocumentViewHeader'
 import DocumentHeaderActions from '@/components/documents/DocumentHeaderActions'
 import RecapContextPanel from '@/components/documents/RecapContextPanel'
 import RecapFooterActions from '@/components/documents/RecapFooterActions'
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
 
 export default function DocPage() {
-  const { workspaceId, docId } = useParams<{ workspaceId: string; docId: string }>()
+  const { docId } = useParams<{ workspaceId: string; docId: string }>()
+  const pathname = usePathname()
+  const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
   const router = useRouter()
 
   const [doc,       setDoc]       = useState<FolderDocument | null>(null)
@@ -38,7 +41,7 @@ export default function DocPage() {
 
   useEffect(() => {
     const d = getDocumentById(docId)
-    if (!d) { router.replace(`/app/${workspaceId}/dashboard`); return }
+    if (!d) { router.replace(workspacePath(workspaceId, 'dashboard')); return }
     setDoc(d); setTitle(d.title); setLoading(false)
     const folders = loadWorkspaceFolders()
     const folder = folders.find(f => f.id === d.folderId)
@@ -127,7 +130,7 @@ export default function DocPage() {
   function handleDelete() {
     if (!doc) return
     deleteFolderDocument(doc.id)
-    router.replace(`/app/${workspaceId}/folder/${doc.folderId}`)
+    router.replace(workspacePath(workspaceId, 'folder', doc.folderId))
   }
 
   function handleDuplicate() {
@@ -144,7 +147,7 @@ export default function DocPage() {
       updatedAt: now,
     }
     upsertFolderDocument(copy)
-    router.push(`/app/${workspaceId}/doc/${copy.id}`)
+    router.push(workspacePath(workspaceId, 'doc', copy.id))
   }
 
   if (loading) return (
@@ -159,7 +162,7 @@ export default function DocPage() {
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
       <Link
-        href={`/app/${workspaceId}/folder/${doc.folderId}`}
+        href={workspacePath(workspaceId, 'folder', doc.folderId)}
         className="absolute top-3 left-8 z-30 inline-flex max-w-[min(100vw-12rem,20rem)] items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -195,7 +198,7 @@ export default function DocPage() {
                   onMenuToggle={() => setMenuOpen(v => !v)}
                   onMenuClose={() => setMenuOpen(false)}
                   menuItems={[
-                    { icon: ExternalLink, label: 'Open in folder', action: () => router.push(`/app/${workspaceId}/folder/${doc.folderId}`) },
+                    { icon: ExternalLink, label: 'Open in folder', action: () => router.push(workspacePath(workspaceId, 'folder', doc.folderId)) },
                     { icon: Copy, label: 'Duplicate', action: handleDuplicate },
                     { icon: Trash2, label: 'Delete', action: handleDelete, danger: true },
                   ]}

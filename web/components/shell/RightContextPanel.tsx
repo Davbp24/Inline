@@ -27,9 +27,10 @@ function relTime(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`
 }
 
+import { resolveWorkspaceIdFromBrowserPath } from '@/lib/workspace-routes'
+
 function getWsId(pathname: string): string {
-  const m = pathname.match(/\/app\/(ws-[^/]+)/)
-  return m ? m[1] : 'ws-1'
+  return resolveWorkspaceIdFromBrowserPath(pathname)
 }
 
 const KIND_ICON: Record<string, React.ElementType> = {

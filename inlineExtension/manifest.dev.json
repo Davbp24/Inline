@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Inline",
+  "description": "Annotate any webpage with sticky notes, highlights, and AI tools.",
+  "version": "1.1",
+  "permissions": ["storage", "activeTab", "contextMenus", "alarms"],
+  "host_permissions": [
+    "http://localhost:3000/*", "http://127.0.0.1:3000/*",
+    "http://localhost:3030/*", "http://127.0.0.1:3030/*"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:3000/*", "http://127.0.0.1:3000/*",
+      "http://localhost:3030/*", "http://127.0.0.1:3030/*"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "vite.svg"
+  },
+  "commands": {
+    "toggle-command-palette": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Open command palette"
+    },
+    "toggle-rewrite": {
+      "description": "Toggle Rewrite panel"
+    },
+    "toggle-ai": {
+      "description": "Toggle Ask AI panel"
+    },
+    "toggle-highlighter": {
+      "description": "Toggle Highlighter"
+    },
+    "new-note": {
+      "description": "Create new note"
+    },
+    "toggle-pause": {
+      "description": "Pause/resume extension"
+    }
+  }
+}

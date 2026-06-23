@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getSiteUrl } from '@/lib/inline-origin'
 
 export async function POST(req: NextRequest) {
   const { pageUrl, layers, userId } = await req.json()
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/shared/${shareId}`
+  const shareUrl = `${getSiteUrl()}/shared/${shareId}`
   return NextResponse.json({ shareUrl, shareId })
 }
 

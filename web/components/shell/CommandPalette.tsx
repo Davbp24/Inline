@@ -39,9 +39,10 @@ type SearchResult = {
   created_at: string
 }
 
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
+
 function getWorkspaceId(pathname: string | null): string {
-  const m = pathname?.match(/\/app\/(ws-[^/]+)/)
-  return m ? m[1] : 'ws-1'
+  return resolveWorkspaceIdFromBrowserPath(pathname)
 }
 
 export default function CommandPalette() {
@@ -122,7 +123,7 @@ export default function CommandPalette() {
     [router],
   )
 
-  const historyBase = `/app/${workspaceId}/history`
+  const historyBase = workspacePath(workspaceId, 'history')
 
   return (
     <CommandDialog open={open} onOpenChange={v => { setOpen(v); if (!v) setQuery('') }}>
@@ -183,7 +184,7 @@ export default function CommandPalette() {
             {NAV_COMMANDS.map(item => {
               const Icon = item.icon
               return (
-                <CommandItem key={item.label} onSelect={() => run(`/app/${workspaceId}/${item.path}`)}>
+                <CommandItem key={item.label} onSelect={() => run(workspacePath(workspaceId, item.path))}>
                   <Icon className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span>{item.label}</span>
                   {item.shortcut && (

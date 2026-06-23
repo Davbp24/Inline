@@ -28,7 +28,7 @@ function CollapsedPillMock() {
   return (
     <div
       className="flex w-fit items-center gap-2 rounded-full border border-[#d6d3d1] bg-white px-3 py-2"
-      style={{ boxShadow: product.toolbarShadow }}
+      style={{ boxShadow: product.chatPillShadow }}
     >
       <InlineChatIcon size="md" variant="badge" />
       <span className="text-xs font-medium text-[#78716c]">Inline</span>

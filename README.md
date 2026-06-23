@@ -56,6 +56,14 @@ Load the unpacked extension from `inlineExtension/dist` in Chrome after building
 - Web app: `http://localhost:3000`
 - Backend API: `http://localhost:3030`
 - Extension build output: `inlineExtension/dist`
+- Privacy policy: `http://localhost:3000/privacy`
+
+## Extension Privacy Notes
+
+- The extension has a first-run disclosure before capture or AI actions are available.
+- Guest/local captures save to browser storage and use encrypted annotation records.
+- Signed-in captures sync to the active workspace over secure non-local transport.
+- The Chrome Web Store listing should use `/privacy` as the privacy policy URL and mirror the permission reasons in `inlineExtension/README.md`.
 
 ## Validation
 

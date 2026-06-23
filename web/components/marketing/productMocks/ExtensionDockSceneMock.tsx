@@ -19,7 +19,7 @@ export default function ExtensionDockSceneMock({
   return (
     <div
       className={cn(
-        'relative flex min-h-[320px] flex-col overflow-hidden rounded-2xl border border-[#E8DFD4] bg-white p-5 md:min-h-[360px] md:p-6',
+        'relative flex min-h-[280px] flex-col overflow-hidden rounded-2xl border border-[#E8DFD4] bg-[#F5EDE3] p-4 sm:min-h-[320px] sm:p-5 md:min-h-[360px] md:p-6',
         className,
       )}
     >
@@ -40,8 +40,8 @@ export default function ExtensionDockSceneMock({
           </div>
         )}
 
-        <div className="flex flex-1 items-start justify-end gap-3">
-          <ExtensionAskPanelMock compact className="shrink-0" badgeShape={badgeShape} />
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-end">
+          <ExtensionAskPanelMock compact className="w-full max-w-[342px]" badgeShape={badgeShape} />
           <ExtensionDockMock className="shrink-0" />
         </div>
       </div>

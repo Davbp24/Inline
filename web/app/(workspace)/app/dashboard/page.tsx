@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
 
-export default function LegacyDashboardPage() {
-  const firstWorkspaceId = DEFAULT_WORKSPACES[0]?.id ?? 'ws-1'
-  redirect(`/app/${firstWorkspaceId}/dashboard`)
+export default function DashboardRedirectPage() {
+  const first = DEFAULT_WORKSPACES[0]
+  redirect(workspacePath(first ?? 'marketing-team', 'dashboard'))
 }

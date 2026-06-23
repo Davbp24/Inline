@@ -1,6 +1,6 @@
 import { Globe, Star } from 'lucide-react'
 import { DEMO_CAPTURES } from '@/components/marketing/productMocks/sampleData'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 
 type DashboardCapturesMockProps = {
   className?: string
@@ -36,7 +36,7 @@ export default function DashboardCapturesMock({
                 compact ? 'text-sm' : 'text-base',
               )}
             >
-              {capture.title}
+              {formatDisplayTitle(capture.title)}
             </p>
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{capture.preview}</p>
           </div>

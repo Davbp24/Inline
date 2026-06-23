@@ -1,4 +1,6 @@
+import { DEFAULT_WEB_URL } from './inlineUrls'
 import { normalizeInlineVoiceId } from './inlineVoicePresets'
+import { isSecureTransportUrl, normalizeSecureBase } from './secureTransport'
 
 export type ExtensionSettings = {
   apiBaseUrl: string
@@ -9,7 +11,13 @@ export type ExtensionSettings = {
   screenReader: boolean
 }
 
-const DEFAULT_BASE = 'http://localhost:3000'
+const DEFAULT_BASE = DEFAULT_WEB_URL
+
+function safeApiBase(value: unknown): string {
+  if (typeof value !== 'string' || !value) return DEFAULT_BASE
+  const base = value.replace(/\/$/, '')
+  return isSecureTransportUrl(base) ? base : DEFAULT_BASE
+}
 
 export async function loadSettings(): Promise<ExtensionSettings> {
   return new Promise(resolve => {
@@ -26,7 +34,7 @@ export async function loadSettings(): Promise<ExtensionSettings> {
         } catch { /* invalid JSON, keep default */ }
 
         resolve({
-          apiBaseUrl: typeof r.inlineApiBase === 'string' && r.inlineApiBase ? r.inlineApiBase : DEFAULT_BASE,
+          apiBaseUrl: safeApiBase(r.inlineApiBase),
           accessToken: typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : '',
           blockedDomains: Array.isArray(blockedDomains) ? blockedDomains : [],
           focusMode: r.inlineFocusMode === 'true' || r.inlineFocusMode === true,
@@ -42,7 +50,7 @@ export async function loadSettings(): Promise<ExtensionSettings> {
 
 export async function saveSettings(s: Partial<ExtensionSettings>): Promise<void> {
   const patch: Record<string, string> = {}
-  if (s.apiBaseUrl !== undefined) patch.inlineApiBase = s.apiBaseUrl.replace(/\/$/, '')
+  if (s.apiBaseUrl !== undefined) patch.inlineApiBase = normalizeSecureBase(s.apiBaseUrl)
   if (s.accessToken !== undefined) patch.inlineAccessToken = s.accessToken
   if (s.blockedDomains !== undefined) patch.inlineBlockedDomains = JSON.stringify(s.blockedDomains)
   if (s.focusMode !== undefined) patch.inlineFocusMode = String(s.focusMode)

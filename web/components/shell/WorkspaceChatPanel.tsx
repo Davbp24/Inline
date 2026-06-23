@@ -23,7 +23,7 @@ import {
   PanelRight,
 } from 'lucide-react'
 import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 import { useChatPanel } from '@/lib/chat-panel-context'
 import { loadFolderDocuments } from '@/lib/workspace-library'
 import { normalizeInlineVoiceId } from '@/lib/inlineVoicePresets'
@@ -346,24 +346,25 @@ function stopChatSpeaking() {
   }
 }
 
+import { resolveWorkspaceIdFromBrowserPath } from '@/lib/workspace-routes'
+
 function getWsId(pathname: string): string {
-  const m = pathname.match(/\/app\/(ws-[^/]+)/)
-  return m ? m[1] : 'ws-1'
+  return resolveWorkspaceIdFromBrowserPath(pathname)
 }
 
-function useIsApplePlatform() {
-  const [apple, setApple] = useState(false)
+function useUsesMetaShortcut() {
+  const [usesMetaShortcut, setUsesMetaShortcut] = useState(false)
   useEffect(() => {
-    setApple(typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent))
+    setUsesMetaShortcut(typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent))
   }, [])
-  return apple
+  return usesMetaShortcut
 }
 
 export default function WorkspaceChatPanel() {
   const pathname = usePathname()
   const wsId = getWsId(pathname)
   const { open, setOpen, toggle } = useChatPanel()
-  const isApple = useIsApplePlatform()
+  const usesMetaShortcut = useUsesMetaShortcut()
   const isDashboard = /\/dashboard$/.test(pathname)
 
   const [sessions, setSessions] = useState<WorkspaceChatSession[]>([])
@@ -380,7 +381,7 @@ export default function WorkspaceChatPanel() {
 
   const activeSession = sessions.find(s => s.id === activeSessionId) ?? null
   const messages = (activeSession?.messages ?? []) as Message[]
-  const sessionTitle = activeSession?.title ?? 'New AI chat'
+  const sessionTitle = formatDisplayTitle(activeSession?.title ?? 'New AI chat')
 
   const patchActiveMessages = useCallback((
     updater: Message[] | ((prev: Message[]) => Message[]),
@@ -658,7 +659,7 @@ export default function WorkspaceChatPanel() {
                   aria-label="Chat sessions"
                 >
                   <InlineChatIcon size="md" variant="badge" />
-                  <span className="truncate">{sessionTitle}</span>
+                  <span className="min-w-0 truncate">{sessionTitle}</span>
                   <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-72 bg-card border border-border rounded-lg">
@@ -676,7 +677,7 @@ export default function WorkspaceChatPanel() {
                       className="cursor-pointer"
                       onClick={() => switchSession(session.id)}
                     >
-                      <span className="min-w-0 flex-1 truncate">{session.title}</span>
+                      <span className="min-w-0 flex-1 truncate">{formatDisplayTitle(session.title)}</span>
                       {session.id === activeSessionId && (
                         <Check className="h-4 w-4 shrink-0 text-primary" />
                       )}
@@ -982,7 +983,7 @@ export default function WorkspaceChatPanel() {
           exit={{ opacity: 0, y: 8, scale: 0.96 }}
           transition={{ duration: 0.22, ease: EASE }}
           onClick={() => setOpen(true)}
-          title={isApple ? 'Open Inline (Cmd+Shift+L)' : 'Open Inline (Ctrl+Shift+L)'}
+          title={usesMetaShortcut ? 'Open Inline (Cmd+Shift+L)' : 'Open Inline (Ctrl+Shift+L)'}
           className="flex h-11 w-[210px] cursor-pointer items-center justify-start overflow-hidden rounded-full border border-border bg-card/95 px-3 text-left shadow-[0_14px_40px_-8px_rgba(28,30,38,0.34),0_6px_18px_-4px_rgba(28,30,38,0.2)] backdrop-blur-md"
           aria-label="Open Inline chat"
         >

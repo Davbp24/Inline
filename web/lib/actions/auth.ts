@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { getSiteUrl } from '@/lib/inline-origin'
 
 const HAS_SUPABASE = !!(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -24,7 +25,7 @@ export async function sendPasswordReset(email: string): Promise<{ error?: string
   const supabase = await createClient()
 
   const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/auth/update-password`,
+    redirectTo: `${getSiteUrl()}/auth/update-password`,
   })
 
   if (error) return { error: error.message }

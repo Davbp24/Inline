@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
 
 /**
  * Workspace Home — the default landing surface for a workspace.
@@ -13,6 +14,7 @@ export default async function WorkspaceHomePage({
 }: {
   params: Promise<{ workspaceId: string }>
 }) {
-  const { workspaceId } = await params
-  redirect(`/app/${workspaceId}/dashboard`)
+  const { workspaceId: routeSegment } = await params
+  const workspaceId = resolveWorkspaceId(routeSegment)
+  redirect(workspacePath(workspaceId, 'dashboard'))
 }

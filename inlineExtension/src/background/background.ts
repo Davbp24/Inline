@@ -3,20 +3,23 @@
  * script, and proxies backend API calls for content scripts.
  */
 
-import { enqueue, getQueue } from '../lib/syncQueue'
+import { enqueue, getQueue, persistQueue } from '../lib/syncQueue'
 import { DEFAULT_INLINE_VOICE_ID, normalizeInlineVoiceId } from '../lib/inlineVoicePresets'
+import { decryptJson, encryptJson, isEncryptedJson } from '../lib/localCrypto'
+import { DEFAULT_BACKEND_URL, DEFAULT_WEB_URL } from '../lib/inlineUrls'
+import { assertSecureTransport, isSecureTransportUrl, normalizeSecureBase } from '../lib/secureTransport'
 
 /**
  * Port split (see plan section "port-split"):
- *   - `BACKEND_URL` is the Express annotations server (default :3030).
- *   - `WEB_URL`     is the Next.js app that serves /api/clip, /api/share,
- *                   /api/tts, /api/ai/*, etc. (default :3000).
+ *   - `DEFAULT_BACKEND_URL` is the annotation API (Express in dev, web app in prod).
+ *   - `DEFAULT_WEB_URL`     is the Next.js app that serves /api/clip, /api/tts,
+ *                           /api/ai/*, etc.
  *
  * Users can override either via `inlineApiBase` (Next) /
  * `inlineBackendBase` (Express) in chrome.storage.local.
  */
-const BACKEND_URL = 'http://localhost:3030'
-const WEB_URL     = 'http://localhost:3000'
+const BACKEND_URL = DEFAULT_BACKEND_URL
+const WEB_URL     = DEFAULT_WEB_URL
 
 /**
  * Only attach an Authorization header if the token *looks* like a real JWT
@@ -72,7 +75,18 @@ function asLocalAnnotationDoc(value: unknown, pageUrl: string): LocalAnnotationD
 async function loadLocalAnnotations(pageUrl: string): Promise<LocalAnnotationDoc> {
   const key = localAnnotationsKey(pageUrl)
   const stored = await chrome.storage.local.get(key)
-  return asLocalAnnotationDoc(stored[key], pageUrl)
+  if (isEncryptedJson(stored[key])) {
+    try {
+      return asLocalAnnotationDoc(await decryptJson(stored[key]), pageUrl)
+    } catch {
+      return asLocalAnnotationDoc(null, pageUrl)
+    }
+  }
+  const legacy = asLocalAnnotationDoc(stored[key], pageUrl)
+  if (stored[key]) {
+    await chrome.storage.local.set({ [key]: await encryptJson(legacy) })
+  }
+  return legacy
 }
 
 async function saveLocalAnnotation(input: {
@@ -93,8 +107,15 @@ async function saveLocalAnnotation(input: {
     updatedAt: Date.now(),
     clearedAt: input.clearedAt ?? current.clearedAt ?? null,
   }
-  await chrome.storage.local.set({ [key]: next })
+  await chrome.storage.local.set({ [key]: await encryptJson(next) })
   return next
+}
+
+function safeBaseFromStored(value: unknown, fallback: string): string {
+  const raw = typeof value === 'string' && value ? value : fallback
+  const base = raw.replace(/\/$/, '')
+  if (isSecureTransportUrl(base)) return base
+  return normalizeSecureBase(fallback)
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -253,8 +274,22 @@ chrome.runtime.onMessageExternal.addListener((message, _sender, sendResponse) =>
     if (typeof p.accessToken === 'string') patch.inlineAccessToken = p.accessToken
     if (typeof p.userId === 'string')      patch.inlineUserId      = p.userId
     if (typeof p.workspaceId === 'string' && p.workspaceId) patch.inlineActiveWorkspaceId = p.workspaceId
-    if (typeof p.apiBase === 'string' && p.apiBase)         patch.inlineApiBase = p.apiBase.replace(/\/$/, '')
-    if (typeof p.backendBase === 'string' && p.backendBase) patch.inlineBackendBase = p.backendBase.replace(/\/$/, '')
+    if (typeof p.apiBase === 'string' && p.apiBase) {
+      const apiBase = p.apiBase.replace(/\/$/, '')
+      if (!isSecureTransportUrl(apiBase)) {
+        sendResponse({ ok: false, error: 'Workspace sync must use HTTPS outside local development.' })
+        return true
+      }
+      patch.inlineApiBase = apiBase
+    }
+    if (typeof p.backendBase === 'string' && p.backendBase) {
+      const backendBase = p.backendBase.replace(/\/$/, '')
+      if (!isSecureTransportUrl(backendBase)) {
+        sendResponse({ ok: false, error: 'Workspace sync must use HTTPS outside local development.' })
+        return true
+      }
+      patch.inlineBackendBase = backendBase
+    }
     if (typeof p.email === 'string' && p.email)             patch.inlineUserEmail = p.email
     if (typeof p.name === 'string' && p.name)               patch.inlineUserName = p.name
     if (typeof p.avatarUrl === 'string' && p.avatarUrl)     patch.inlineUserAvatarUrl = p.avatarUrl
@@ -287,6 +322,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     ;(async () => {
       try {
+        assertSecureTransport(url)
         const res = await fetch(url, {
           method: payload.method ?? 'GET',
           headers: payload.headers ?? {},
@@ -317,8 +353,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     void chrome.storage.local.get(
       ['inlineApiBase', 'inlineAccessToken', 'inlineVoiceId', 'inlineVoiceStability', 'inlineVoiceSimilarity'],
       async (r) => {
-        const baseRaw = typeof r.inlineApiBase === 'string' && r.inlineApiBase ? r.inlineApiBase : WEB_URL
-        const base = baseRaw.replace(/\/$/, '')
+        const base = safeBaseFromStored(r.inlineApiBase, WEB_URL)
         const vid = normalizeInlineVoiceId(
           (typeof payload.voiceId === 'string' && payload.voiceId) ||
             (typeof r.inlineVoiceId === 'string' && r.inlineVoiceId) ||
@@ -338,7 +373,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (isUsableJwt(accessToken)) headers.Authorization = `Bearer ${accessToken}`
 
         try {
-          const res = await fetch(`${base}/api/tts`, {
+          const url = `${base}/api/tts`
+          assertSecureTransport(url)
+          const res = await fetch(url, {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -394,7 +431,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     void chrome.storage.local.get(
       ['inlineApiBase', 'inlineAccessToken', 'inlineActiveWorkspaceId'],
       async (r) => {
-        const base = (typeof r.inlineApiBase === 'string' && r.inlineApiBase ? r.inlineApiBase : WEB_URL).replace(/\/$/, '')
+        const base = safeBaseFromStored(r.inlineApiBase, WEB_URL)
         const accessToken = typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : ''
         const ws = workspaceId
           || (typeof r.inlineActiveWorkspaceId === 'string' ? r.inlineActiveWorkspaceId : '')
@@ -408,7 +445,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         try {
-          const res = await fetch(`${base}/api/clip`, {
+          const url = `${base}/api/clip`
+          assertSecureTransport(url)
+          const res = await fetch(url, {
             method: 'POST',
             headers,
             body: JSON.stringify({ pageUrl, pageTitle, selection, highlights, workspaceId: ws }),
@@ -434,7 +473,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     void chrome.storage.local.get(
       ['inlineBackendBase', 'inlineAccessToken', 'inlineActiveWorkspaceId', 'inlineUserId'],
       async (r) => {
-        const base = (typeof r.inlineBackendBase === 'string' && r.inlineBackendBase ? r.inlineBackendBase : BACKEND_URL).replace(/\/$/, '')
+        const base = safeBaseFromStored(r.inlineBackendBase, BACKEND_URL)
         const accessToken = typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : ''
         const workspaceId = typeof r.inlineActiveWorkspaceId === 'string' ? r.inlineActiveWorkspaceId : ''
         const userId      = typeof r.inlineUserId === 'string' ? r.inlineUserId : ''
@@ -455,7 +494,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         try {
           await saveLocalAnnotation({ pageUrl, featureKey, data, pageTitle, domain, clearedAt })
-          const res = await fetch(`${base}/api/annotations`, {
+          const url = `${base}/api/annotations`
+          assertSecureTransport(url)
+          const res = await fetch(url, {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -502,9 +543,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const { pageUrl } = message.payload;
 
     void chrome.storage.local.get(['inlineBackendBase', 'inlineAccessToken'], async (r) => {
-      const base = (typeof r.inlineBackendBase === 'string' && r.inlineBackendBase
-        ? r.inlineBackendBase
-        : BACKEND_URL).replace(/\/$/, '')
+      const base = safeBaseFromStored(r.inlineBackendBase, BACKEND_URL)
       const accessToken = typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : ''
       const headers: Record<string, string> = {}
       if (isUsableJwt(accessToken)) headers.Authorization = `Bearer ${accessToken}`
@@ -516,7 +555,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       try {
-        const res = await fetch(`${base}/api/annotations?url=${encodeURIComponent(pageUrl)}`, { headers })
+        const url = `${base}/api/annotations?url=${encodeURIComponent(pageUrl)}`
+        assertSecureTransport(url)
+        const res = await fetch(url, { headers })
         const text = await res.text()
         let json: unknown
         try { json = JSON.parse(text) as unknown }
@@ -536,48 +577,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ ok: true, data: localDoc, storageMode: 'local', warning: err instanceof Error ? err.message : 'Using browser copy.' })
       }
     })
-    return true
-  }
-
-  if (message.type === 'SHARE_ANNOTATIONS') {
-    const { pageUrl, layers } = message.payload as { pageUrl: string; layers: string[] }
-
-    void chrome.storage.local.get(['inlineBackendBase', 'inlineApiBase', 'inlineAccessToken'], async (r) => {
-      const backend = (typeof r.inlineBackendBase === 'string' && r.inlineBackendBase
-        ? r.inlineBackendBase : BACKEND_URL).replace(/\/$/, '')
-      const web = (typeof r.inlineApiBase === 'string' && r.inlineApiBase
-        ? r.inlineApiBase : WEB_URL).replace(/\/$/, '')
-      const accessToken = typeof r.inlineAccessToken === 'string' ? r.inlineAccessToken : ''
-      const authHeaders: Record<string, string> = {}
-      if (isUsableJwt(accessToken)) authHeaders.Authorization = `Bearer ${accessToken}`
-
-      try {
-        const res = await fetch(`${backend}/api/annotations?url=${encodeURIComponent(pageUrl)}`, { headers: authHeaders })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const json = (await res.json()) as { elements?: Record<string, unknown> }
-        const allElements = json.elements ?? {}
-
-        const filteredLayers: Record<string, unknown> = {}
-        for (const key of layers) {
-          if (key in allElements) filteredLayers[key] = allElements[key]
-        }
-
-        const shareRes = await fetch(`${web}/api/share`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pageUrl, layers: filteredLayers }),
-        })
-        const shareJson = (await shareRes.json()) as { shareUrl?: string; error?: string }
-        if (!shareRes.ok) {
-          sendResponse({ ok: false, error: shareJson.error ?? `HTTP ${shareRes.status}` })
-          return
-        }
-        sendResponse({ ok: true, shareUrl: shareJson.shareUrl })
-      } catch (err) {
-        sendResponse({ ok: false, error: err instanceof Error ? err.message : 'Share failed' })
-      }
-    })
-
     return true
   }
 });
@@ -603,9 +602,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   const stored = await chrome.storage.local.get([
     'inlineBackendBase', 'inlineAccessToken', 'inlineActiveWorkspaceId',
   ])
-  const base = (typeof stored.inlineBackendBase === 'string' && stored.inlineBackendBase
-    ? stored.inlineBackendBase
-    : BACKEND_URL).replace(/\/$/, '')
+  const base = safeBaseFromStored(stored.inlineBackendBase, BACKEND_URL)
   const accessToken = typeof stored.inlineAccessToken === 'string' ? stored.inlineAccessToken : ''
   const workspaceId = typeof stored.inlineActiveWorkspaceId === 'string' ? stored.inlineActiveWorkspaceId : ''
 
@@ -617,7 +614,9 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   for (let i = 0; i < remaining.length; i++) {
     const item = remaining[i]
     try {
-      const res = await fetch(`${base}/api/annotations`, {
+      const url = `${base}/api/annotations`
+      assertSecureTransport(url)
+      const res = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -635,5 +634,5 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     }
   }
 
-  await chrome.storage.local.set({ inlineSyncQueue: remaining })
+  await persistQueue(remaining)
 })

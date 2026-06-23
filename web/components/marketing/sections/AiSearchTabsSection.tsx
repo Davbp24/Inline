@@ -7,6 +7,7 @@ import WorkspaceChatMock, {
   type WorkspaceChatScenario,
 } from '@/components/marketing/productMocks/WorkspaceChatMock'
 import { DEMO_BRIDGE_SOURCES } from '@/components/marketing/productMocks/sampleData'
+import { formatDisplayTitle } from '@/lib/utils'
 
 const SCENARIOS: { id: string; label: string; scenario: WorkspaceChatScenario }[] = [
   {
@@ -49,7 +50,7 @@ export default function AiSearchTabsSection() {
   const scenario = SCENARIOS.find(s => s.id === active)?.scenario ?? SCENARIOS[0]!.scenario
 
   return (
-    <section id="rag" className="scroll-mt-24 bg-[#FDFBF7] py-24 md:py-32">
+    <section id="rag" className="scroll-mt-24 bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 text-center lg:px-10">
         <Reveal>
           <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card">
@@ -64,9 +65,9 @@ export default function AiSearchTabsSection() {
           </p>
         </Reveal>
 
-        <Reveal delay={0.06} className="mt-8">
+        <Reveal delay={0.06} className="mt-8 flex justify-center -mx-1 px-1">
           <div
-            className="inline-flex max-w-full flex-wrap justify-center gap-1 rounded-full border border-border bg-muted p-1"
+            className="scrollbar-minimal inline-flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-full border border-border bg-muted p-1.5"
             role="tablist"
             aria-label="Search scenarios"
           >
@@ -77,13 +78,13 @@ export default function AiSearchTabsSection() {
                 role="tab"
                 aria-selected={active === s.id}
                 onClick={() => setActive(s.id)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                   active === s.id
-                    ? 'bg-card text-foreground'
+                    ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {s.label}
+                {formatDisplayTitle(s.label)}
               </button>
             ))}
           </div>

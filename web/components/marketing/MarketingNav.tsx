@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useState } from 'react'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { SectionLink, type SectionHref } from '@/components/marketing/SectionLink'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
 import { cn } from '@/lib/utils'
 
 /**
@@ -148,7 +150,7 @@ export default function MarketingNav() {
               'inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
               onDark
                 ? 'bg-white text-[#1C1E26] hover:bg-stone-100 focus-visible:outline-white/70'
-                : 'bg-[#1C1E26] text-white hover:bg-stone-800 focus-visible:outline-[#4B83C4]',
+                : 'bg-[#1B1B1B] text-white hover:bg-[#141414] focus-visible:outline-[#4B83C4]',
             )}
           >
             Add to Chrome
@@ -195,9 +197,9 @@ export default function MarketingNav() {
               Sign in
             </Link>
             <Link
-              href="/app/ws-1/dashboard"
+              href={workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')}
               onClick={() => setMobileOpen(false)}
-              className="inline-flex items-center justify-center rounded-full bg-[#1C1E26] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-800"
+              className="inline-flex items-center justify-center rounded-full bg-[#1B1B1B] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#141414]"
             >
               Open workspace
             </Link>

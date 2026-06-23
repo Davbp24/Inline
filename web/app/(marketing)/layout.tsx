@@ -10,12 +10,13 @@ export default function MarketingLayout({
 }) {
   return (
     <div
-      className="min-h-screen bg-[#FDFBF7] text-[#1C1E26] antialiased"
+      data-marketing-layout
+      className="min-h-screen overflow-x-clip bg-[#FDFBF7] text-[#1C1E26] antialiased"
       style={{ backgroundColor: mkt.creamLight }}
     >
       <MarketingNav />
       <MarketingHashScroll />
-      <main>{children}</main>
+      <main className="min-w-0">{children}</main>
       <MarketingFooter />
     </div>
   )

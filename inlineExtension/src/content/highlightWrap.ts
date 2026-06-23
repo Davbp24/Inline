@@ -20,40 +20,21 @@ const ACTION_META: Record<string, { bg: string; title: string }> = {
   function generateHighlightId(): string {
     return `hl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
   }
-  
-  function highlightStorageKey(): string {
-    try {
-      const u = new URL(window.location.href)
-      return `inlineHighlights:${u.origin}${u.pathname}`.replace(/\/$/, '')
-    } catch {
-      return `inlineHighlights:${window.location.href}`
-    }
-  }
-  
-  function loadSavedHighlights(): SavedHighlight[] {
-    try {
-      const raw = localStorage.getItem(highlightStorageKey())
-      return raw ? JSON.parse(raw) : []
-    } catch { return [] }
-  }
-  
+
+  let sessionHighlights: SavedHighlight[] = []
+
   function saveHighlight(highlight: SavedHighlight): void {
-    try {
-      const existing = loadSavedHighlights()
-      existing.push(highlight)
-      localStorage.setItem(highlightStorageKey(), JSON.stringify(existing))
-    } catch { /* ignore in sandboxed contexts */ }
+    sessionHighlights = [...sessionHighlights, highlight]
 
     try {
       if (!chrome.runtime?.id) return
-      const all = loadSavedHighlights()
       chrome.runtime.sendMessage(
         {
           type: 'SAVE_ANNOTATIONS',
           payload: {
             pageUrl: window.location.href,
             featureKey: 'highlights',
-            data: all,
+            data: sessionHighlights,
             pageTitle: document.title,
             domain: window.location.hostname,
           },
@@ -145,9 +126,6 @@ const ACTION_META: Record<string, { bg: string; title: string }> = {
   }
 
   export function restoreHighlights(): void {
-    const local = loadSavedHighlights()
-    if (local.length > 0) applyHighlights(local)
-
     try {
       if (!chrome.runtime?.id) return
       chrome.runtime.sendMessage(
@@ -156,15 +134,8 @@ const ACTION_META: Record<string, { bg: string; title: string }> = {
           if (chrome.runtime.lastError || !response?.ok) return
           const remote: SavedHighlight[] = response.data?.elements?.highlights
           if (!Array.isArray(remote) || remote.length === 0) return
-
-          const localTexts = new Set(loadSavedHighlights().map((h: SavedHighlight) => h.text))
-          const newOnes = remote.filter((h: SavedHighlight) => !localTexts.has(h.text))
-          if (newOnes.length === 0) return
-
-          const merged = [...loadSavedHighlights(), ...newOnes]
-          try { localStorage.setItem(highlightStorageKey(), JSON.stringify(merged)) } catch { /* ignore */ }
-
-          applyHighlights(newOnes)
+          sessionHighlights = remote
+          applyHighlights(remote)
         },
       )
     } catch { /* extension context unavailable */ }

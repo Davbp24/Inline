@@ -1,3 +1,5 @@
+import { formatDisplayTitle } from '@/lib/utils'
+
 export interface WorkspaceChatMessage {
   role: 'user' | 'assistant'
   content: string
@@ -23,11 +25,12 @@ function storageKey(workspaceId: string) {
   return `${STORAGE_KEY}:${workspaceId}`
 }
 
+
 export function deriveChatTitle(messages: WorkspaceChatMessage[]): string {
   const firstUser = messages.find(m => m.role === 'user' && m.content.trim())
   if (!firstUser) return DEFAULT_TITLE
 
-  const text = firstUser.content.trim().replace(/\s+/g, ' ')
+  const text = formatDisplayTitle(firstUser.content.trim().replace(/\s+/g, ' '))
   if (text.length <= 48) return text
   return `${text.slice(0, 48).trimEnd()}…`
 }

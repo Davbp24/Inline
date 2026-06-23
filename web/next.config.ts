@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
-  /** Extension posts to localhost:3000/api/annotations — forward to Express. */
+  /** Extension and web app call /api/annotations on the Next origin — forward to Express. */
   async rewrites() {
     return [
       {

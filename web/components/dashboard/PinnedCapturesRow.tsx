@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { Note } from '@/lib/types'
 import { Star, Globe } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 import {
   getPinnedNoteIds,
   togglePinnedNote,
   isPinnedNote,
 } from '@/lib/dashboard-favorites'
 import { prettyNotePreviewTruncated } from '@/lib/note-preview'
+import { workspacePath } from '@/lib/workspace-routes'
 
 const PASTEL_BGS = [
   'bg-card dark:bg-[#15285C]',
@@ -67,12 +68,12 @@ function NoteCaptureCard({
       </button>
 
       <Link
-        href={`/app/${workspaceId}/history/${note.id}`}
+        href={workspacePath(workspaceId, 'history', note.id)}
         className="flex flex-col justify-between flex-1 min-h-0"
       >
         <div>
           <p className="line-clamp-1 pr-6 text-base font-semibold tracking-tight text-foreground">
-            {note.pageTitle || note.domain}
+            {formatDisplayTitle(note.pageTitle || note.domain)}
           </p>
           <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
             {prettyNotePreviewTruncated(note, 120) || note.domain}

@@ -1,6 +1,7 @@
 import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
 import { Database, SearchCheck, Quote, FileStack } from 'lucide-react'
 import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
+import { formatDisplayTitle } from '@/lib/utils'
 import { mktPanelMock } from '@/components/marketing/marketingSurfaces'
 
 /**
@@ -68,7 +69,7 @@ function ChatMock() {
                   <span className="rounded-full border border-[#d6d3d1] px-1.5 font-mono text-[8px] text-[#78716c]">
                     {s.ref}
                   </span>
-                  <span className="truncate text-[10px] font-medium text-[#1C1E26]">{s.title}</span>
+                  <span className="truncate text-[10px] font-medium text-[#1C1E26]">{formatDisplayTitle(s.title)}</span>
                 </div>
                 <div className="mt-1.5 flex items-center gap-1.5 text-[8px] text-[#78716c]">
                   <span className="rounded-full bg-white px-1.5 py-px">{s.type}</span>

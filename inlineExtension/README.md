@@ -1,73 +1,49 @@
-# React + TypeScript + Vite
+# Inline Extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Inline is a browser extension for user-triggered page annotation, capture, rewrite, and workspace sync.
 
-Currently, two official plugins are available:
+## Runtime Modes
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Guest/local mode:
 
-## React Compiler
+- Users can open the dock without an account.
+- Highlights, sticky notes, drawings, handwriting, stamps, AI edits, and page annotation records save to browser storage.
+- Local annotation records and retry queues are encrypted at rest with AES-GCM before they are written.
+- Guest AI is limited to 10 prompts on the device.
+- Success copy should say `Saved to browser.`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Signed-in/synced mode:
 
-## Expanding the ESLint configuration
+- The dashboard syncs the active account, profile, workspace id, and API bases through the external message handoff.
+- Captures can sync to the workspace backend and database.
+- AI is unlocked for signed-in workspace use.
+- Success copy should say `Saved to Workspace` with a dashboard action.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Privacy And Secure Handling Checklist
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Publish `/privacy` as the privacy policy URL for the extension listing.
+- Keep the in-product first-run disclosure enabled before users can start capture or AI actions.
+- Use HTTPS or WSS for every non-local synced workspace and AI request.
+- Localhost HTTP is allowed only for development on the same machine.
+- Do not store provider API keys in the extension bundle, browser storage, or extension messages.
+- Do not use user data for personalized, retargeted, or interest-based advertising.
+- Do not sell user data.
+- Do not allow humans to read user content except with user consent for support, for security investigation, to comply with law, or as aggregated and anonymized internal operations.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Manifest Permissions
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `storage`: saves preferences, local guest captures, encrypted annotation records, encrypted retry queues, and the guest AI prompt counter.
+- `activeTab`: captures the visible tab after a user-triggered screenshot or crop action.
+- `contextMenus`: exposes user-triggered page and selection actions.
+- `alarms`: retries pending signed-in sync jobs without a constant background loop.
+- `content_scripts` on pages: renders the dock and user-facing annotation tools on pages the user visits.
+- `host_permissions` for localhost: allows the extension to reach the local web app and backend in development. Production builds should replace localhost entries with the exact deployed HTTPS origins.
+
+## Development
+
+```bash
+npm install
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Load `dist/` as an unpacked extension after building.

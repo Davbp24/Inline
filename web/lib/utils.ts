@@ -61,6 +61,14 @@ export function previewText(content: string, max = 140): string {
   return `${clean.slice(0, max - 1).trimEnd()}…`
 }
 
+/** Drop hyphen suffixes for display — "Cable-stayed bridge" → "Cable". */
+export function formatDisplayTitle(title: string): string {
+  const trimmed = title.trim()
+  if (!trimmed || !trimmed.includes('-')) return trimmed
+  const head = trimmed.split('-')[0]?.trim()
+  return head || trimmed
+}
+
 /**
  * Compact URL for history lists — keeps host + path and collapses long queries.
  */

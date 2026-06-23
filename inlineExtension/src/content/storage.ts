@@ -1,9 +1,8 @@
 /**
  * Sticky Note Storage Layer
  *
- * Uses chrome.storage.local for local persistence; notes are mirrored to the
- * backend via SAVE_ANNOTATIONS. This module is the ONLY place that touches
- * the local storage backend, so a future swap stays contained to this file.
+ * Sticky notes persist through the background worker so browser-only copies
+ * are encrypted and signed-in copies can sync to the workspace.
  */
 
 export interface StickyNoteData {
@@ -22,40 +21,26 @@ export interface StickyNoteData {
 }
 
 /**
- * Normalize a URL to a consistent storage key.
- * Strips query params, hash, and trailing slash so the same
- * page always maps to the same key.
- */
-function normalizeUrl(url: string): string {
-  try {
-    const parsed = new URL(url)
-    return `${parsed.origin}${parsed.pathname}`.replace(/\/$/, '')
-  } catch {
-    return url
-  }
-}
-
-/** Build the chrome.storage key for a given page URL */
-function storageKey(pageUrl: string): string {
-  return `stickyNotes:${normalizeUrl(pageUrl)}`
-}
-
-/**
  * Load all sticky notes for a given page URL.
  * Returns an empty array if no notes are saved.
  */
 export async function loadNotes(pageUrl: string): Promise<StickyNoteData[]> {
-  const key = storageKey(pageUrl)
-
   return new Promise((resolve) => {
-    chrome.storage.local.get(key, (result) => {
-      const notes = result[key]
-      if (Array.isArray(notes)) {
-        resolve(notes as StickyNoteData[])
-      } else {
-        resolve([])
-      }
-    })
+    if (!chrome.runtime?.id) {
+      resolve([])
+      return
+    }
+    chrome.runtime.sendMessage(
+      { type: 'LOAD_ANNOTATIONS', payload: { pageUrl } },
+      (response) => {
+        if (chrome.runtime.lastError || !response?.ok) {
+          resolve([])
+          return
+        }
+        const notes = response.data?.elements?.stickyNotes
+        resolve(Array.isArray(notes) ? notes as StickyNoteData[] : [])
+      },
+    )
   })
 }
 
@@ -64,12 +49,27 @@ export async function loadNotes(pageUrl: string): Promise<StickyNoteData[]> {
  * Overwrites the entire array for that URL.
  */
 export async function saveNotes(pageUrl: string, notes: StickyNoteData[]): Promise<void> {
-  const key = storageKey(pageUrl)
-
   return new Promise((resolve) => {
-    chrome.storage.local.set({ [key]: notes }, () => {
+    if (!chrome.runtime?.id) {
       resolve()
-    })
+      return
+    }
+    chrome.runtime.sendMessage(
+      {
+        type: 'SAVE_ANNOTATIONS',
+        payload: {
+          pageUrl,
+          featureKey: 'stickyNotes',
+          data: notes,
+          pageTitle: document.title,
+          domain: window.location.hostname,
+          clearedAt: notes.length === 0 ? Date.now() : null,
+        },
+      },
+      () => {
+        resolve()
+      },
+    )
   })
 }
 

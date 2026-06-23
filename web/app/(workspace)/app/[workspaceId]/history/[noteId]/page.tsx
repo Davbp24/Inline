@@ -3,14 +3,16 @@ import { fetchNoteById, fetchExtractionsForNote } from '@/lib/data'
 import { ArrowLeft, Globe, Calendar, Tag, MapPin, FileText } from 'lucide-react'
 import CreateDocFromNoteCTA from './CreateDocFromNoteCTA'
 import { prettyNotePreview } from '@/lib/note-preview'
-import { truncateDisplayUrl } from '@/lib/utils'
+import { formatDisplayTitle, truncateDisplayUrl } from '@/lib/utils'
+import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
 
 export default async function NoteDetailPage({
   params,
 }: {
   params: Promise<{ workspaceId: string; noteId: string }>
 }) {
-  const { workspaceId, noteId } = await params
+  const { workspaceId: routeSegment, noteId } = await params
+  const workspaceId = resolveWorkspaceId(routeSegment)
   const [note, extractions] = await Promise.all([
     fetchNoteById(noteId, workspaceId),
     fetchExtractionsForNote(noteId),
@@ -21,7 +23,7 @@ export default async function NoteDetailPage({
       <div className="min-h-full bg-background">
         <div className="max-w-3xl mx-auto px-6 py-8 space-y-4">
           <Link
-            href={`/app/${workspaceId}/history`}
+            href={workspacePath(workspaceId, 'history')}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -48,7 +50,7 @@ export default async function NoteDetailPage({
 
         {/* Back nav */}
         <Link
-          href={`/app/${workspaceId}/history`}
+          href={workspacePath(workspaceId, 'history')}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -58,7 +60,7 @@ export default async function NoteDetailPage({
         {/* Title */}
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
-            {note.pageTitle || 'Untitled note'}
+            {formatDisplayTitle(note.pageTitle || 'Untitled note')}
           </h1>
           {note.pageUrl && (
             <a

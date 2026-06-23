@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { loadSettings, saveSettings, purgeLegacySecrets } from './lib/extensionSettings'
+import { DEFAULT_WEB_URL } from './lib/inlineUrls'
 import { INLINE_VOICE_PRESETS, DEFAULT_INLINE_VOICE_ID } from './lib/inlineVoicePresets'
+import { SUPPORT_MAILTO } from './lib/siteContact'
 
 /**
  * Extension popup. Session and workspace are synced automatically from the
@@ -15,7 +17,7 @@ function looksLikeJwt(token: string): boolean {
 }
 
 function App() {
-  const [apiBase, setApiBase] = useState('http://localhost:3000')
+  const [apiBase, setApiBase] = useState(DEFAULT_WEB_URL)
   const [token, setToken] = useState('')
   const [hasWorkspace, setHasWorkspace] = useState(false)
   const [voiceId, setVoiceId] = useState(DEFAULT_INLINE_VOICE_ID)
@@ -100,6 +102,22 @@ function App() {
         onClick={() => { window.open(dashboardUrl + '/app/dashboard', '_blank') }}
       >
         Open Inline dashboard
+      </button>
+
+      <button
+        type="button"
+        className="popup-link-btn"
+        onClick={() => { window.open(dashboardUrl + '/privacy', '_blank') }}
+      >
+        Privacy policy
+      </button>
+
+      <button
+        type="button"
+        className="popup-link-btn"
+        onClick={() => { window.open(SUPPORT_MAILTO, '_blank') }}
+      >
+        Contact support
       </button>
     </div>
   )

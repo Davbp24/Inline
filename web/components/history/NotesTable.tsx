@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { deleteNote } from '@/lib/actions/notes'
 import { prettyNotePreview } from '@/lib/note-preview'
+import { workspacePath } from '@/lib/workspace-routes'
 
 const TYPE_COLORS: Record<NoteType, string> = {
   text: 'bg-primary/15 text-primary border-primary/20',
@@ -78,7 +79,7 @@ export default function NotesTable({ notes, workspaceId, highlightNoteId: _ }: N
         return (
           <button
             className="text-left w-full"
-            onClick={() => router.push(`/app/${workspaceId}/history/${note.id}`)}
+            onClick={() => router.push(workspacePath(workspaceId, 'history', note.id))}
           >
             <div className="flex items-start gap-3 min-w-0">
               <div
@@ -271,7 +272,7 @@ export default function NotesTable({ notes, workspaceId, highlightNoteId: _ }: N
                 <tr
                   key={row.id}
                   className="border-b border-border last:border-0 hover:bg-card/60 transition-colors group cursor-pointer"
-                  onClick={() => router.push(`/app/${workspaceId}/history/${row.original.id}`)}
+                  onClick={() => router.push(workspacePath(workspaceId, 'history', row.original.id))}
                 >
                   {row.getVisibleCells().map(cell => (
                     <td key={cell.id} className="px-4 py-3" style={{ width: cell.column.getSize() }}>

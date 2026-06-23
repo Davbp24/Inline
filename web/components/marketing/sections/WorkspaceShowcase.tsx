@@ -20,6 +20,10 @@ import {
   mktEyebrow,
   product,
 } from '@/components/marketing/marketingSurfaces'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
+
+const WORKSPACE_HOME = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
 
 type Orbit = {
   icon: LucideIcon
@@ -157,7 +161,7 @@ export default function WorkspaceShowcase() {
             Every surface below is a real page in the app — connected, searchable, and grounded in the
             context you saved.
           </p>
-          <Link href="/app/ws-1/dashboard" className={`mt-9 ${mktBtnPrimary}`}>
+          <Link href={WORKSPACE_HOME} className={`mt-9 ${mktBtnPrimary}`}>
             Open workspace
           </Link>
         </Reveal>

@@ -58,37 +58,37 @@ export const DEMO_CAPTURES = [
     pinned: false,
   },
   {
-    title: 'fifa - Google Search',
-    preview: 'AI summary: tournament format, host nations, and qualification paths…',
-    domain: 'www.google.com',
-    time: '13h ago',
-    pinned: true,
+    title: 'Tower geometry & stay cables',
+    preview: 'Notes on fan vs harp layouts and how loads reach the deck…',
+    domain: 'engineering.org',
+    time: '5d ago',
+    pinned: false,
   },
 ] as const
 
 export const DEMO_LIBRARY_DOCS = [
   {
-    title: 'Google AI Studio',
-    preview: 'Build with Gemini models, test prompts, and deploy prototypes…',
+    title: 'Cable-stayed bridge design',
+    preview: 'Auto-recap: load paths, tower geometry, and construction trade-offs.',
+    autoRecap: true,
+    time: '2h ago',
+  },
+  {
+    title: 'Bridge load distribution',
+    preview: 'Stay cables vs suspension anchorages — highlights merged into one recap.',
     autoRecap: true,
     time: '1d ago',
   },
   {
-    title: 'White Screen - Fullscreen',
-    preview: 'Blank canvas for presentations and mockups.',
-    autoRecap: true,
-    time: '2d ago',
-  },
-  {
-    title: 'History - Inline',
-    preview: 'Browse captures, highlights, and notes across your workspace.',
+    title: 'Suspension bridge overview',
+    preview: 'Wikipedia captures summarized with your notes on deck hanging mechanics.',
     autoRecap: true,
     time: '3d ago',
   },
   {
-    title: 'Dashboard - Inline',
-    preview: 'Workspace home with captures, library docs, and activity stats.',
+    title: 'Construction timelines',
+    preview: 'Compared cable-stayed build speed vs suspension spans from your reading.',
     autoRecap: true,
-    time: '4d ago',
+    time: '5d ago',
   },
 ] as const

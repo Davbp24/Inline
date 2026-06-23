@@ -17,7 +17,6 @@ import {
   IconScreenshot,
   IconSearch,
   IconSettings,
-  IconShare,
   IconStamp,
   DockMenuIcon,
 } from './toolIcons'
@@ -31,23 +30,23 @@ import Stamps from './Stamps'
 import Search from './Search'
 import CropOverlay from './CropOverlay'
 import Laser from './Laser'
-import SharePanel from './SharePanel'
 import Handwriting from './Handwriting'
 import { BRAND_GRADIENT, FONT, PANEL as C } from '../lib/extensionTheme'
 import { isAiBusy } from '../lib/panelLock'
 import { ensurePanelKeyframes } from './panelKit'
 import { loadSettings } from '../lib/extensionSettings'
+import { DEFAULT_WEB_URL } from '../lib/inlineUrls'
 
 type PanelId =
   | 'rewrite' | 'ai' | 'notes' | 'settings' | 'highlighter' | 'draw'
-  | 'layers' | 'stamps' | 'search' | 'screenshot' | 'laser' | 'share' | 'handwriting'
+  | 'layers' | 'stamps' | 'search' | 'screenshot' | 'laser' | 'handwriting'
   | null
 
 /** Open the Inline dashboard using the configured API base (not a hardcoded host). */
 function openDashboard(path = '/app/dashboard') {
   void loadSettings()
     .then(s => { window.open(`${s.apiBaseUrl}${path}`, '_blank') })
-    .catch(() => { window.open(`http://localhost:3000${path}`, '_blank') })
+    .catch(() => { window.open(`${DEFAULT_WEB_URL}${path}`, '_blank') })
 }
 
 const spring = { type: 'spring' as const, stiffness: 380, damping: 30, mass: 0.6 }
@@ -65,7 +64,6 @@ const IStamps = () => <IconStamp />
 const ISearch = () => <IconSearch />
 const IScreenshot = () => <IconScreenshot />
 const ILaser = () => <IconLaser />
-const IShare = () => <IconShare />
 const IHandwriting = () => <IconHandwriting />
 const INotebook = () => <IconNotebook />
 const IEyeOff = () => <IconEyeOff />
@@ -138,7 +136,6 @@ const TOOL_DEFS: Record<string, { icon: React.ReactNode; label: string }> = {
   screenshot: { icon: <IScreenshot />, label: 'Screenshot' },
   laser: { icon: <ILaser />, label: 'Laser pointer' },
   layers: { icon: <ILayers />, label: 'Layers' },
-  share: { icon: <IShare />, label: 'Share' },
   settings: { icon: <ISettings />, label: 'Settings' },
 }
 
@@ -154,11 +151,11 @@ const DOCK_PRIMARY: ({ type: 'tool'; id: Exclude<PanelId, null> } | { type: 'gro
 
 const DOCK_FLYOUTS: Record<DockGroupId, Exclude<PanelId, null>[]> = {
   annotate: ['highlighter', 'notes', 'draw', 'handwriting', 'stamps'],
-  utility: ['screenshot', 'laser', 'layers', 'share', 'settings'],
+  utility: ['screenshot', 'laser', 'layers', 'settings'],
 }
 
 /** Tools that swap content into the main docked panel. */
-const PANEL_TOOLS = new Set<string>(['ai', 'rewrite', 'search', 'settings', 'highlighter', 'draw', 'handwriting', 'stamps', 'layers', 'share'])
+const PANEL_TOOLS = new Set<string>(['ai', 'rewrite', 'search', 'settings', 'highlighter', 'draw', 'handwriting', 'stamps', 'layers'])
 
 /** Tools that enter a page-interaction mode and show a status toast. */
 const MODE_LABELS: Record<string, string> = {
@@ -517,7 +514,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     switch (actionId) {
       case 'rewrite': case 'ai': case 'search': case 'settings':
       case 'highlighter': case 'draw': case 'handwriting':
-      case 'stamps': case 'layers': case 'share':
+      case 'stamps': case 'layers':
         runTool(actionId as PanelId); break
       case 'notes': spawnNote(); break
       case 'screenshot': captureScreenshot(); break
@@ -585,7 +582,6 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
         {activePanel === 'handwriting' && <Handwriting onClose={closePanel} />}
         {activePanel === 'stamps' && <Stamps onClose={closePanel} />}
         {activePanel === 'layers' && <Layers onClose={closePanel} />}
-        {activePanel === 'share' && <SharePanel onClose={closePanel} />}
       </motion.div>
     </AnimatePresence>
   ) : null

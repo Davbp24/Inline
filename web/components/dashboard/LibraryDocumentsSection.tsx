@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { FileText, Star, Sparkles } from 'lucide-react'
 import { documentHref } from '@/lib/doc-routes'
-import { cn, previewText } from '@/lib/utils'
+import { cn, formatDisplayTitle, previewText } from '@/lib/utils'
 import { loadFolderDocuments, type FolderDocument } from '@/lib/workspace-library'
 import { loadWorkspaceFolders, findFolder, type WorkspaceFolder } from '@/lib/workspace-folders'
 import {
@@ -163,7 +163,7 @@ function DocLibraryCard({
 
       <div>
         <p className="line-clamp-1 w-full truncate pr-6 text-base font-semibold tracking-tight text-foreground">
-          {doc.title}
+          {formatDisplayTitle(doc.title)}
         </p>
         <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-[#C9DAF0]/85">
           {preview}

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import SettingsShell, { type SettingsNavGroup } from '@/components/settings/SettingsShell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { getWorkspaceName, getWorkspaceColor, DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
 import { exportWorkspaceNotes } from '@/lib/actions/export'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -447,7 +448,7 @@ function LibraryFolderTreeItem({
   return (
     <li className="space-y-2">
       <Link
-        href={`/app/${workspaceId}/folder/${folder.id}`}
+        href={workspacePath(workspaceId, 'folder', folder.id)}
         className="flex items-center gap-3 rounded-xl border border-border/80 px-4 py-3 hover:border-primary/30 hover:bg-primary/5 transition-colors cursor-pointer"
         style={{ marginLeft: depth * 12 }}
       >
@@ -508,7 +509,7 @@ function LibraryTab({ workspaceId }: { workspaceId: string }) {
       >
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`/app/${workspaceId}/dashboard`}
+            href={workspacePath(workspaceId, 'dashboard')}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline cursor-pointer"
           >
             <ArrowRight className="w-4 h-4 rotate-180" /> Back to dashboard
@@ -558,8 +559,8 @@ function NotificationsTab() {
 // Page
 // ---------------------------------------------------------------------------
 export default function WorkspaceSettingsPage() {
-  const params      = useParams()
-  const workspaceId = Array.isArray(params.workspaceId) ? params.workspaceId[0] : (params.workspaceId as string) ?? 'ws-1'
+  const pathname = usePathname()
+  const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
   const [workspaceName,  setWorkspaceName]  = useState(() => getWorkspaceName(workspaceId))
   const workspaceColor = getWorkspaceColor(workspaceId)
 

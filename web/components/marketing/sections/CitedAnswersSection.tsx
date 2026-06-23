@@ -18,7 +18,7 @@ const DOMAINS = [
 
 export default function CitedAnswersSection() {
   return (
-    <section className="bg-[#FDFBF7] py-24 md:py-32">
+    <section className="bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <Reveal className="text-center">
           <h2 className="text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
@@ -37,11 +37,11 @@ export default function CitedAnswersSection() {
         </Reveal>
 
         <Reveal delay={0.08} className="mt-8">
-          <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
             {DOMAINS.map(domain => (
               <span
                 key={domain}
-                className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground"
+                className="rounded-lg border border-border bg-card px-2 py-1 text-[10px] font-medium text-muted-foreground sm:px-3 sm:py-1.5 sm:text-xs"
               >
                 {domain}
               </span>
@@ -51,7 +51,7 @@ export default function CitedAnswersSection() {
 
         <div className="mt-10 grid items-stretch gap-5 lg:grid-cols-3">
           <Reveal delay={0.1} className="lg:col-span-2">
-            <article className="flex h-full flex-col rounded-[1.5rem] border border-[#E8DFD4] bg-[#F5EDE3] p-6">
+            <article className="flex h-full flex-col rounded-[1.5rem] border border-[#E8DFD4] bg-[#F5EDE3] p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-[#1C1E26]">Real source cards from retrieval</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Citations are built server-side from retrieved chunks — the same{' '}
@@ -72,7 +72,7 @@ export default function CitedAnswersSection() {
           </Reveal>
 
           <Reveal delay={0.14}>
-            <article className="flex h-full flex-col rounded-[1.5rem] border border-[#E8DFD4] bg-[#F5EDE3] p-6">
+            <article className="flex h-full flex-col rounded-[1.5rem] border border-[#E8DFD4] bg-[#F5EDE3] p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-[#1C1E26]">Workspace-scoped</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Semantic search runs as you, filtered to your workspace only.

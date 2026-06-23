@@ -25,15 +25,16 @@ interface PageHeaderProps {
   className?: string
 }
 
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
+
 function getWorkspaceSettingsHref(pathname: string): string {
-  const match = pathname.match(/\/app\/(ws-[^/]+)/)
-  if (match) return `/app/${match[1]}/settings`
-  return '/app/settings'
+  const wsId = resolveWorkspaceIdFromBrowserPath(pathname)
+  return workspacePath(wsId, 'settings')
 }
 
 function getWorkspaceId(pathname: string): string | undefined {
-  const match = pathname.match(/\/app\/(ws-[^/]+)/)
-  return match ? match[1] : undefined
+  const segment = pathname.match(/\/app\/([^/]+)/)?.[1]
+  return segment ? resolveWorkspaceIdFromBrowserPath(pathname) : undefined
 }
 
 export default function PageHeader({ crumbs, title, titleSlot, subtitle, action, className }: PageHeaderProps) {

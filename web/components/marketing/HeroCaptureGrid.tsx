@@ -7,14 +7,18 @@ import {
 import InlineBrandGlyph from '@/components/marketing/InlineBrandGlyph'
 import {
   mktHeroAmbient,
+  mktHeroTileBackdrop,
+  mktHeroTileBorder,
+  mktHeroTileGlass,
   mktLogoTileShadow,
   mktTileShadow,
+  mktTileShadowEmphasis,
 } from '@/components/marketing/marketingSurfaces'
 
 type TileDef = { tool?: HeroToolIconId; center?: boolean }
 
 /**
- * Loose row layout — wide gaps, vignette mask, extension tool icons.
+ * Staggered keyboard-style rows with glass keycap tiles and center brand mark.
  * Row counts: 5 · 6 · 5 (logo center) · 3
  */
 const ROWS: TileDef[][] = [
@@ -47,17 +51,38 @@ const ROWS: TileDef[][] = [
   ],
 ]
 
-const GLYPH_SIZE = 30
+const ROW_OFFSETS = [0, 84, 168, 252]
+const TILE_PX = 80
+const GLYPH_SIZE = 32
 
-const TILE_SIZE =
-  'h-[clamp(52px,7.5vw,72px)] w-[clamp(52px,7.5vw,72px)]'
+const glassTileStyle = {
+  width: TILE_PX,
+  height: TILE_PX,
+  borderRadius: 18,
+  background: mktHeroTileGlass,
+  border: mktHeroTileBorder,
+  backdropFilter: mktHeroTileBackdrop,
+  WebkitBackdropFilter: mktHeroTileBackdrop,
+  boxShadow:
+    'inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(255, 255, 255, 0.12)',
+} as const
 
-const TILE_CLASS = `flex shrink-0 items-center justify-center rounded-[18px] bg-white text-[#78716c] border border-[#d6d3d1] ${mktTileShadow} ${TILE_SIZE}`
-
-function ToolTile({ tool }: { tool: HeroToolIconId }) {
+function ToolTile({
+  tool,
+  emphasized,
+}: {
+  tool: HeroToolIconId
+  emphasized?: boolean
+}) {
   return (
-    <div className={TILE_CLASS}>
-      <span className="flex h-7 w-7 items-center justify-center sm:h-8 sm:w-8 [&>svg]:h-full [&>svg]:w-full">
+    <div
+      className="relative isolate flex shrink-0 items-center justify-center overflow-hidden text-[#2F2F30]"
+      style={{
+        ...glassTileStyle,
+        boxShadow: `${glassTileStyle.boxShadow}, ${emphasized ? mktTileShadowEmphasis : mktTileShadow}`,
+      }}
+    >
+      <span className="flex h-8 w-8 items-center justify-center [&>svg]:h-full [&>svg]:w-full">
         {renderHeroToolIcon(tool, GLYPH_SIZE)}
       </span>
     </div>
@@ -67,37 +92,66 @@ function ToolTile({ tool }: { tool: HeroToolIconId }) {
 export default function HeroCaptureGrid() {
   return (
     <div
-      className="relative mx-auto mb-6 flex w-full max-w-[min(100%,52rem)] shrink-0 items-center justify-center px-2"
-      style={{ height: 'clamp(260px, 36vh, 340px)' }}
+      className="relative mx-auto mb-6 flex w-full max-w-[52rem] shrink-0 items-center justify-center px-2"
+      style={{ height: 'clamp(280px, 36vh, 360px)' }}
       aria-hidden
     >
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[min(380px,98%)] w-[min(660px,102%)] -translate-x-1/2 -translate-y-1/2 blur-[40px]"
-        style={{ background: mktHeroAmbient }}
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[360px] w-[600px] max-w-[95%] -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background: mktHeroAmbient,
+          filter: 'blur(28px)',
+        }}
       />
 
-      <div className="relative h-full w-full mask-[radial-gradient(52%_68%_at_50%_50%,black_28%,transparent_94%)]">
-        <div className="relative z-10 flex h-full flex-col items-center justify-center gap-3 sm:gap-4">
-          {ROWS.map((row, rowIndex) => (
-            <div
-              key={rowIndex}
-              className="flex items-center justify-center gap-3 sm:gap-4"
-            >
-              {row.map((tile, colIndex) =>
-                tile.center ? (
-                  <div
-                    key="logo"
-                    className={`${TILE_SIZE} shrink-0 overflow-hidden rounded-[18px] ${mktLogoTileShadow}`}
-                  >
-                    <InlineBrandGlyph />
-                  </div>
-                ) : tile.tool ? (
-                  <ToolTile key={`${rowIndex}-${colIndex}-${tile.tool}`} tool={tile.tool} />
-                ) : null,
-              )}
-            </div>
-          ))}
-        </div>
+      <div
+        className="relative mx-auto h-[332px] w-[820px] max-w-full origin-center scale-[0.58] sm:scale-[0.88] md:scale-100"
+        style={{
+          maskImage:
+            'radial-gradient(50% 60% at 50% 55%, black 25%, transparent 90%)',
+          WebkitMaskImage:
+            'radial-gradient(50% 60% at 50% 55%, black 25%, transparent 90%)',
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+          style={{
+            background:
+              'radial-gradient(circle at 38% 42%, rgba(232, 160, 130, 0.34) 0%, transparent 52%), radial-gradient(circle at 62% 58%, rgba(210, 195, 255, 0.22) 0%, transparent 48%), radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 70%)',
+          }}
+        />
+
+        {ROWS.map((row, rowIndex) => (
+          <div
+            key={rowIndex}
+            className="absolute left-1/2 z-10 flex -translate-x-1/2 gap-2 pb-1"
+            style={{ top: ROW_OFFSETS[rowIndex] }}
+          >
+            {row.map((tile, colIndex) =>
+              tile.center ? (
+                <div
+                  key="logo"
+                  className="shrink-0 overflow-hidden"
+                  style={{
+                    ...glassTileStyle,
+                    background: 'transparent',
+                    border: '2px solid transparent',
+                    boxShadow: mktLogoTileShadow,
+                  }}
+                >
+                  <InlineBrandGlyph />
+                </div>
+              ) : tile.tool ? (
+                <ToolTile
+                  key={`${rowIndex}-${colIndex}-${tile.tool}`}
+                  tool={tile.tool}
+                  emphasized={rowIndex === 2}
+                />
+              ) : null,
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )

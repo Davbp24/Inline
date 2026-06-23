@@ -114,7 +114,7 @@ export default function WorkspaceDashboardHeroMock({
     <div
       className={cn(
         'flex w-full bg-white',
-        compact ? 'h-[580px] overflow-hidden md:h-[660px]' : 'min-h-[680px] lg:min-h-[760px]',
+        compact ? 'min-h-[440px] overflow-hidden sm:h-[580px] md:h-[660px]' : 'min-h-[680px] lg:min-h-[760px]',
         className,
       )}
     >
@@ -182,7 +182,7 @@ export default function WorkspaceDashboardHeroMock({
           </nav>
         </div>
 
-        <div className={cn('px-4 sm:px-6 lg:pr-8', compact ? 'space-y-5 py-4 pb-20' : 'space-y-8 py-6 pb-28')}>
+        <div className={cn('px-3 sm:px-6 lg:pr-8', compact ? 'space-y-4 py-4 pb-16 sm:space-y-5 sm:pb-20' : 'space-y-8 py-6 pb-28')}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3
@@ -282,7 +282,7 @@ export default function WorkspaceDashboardHeroMock({
           </section>
         </div>
 
-        <div className={cn('absolute inset-x-0 flex justify-center px-4', compact ? 'bottom-3' : 'bottom-5')}>
+        <div className={cn('absolute inset-x-0 flex justify-center px-3 sm:px-4', compact ? 'bottom-3' : 'bottom-5')}>
           <WorkspaceChatMock variant="pill" elevated />
         </div>
       </div>

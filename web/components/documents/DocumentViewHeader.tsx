@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ChevronRight, ExternalLink, Sparkles } from 'lucide-react'
 import { formatRelativeUpdated } from '@/lib/recap-meta'
+import { workspacePath } from '@/lib/workspace-routes'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 
@@ -39,8 +40,8 @@ export default function DocumentViewHeader({
   actions,
 }: DocumentViewHeaderProps) {
   const displayTitle = title.trim() || 'Untitled'
-  const folderHref = `/app/${workspaceId}/folder/${folderId}`
-  const dashboardHref = `/app/${workspaceId}/dashboard`
+  const folderHref = workspacePath(workspaceId, 'folder', folderId)
+  const dashboardHref = workspacePath(workspaceId, 'dashboard')
 
   return (
     <header className="mb-8 space-y-4">

@@ -5,30 +5,30 @@ import { ChevronRight } from 'lucide-react'
 import { Reveal } from '@/components/marketing/primitives/Reveal'
 import { WorkspaceDashboardPreviewMock } from '@/components/marketing/productMocks'
 import { mktBtnSecondary } from '@/components/marketing/marketingSurfaces'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
+
+const WORKSPACE_HOME = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
 
 export default function ReviewLoopSection() {
   return (
-    <section id="workspace" className="scroll-mt-24 overflow-hidden bg-[#FAF5EE] py-24 md:py-32">
+    <section id="workspace" className="scroll-mt-24 overflow-hidden bg-[#FAF5EE] py-16 sm:py-20 md:py-28 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
-        <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
-          <Reveal>
-            <h2 className="text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
-              You always stay in the loop
-            </h2>
-          </Reveal>
-          <Reveal delay={0.06}>
-            <p className="text-base leading-relaxed text-muted-foreground">
-              Inline drafts recap updates in the extension. You approve in the same Ask panel — then
-              captures and recaps show up on your dashboard.
-            </p>
-            <Link href="/app/ws-1/dashboard" className={`mt-6 inline-flex items-center gap-1 ${mktBtnSecondary}`}>
-              Open workspace
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Reveal>
-        </div>
+        <Reveal className="max-w-2xl lg:max-w-none">
+          <h2 className="text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
+            You always stay in the loop
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-muted-foreground lg:mt-0">
+            Inline drafts recap updates in the extension. You approve in the same Ask panel — then
+            captures and recaps show up on your dashboard.
+          </p>
+          <Link href={WORKSPACE_HOME} className={`mt-6 inline-flex items-center gap-1 ${mktBtnSecondary}`}>
+            Open workspace
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </Reveal>
 
-        <Reveal delay={0.08} className="mt-14 w-full">
+        <Reveal delay={0.08} className="mt-10 w-full md:mt-14">
           <WorkspaceDashboardPreviewMock />
         </Reveal>
       </div>

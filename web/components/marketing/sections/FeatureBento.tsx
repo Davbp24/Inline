@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
 import { mktCard } from '@/components/marketing/marketingSurfaces'
+import { formatDisplayTitle } from '@/lib/utils'
 
 /**
  * Capability bento. All ten capabilities ship in the product today.
@@ -89,7 +90,7 @@ export default function FeatureBento() {
                 <div className={`mb-4 flex h-9 w-9 items-center justify-center rounded-lg border border-[#d6d3d1] ${f.tint} text-[#1C1E26]`}>
                   <f.icon className="h-4.5 w-4.5" aria-hidden />
                 </div>
-                <h3 className="text-sm font-semibold text-[#1C1E26]">{f.title}</h3>
+                <h3 className="text-sm font-semibold text-[#1C1E26]">{formatDisplayTitle(f.title)}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-stone-600">{f.body}</p>
               </div>
             </Reveal>
