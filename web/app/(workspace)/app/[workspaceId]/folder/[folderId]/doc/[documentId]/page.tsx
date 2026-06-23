@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { getWorkspaceName } from '@/lib/workspaces'
 import {
@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
 
 function loadSidebarFolderName(workspaceId: string, folderId: string): string | null {
   if (typeof window === 'undefined') return null
@@ -51,10 +52,11 @@ interface Comment {
 
 export default function FolderDocumentEditorPage() {
   const params = useParams()
+  const pathname = usePathname()
   const router = useRouter()
   const confirm = useConfirm()
   const toast = useToast()
-  const workspaceId  = Array.isArray(params.workspaceId)  ? params.workspaceId[0]!  : (params.workspaceId  as string)
+  const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
   const folderId     = Array.isArray(params.folderId)     ? params.folderId[0]!     : (params.folderId     as string)
   const documentId   = Array.isArray(params.documentId)   ? params.documentId[0]!   : (params.documentId   as string)
   const workspaceName = getWorkspaceName(workspaceId)
@@ -200,7 +202,7 @@ export default function FolderDocumentEditorPage() {
     if (!ok) return
     deleteFolderDocument(documentId)
     toast.success('Document deleted')
-    router.push(`/app/${workspaceId}/folder/${folderId}`)
+    router.push(workspacePath(workspaceId, 'folder', folderId))
   }
 
   const timeSince = (ms: number) => {
@@ -215,7 +217,7 @@ export default function FolderDocumentEditorPage() {
     return (
       <div className="min-h-full bg-white p-8">
         <p className="text-slate-500">Document not found.</p>
-        <Link href={`/app/${workspaceId}/folder/${folderId}`} className="text-[#37352F] text-sm mt-4 inline-block cursor-pointer">
+        <Link href={workspacePath(workspaceId, 'folder', folderId)} className="text-[#37352F] text-sm mt-4 inline-block cursor-pointer">
           &larr; Back to folder
         </Link>
       </div>
@@ -228,7 +230,7 @@ export default function FolderDocumentEditorPage() {
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <Link
-            href={`/app/${workspaceId}/folder/${folderId}`}
+            href={workspacePath(workspaceId, 'folder', folderId)}
             className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors cursor-pointer shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -241,9 +243,9 @@ export default function FolderDocumentEditorPage() {
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-800 truncate">{title || 'Untitled'}</p>
             <p className="text-[11px] text-slate-400">
-              <Link href={`/app/${workspaceId}/dashboard`} className="hover:text-slate-600 transition-colors">{workspaceName}</Link>
+              <Link href={workspacePath(workspaceId, 'dashboard')} className="hover:text-slate-600 transition-colors">{workspaceName}</Link>
               {' · '}
-              <Link href={`/app/${workspaceId}/folder/${folderId}`} className="hover:text-slate-600 transition-colors">{folderName}</Link>
+              <Link href={workspacePath(workspaceId, 'folder', folderId)} className="hover:text-slate-600 transition-colors">{folderName}</Link>
             </p>
           </div>
         </div>

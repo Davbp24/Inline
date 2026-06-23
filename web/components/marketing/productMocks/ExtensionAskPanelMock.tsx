@@ -1,7 +1,8 @@
 import { ArrowUp, X } from 'lucide-react'
 import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
 import { product } from '@/components/marketing/marketingSurfaces'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
 const QUICK_ACTIONS = [
   { label: 'Summarize', desc: 'Key points' },
@@ -23,7 +24,7 @@ type ExtensionAskPanelMockProps = {
 export default function ExtensionAskPanelMock({
   className,
   pageTitle = 'Cable-stayed bridge design',
-  domain = 'engineering.org',
+  domain = DEMO_DOMAIN,
   compact = false,
   badgeShape = 'circle',
   elevated = true,
@@ -67,7 +68,7 @@ export default function ExtensionAskPanelMock({
               </svg>
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{pageTitle}</p>
+              <p className="truncate text-sm font-medium text-foreground">{formatDisplayTitle(pageTitle)}</p>
               <p className="truncate text-xs text-muted-foreground">{domain}</p>
             </div>
           </div>

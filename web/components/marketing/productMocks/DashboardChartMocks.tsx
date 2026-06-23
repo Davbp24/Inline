@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
 const HEATMAP_LEVELS = [
   0, 0, 1, 2, 1, 0, 0,
@@ -16,13 +17,7 @@ const HEATMAP_COLORS = [
   'bg-[#1C1E26]',
 ] as const
 
-const TOP_DOMAINS = [
-  { domain: 'engineering.org', count: 12, width: '88%' },
-  { domain: 'wikipedia.org', count: 9, width: '72%' },
-  { domain: 'medium.com', count: 6, width: '54%' },
-  { domain: 'arxiv.org', count: 4, width: '38%' },
-  { domain: 'notion.so', count: 3, width: '28%' },
-] as const
+const TOP_DOMAINS = [{ domain: DEMO_DOMAIN, count: 12, width: '88%' }] as const
 
 export function MockCaptureVolumeChart({ className }: { className?: string }) {
   return (

@@ -31,7 +31,7 @@ export function InlineChatIcon({
     return (
       <span
         className={cn(
-          'inline-flex items-center justify-center bg-[#12203f] text-white shadow-none',
+          'inline-flex shrink-0 items-center justify-center bg-[#12203f] text-white shadow-none aspect-square',
           badgeShape === 'square' ? 'rounded-[7px]' : 'rounded-full',
           s.wrap,
           className,

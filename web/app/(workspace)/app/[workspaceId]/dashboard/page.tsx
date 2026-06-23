@@ -15,6 +15,7 @@ import LibraryDocumentsSection from '@/components/dashboard/LibraryDocumentsSect
 import { KpiSkeleton, ChartSkeleton, HeatmapSkeleton } from '@/components/dashboard/DashboardSkeleton'
 import { fetchDashboardStats, fetchNotes } from '@/lib/data'
 import { getWorkspaceName } from '@/lib/workspaces'
+import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
 
 export const metadata: Metadata = { title: 'Dashboard' }
 
@@ -27,7 +28,7 @@ function Greeting() {
 
 async function StatsSection({ workspaceId }: { workspaceId: string }) {
   const stats = await fetchDashboardStats(workspaceId)
-  const analyticsBase = `/app/${workspaceId}/analytics`
+  const analyticsBase = workspacePath(workspaceId, 'analytics')
 
   const kpis = [
     { title: 'This week',     value: stats.notesThisWeek,               delta: stats.notesThisWeekDelta, deltaLabel: 'vs last week', icon: BookMarked,   iconColor: 'text-stone-700', href: analyticsBase },
@@ -48,7 +49,7 @@ async function StatsSection({ workspaceId }: { workspaceId: string }) {
       </div>
       <ActivityHeatmap
         data={stats.captureHistory}
-        linkHref={`/app/${workspaceId}/analytics#activity`}
+        linkHref={workspacePath(workspaceId, 'analytics') + '#activity'}
       />
     </div>
   )
@@ -64,8 +65,9 @@ export default async function WorkspaceDashboardPage({
 }: {
   params: Promise<{ workspaceId: string }>
 }) {
-  const { workspaceId } = await params
-  const workspaceName   = getWorkspaceName(workspaceId)
+  const { workspaceId: routeSegment } = await params
+  const workspaceId = resolveWorkspaceId(routeSegment)
+  const workspaceName = getWorkspaceName(routeSegment)
 
   return (
     <div className="min-h-full bg-background">
@@ -91,7 +93,7 @@ export default async function WorkspaceDashboardPage({
           </div>
           <div className="flex items-center gap-2">
             <Link
-              href={`/app/${workspaceId}/history`}
+              href={workspacePath(workspaceId, 'history')}
               className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
               View all captures

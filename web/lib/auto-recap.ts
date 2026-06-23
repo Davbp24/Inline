@@ -15,6 +15,7 @@
  */
 
 import type { Note } from './types'
+import { formatDisplayTitle } from './utils'
 import {
   buildOverviewHtml,
   buildRecapEntryHtml,
@@ -55,7 +56,7 @@ function domainOf(url: string): string {
 
 function titleOf(notes: Note[], pageUrl: string): string {
   const withTitle = notes.find(n => n.pageTitle && n.pageTitle.trim())
-  return withTitle?.pageTitle?.trim() || domainOf(pageUrl)
+  return formatDisplayTitle(withTitle?.pageTitle?.trim() || domainOf(pageUrl))
 }
 
 /** Ensure an "Auto Recaps" folder exists for this workspace. Returns its id. */

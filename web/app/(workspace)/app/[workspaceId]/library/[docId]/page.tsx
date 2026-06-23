@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import {
   Loader2, ChevronRight, ArrowLeft, ExternalLink,
   Sparkles, Share2,
@@ -9,6 +9,7 @@ import {
 import FolderDocumentEditor from '@/components/documents/FolderDocumentEditor'
 import { getWorkspaceName } from '@/lib/workspaces'
 import { loadServerDocument, saveServerDocument, type ServerDocument } from '@/lib/library-api'
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
 
 /**
  * Server-backed library document viewer/editor.
@@ -19,7 +20,9 @@ import { loadServerDocument, saveServerDocument, type ServerDocument } from '@/l
  * 30 seconds so the UI stays fresh while the recap API runs in the background.
  */
 export default function LibraryDocPage() {
-  const { workspaceId, docId } = useParams<{ workspaceId: string; docId: string }>()
+  const { docId } = useParams<{ workspaceId: string; docId: string }>()
+  const pathname = usePathname()
+  const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
   const router = useRouter()
 
   const [doc,     setDoc]     = useState<ServerDocument | null>(null)
@@ -33,7 +36,7 @@ export default function LibraryDocPage() {
     async function load() {
       const d = await loadServerDocument(docId)
       if (cancelled) return
-      if (!d) { router.replace(`/app/${workspaceId}/dashboard`); return }
+      if (!d) { router.replace(workspacePath(workspaceId, 'dashboard')); return }
       setDoc(d); setTitle(d.title); setLoading(false)
     }
     void load()
@@ -150,7 +153,7 @@ export default function LibraryDocPage() {
 
           <button
             type="button"
-            onClick={() => router.push(`/app/${workspaceId}/history`)}
+            onClick={() => router.push(workspacePath(workspaceId, 'history'))}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mt-2 mb-8 cursor-pointer w-max"
           >
             <ArrowLeft className="w-3.5 h-3.5" />

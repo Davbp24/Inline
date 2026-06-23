@@ -3,7 +3,7 @@ import WorkspaceDashboardHeroMock from '@/components/marketing/productMocks/Work
 
 export default function DashboardShowcaseSection() {
   return (
-    <section className="bg-[#FAF5EE] py-20 md:py-28">
+    <section className="bg-[#FAF5EE] py-16 sm:py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <Reveal className="text-center">
           <h2 className="text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">

@@ -5,7 +5,7 @@ import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
 import { SourceCardRow, type ChatSource } from '@/components/shell/SourceCard'
 import { product } from '@/components/marketing/marketingSurfaces'
 import { DEMO_BRIDGE_SOURCES, DEMO_WORKSPACE_ID } from '@/components/marketing/productMocks/sampleData'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 
 export type WorkspaceChatScenario = {
   userMessage: string
@@ -32,13 +32,18 @@ const DEFAULT_SCENARIO: WorkspaceChatScenario = {
   sources: DEMO_BRIDGE_SOURCES,
 }
 
-function UserBubble({ content }: { content: string }) {
-  const multiline = content.includes('\n') || content.length > 72
+function UserBubble({ content, dense }: { content: string; dense?: boolean }) {
+  const multiline = dense || content.includes('\n') || content.length > 48
   return (
     <div
       className={cn(
-        'ml-auto inline-block max-w-[82%] bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground',
-        multiline ? 'rounded-2xl' : 'rounded-full',
+        'inline-block bg-[#1B1B1B] text-white',
+        dense
+          ? 'max-w-[85%] rounded-2xl px-3 py-1.5 text-[12px] leading-snug'
+          : cn(
+              'ml-auto max-w-[82%] bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground',
+              multiline ? 'rounded-2xl' : 'rounded-full',
+            ),
       )}
     >
       {content}
@@ -62,7 +67,7 @@ export default function WorkspaceChatMock({
           'flex h-11 w-[210px] items-center rounded-full border border-border bg-card px-3',
           className,
         )}
-        style={elevated ? { boxShadow: product.toolbarShadow } : undefined}
+        style={elevated ? { boxShadow: product.chatPillShadow } : undefined}
       >
         <InlineChatIcon variant="badge" badgeShape={badgeShape} />
         <span className="ml-2 text-xs font-medium text-foreground">Ask Inline</span>
@@ -79,14 +84,14 @@ export default function WorkspaceChatMock({
         )}
         style={elevated ? { boxShadow: product.panelShadow } : undefined}
       >
-        <div className="flex h-14 items-center justify-between px-5">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <div className="flex min-h-12 flex-wrap items-center justify-between gap-2 px-4 py-2 sm:h-14 sm:flex-nowrap sm:px-5">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
             <InlineChatIcon size="md" variant="badge" badgeShape={badgeShape} />
-            <span>{sessionTitle}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 truncate">{sessionTitle}</span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-2 text-xs font-medium text-foreground">
+            <span className="hidden items-center gap-2 text-xs font-medium text-foreground sm:flex">
               Personalize
               <span className="relative h-5 w-9 rounded-full bg-[#2f80ed]">
                 <span className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white" />
@@ -97,7 +102,7 @@ export default function WorkspaceChatMock({
             </button>
           </div>
         </div>
-        <div className="flex min-h-[400px] flex-1 flex-col space-y-5 px-8 py-6">
+        <div className="flex min-h-[260px] flex-1 flex-col space-y-4 px-4 py-4 sm:min-h-[400px] sm:space-y-5 sm:px-8 sm:py-6">
           <div className="flex flex-row-reverse items-start gap-2">
             <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-secondary">
               <User className="h-3 w-3 text-foreground" aria-hidden />
@@ -111,7 +116,7 @@ export default function WorkspaceChatMock({
             )}
           </div>
         </div>
-        <div className="bg-card p-4">
+        <div className="bg-card p-3 sm:p-4">
           <div className="overflow-hidden rounded-lg border border-primary/25 bg-background shadow-[0_0_0_3px_rgba(75,131,196,0.10)]">
             <div className="flex min-h-[78px] flex-col px-4 py-3">
               <p className="text-sm text-muted-foreground">
@@ -130,18 +135,29 @@ export default function WorkspaceChatMock({
   }
 
   return (
-    <div className={cn(dense ? 'space-y-3' : 'space-y-4', className)}>
-      <div className="flex flex-row-reverse items-start gap-2">
-        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-secondary">
-          <User className="h-3 w-3 text-foreground" aria-hidden />
-        </div>
-        <UserBubble content={scenario.userMessage} />
+    <div className={cn(dense ? 'flex min-h-0 flex-1 flex-col gap-2' : 'space-y-4', className)}>
+      <div
+        className={cn(
+          dense ? 'flex shrink-0 justify-end' : 'flex flex-row-reverse items-start gap-2',
+        )}
+      >
+        {!dense && (
+          <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-secondary">
+            <User className="h-3 w-3 text-foreground" aria-hidden />
+          </div>
+        )}
+        <UserBubble content={scenario.userMessage} dense={dense} />
       </div>
-      <div className="max-w-full">
+      <div className={cn('max-w-full', dense && 'flex min-h-0 flex-1 flex-col gap-2')}>
+        {dense && (
+          <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+            Searching your captures and recaps…
+          </p>
+        )}
         <p
           className={cn(
             'text-sm leading-relaxed text-foreground',
-            dense && 'line-clamp-3',
+            dense && 'line-clamp-2 text-[12px] leading-snug text-foreground/90',
           )}
         >
           {scenario.assistantMessage}
@@ -150,10 +166,18 @@ export default function WorkspaceChatMock({
           <p className="mt-2 text-[9px] text-muted-foreground/80">{scenario.recencyNote}</p>
         )}
         {scenario.sources && scenario.sources.length > 0 && (
-          <SourceCardRow
-            sources={dense ? scenario.sources.slice(0, 1) : scenario.sources}
-            workspaceId={DEMO_WORKSPACE_ID}
-          />
+          dense ? (
+            <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
+              <span className="font-mono text-[10px] text-foreground/70">
+                [{scenario.sources[0].ref}]
+              </span>{' '}
+              {formatDisplayTitle(scenario.sources[0].pageTitle?.trim() ||
+                scenario.sources[0].domain ||
+                'Saved capture')}
+            </p>
+          ) : (
+            <SourceCardRow sources={scenario.sources} workspaceId={DEMO_WORKSPACE_ID} />
+          )
         )}
       </div>
     </div>

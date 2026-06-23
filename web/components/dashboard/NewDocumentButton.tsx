@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { createFolderDocument } from '@/lib/workspace-library'
 import { loadWorkspaceFolders, saveWorkspaceFolders, getRootFolders } from '@/lib/workspace-folders'
+import { workspacePath } from '@/lib/workspace-routes'
 
 /**
  * Creates a new document in the workspace's first root folder (creating a
@@ -25,7 +26,7 @@ export default function NewDocumentButton({ workspaceId }: { workspaceId: string
       saveWorkspaceFolders([...folders, target])
     }
     const doc = createFolderDocument(workspaceId, target.id, 'Untitled document')
-    router.push(`/app/${workspaceId}/folder/${target.id}/doc/${doc.id}`)
+    router.push(workspacePath(workspaceId, 'folder', target.id, 'doc', doc.id))
   }
 
   return (

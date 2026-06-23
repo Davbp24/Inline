@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-const DEFAULT_WORKSPACE_ID = 'ws-1'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
+
+const DEFAULT_WORKSPACE_ROUTE = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
 
 function redirectLegacyFlatDocUrl(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl
@@ -26,7 +29,7 @@ function redirectRootDocId(request: NextRequest): NextResponse | null {
   const m = pathname.match(/^\/(doc-\d+[^/]*)$/i)
   if (!m) return null
   const url = request.nextUrl.clone()
-  url.pathname = `/app/${DEFAULT_WORKSPACE_ID}/doc/${m[1]}`
+  url.pathname = `${DEFAULT_WORKSPACE_ROUTE.replace(/\/dashboard$/, '')}/doc/${m[1]}`
   return NextResponse.redirect(url)
 }
 
@@ -40,7 +43,22 @@ function rewriteNestedFolderDocUrl(request: NextRequest): NextResponse | null {
   return NextResponse.rewrite(url)
 }
 
+function redirectLegacyWorkspaceIdUrl(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl
+  const m = pathname.match(/^\/app\/(ws-\d+)(\/.*)?$/)
+  if (!m) return null
+  const ws = DEFAULT_WORKSPACES.find(w => w.id === m[1])
+  if (!ws) return null
+  const url = request.nextUrl.clone()
+  const tail = m[2] || '/dashboard'
+  url.pathname = workspacePath(ws) + tail
+  return NextResponse.redirect(url)
+}
+
 export async function proxy(request: NextRequest) {
+  const legacyWs = redirectLegacyWorkspaceIdUrl(request)
+  if (legacyWs) return legacyWs
+
   const nestedDoc = rewriteNestedFolderDocUrl(request)
   if (nestedDoc) return nestedDoc
 

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
 
 /**
  * Legacy /app/history route. Now redirects to the user's first workspace
@@ -12,7 +13,7 @@ export default async function LegacyHistoryPage({
   searchParams: Promise<{ q?: string }>
 }) {
   const { q } = (await searchParams) ?? {}
-  const firstWs = DEFAULT_WORKSPACES[0]?.id ?? 'ws-1'
+  const first = DEFAULT_WORKSPACES[0]!
   const qs = q ? `?q=${encodeURIComponent(q)}` : ''
-  redirect(`/app/${firstWs}/history${qs}`)
+  redirect(workspacePath(first, 'history') + qs)
 }

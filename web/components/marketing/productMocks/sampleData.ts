@@ -1,5 +1,12 @@
 import type { ChatSource } from '@/components/shell/SourceCard'
 
+/** Placeholder domain for marketing mocks — not a real website. */
+export const DEMO_DOMAIN = 'example-website.com'
+
+function demoUrl(path: string): string {
+  return `https://${DEMO_DOMAIN}/${path}`
+}
+
 export const DEMO_WORKSPACE_ID = 'ws-1'
 
 export const DEMO_BRIDGE_SOURCES: ChatSource[] = [
@@ -7,9 +14,9 @@ export const DEMO_BRIDGE_SOURCES: ChatSource[] = [
     ref: 1,
     sourceType: 'note',
     sourceId: 'demo-note-1',
-    pageUrl: 'https://engineering.org/cable-stayed-design',
+    pageUrl: demoUrl('cable-stayed-design'),
     pageTitle: 'Cable-stayed bridge design',
-    domain: 'engineering.org',
+    domain: DEMO_DOMAIN,
     snippet: 'Towers carry deck loads directly through stay cables rather than anchorages.',
     similarity: 0.92,
   },
@@ -17,9 +24,9 @@ export const DEMO_BRIDGE_SOURCES: ChatSource[] = [
     ref: 2,
     sourceType: 'recap',
     sourceId: 'demo-recap-1',
-    pageUrl: 'https://engineering.org/cable-stayed-design',
+    pageUrl: demoUrl('cable-stayed-design'),
     pageTitle: 'Cable-stayed recap',
-    domain: 'engineering.org',
+    domain: DEMO_DOMAIN,
     snippet: 'Auto-recap notes shorter construction time vs suspension designs.',
     similarity: 0.88,
   },
@@ -27,9 +34,9 @@ export const DEMO_BRIDGE_SOURCES: ChatSource[] = [
     ref: 3,
     sourceType: 'note',
     sourceId: 'demo-note-2',
-    pageUrl: 'https://en.wikipedia.org/wiki/Suspension_bridge',
+    pageUrl: demoUrl('suspension-bridge'),
     pageTitle: 'Suspension bridge',
-    domain: 'en.wikipedia.org',
+    domain: DEMO_DOMAIN,
     snippet: 'The deck hangs from main cables anchored at both ends.',
     similarity: 0.81,
   },
@@ -39,56 +46,59 @@ export const DEMO_CAPTURES = [
   {
     title: 'Cable-stayed bridge design',
     preview: 'Towers carry deck loads directly through stay cables…',
-    domain: 'engineering.org',
+    domain: DEMO_DOMAIN,
     time: '2h ago',
     pinned: true,
   },
   {
     title: 'Suspension bridge',
     preview: 'Main cables anchored at both ends; deck hangs below…',
-    domain: 'en.wikipedia.org',
+    domain: DEMO_DOMAIN,
     time: '1d ago',
     pinned: false,
   },
   {
     title: 'Bridge load distribution',
     preview: 'Highlighted comparison of cable-stayed vs suspension…',
-    domain: 'medium.com',
+    domain: DEMO_DOMAIN,
     time: '3d ago',
     pinned: false,
   },
   {
-    title: 'fifa - Google Search',
-    preview: 'AI summary: tournament format, host nations, and qualification paths…',
-    domain: 'www.google.com',
-    time: '13h ago',
-    pinned: true,
+    title: 'Tower geometry & stay cables',
+    preview: 'Notes on fan vs harp layouts and how loads reach the deck…',
+    domain: DEMO_DOMAIN,
+    time: '5d ago',
+    pinned: false,
   },
 ] as const
 
 export const DEMO_LIBRARY_DOCS = [
   {
-    title: 'Google AI Studio',
-    preview: 'Build with Gemini models, test prompts, and deploy prototypes…',
+    title: 'Cable-stayed bridge design',
+    preview: 'Auto-recap: load paths, tower geometry, and construction trade-offs.',
+    autoRecap: true,
+    time: '2h ago',
+  },
+  {
+    title: 'Bridge load distribution',
+    preview: 'Stay cables vs suspension anchorages — highlights merged into one recap.',
     autoRecap: true,
     time: '1d ago',
   },
   {
-    title: 'White Screen - Fullscreen',
-    preview: 'Blank canvas for presentations and mockups.',
-    autoRecap: true,
-    time: '2d ago',
-  },
-  {
-    title: 'History - Inline',
-    preview: 'Browse captures, highlights, and notes across your workspace.',
+    title: 'Suspension bridge overview',
+    preview: 'Captures summarized with your notes on deck hanging mechanics.',
     autoRecap: true,
     time: '3d ago',
   },
   {
-    title: 'Dashboard - Inline',
-    preview: 'Workspace home with captures, library docs, and activity stats.',
+    title: 'Construction timelines',
+    preview: 'Compared cable-stayed build speed vs suspension spans from your reading.',
     autoRecap: true,
-    time: '4d ago',
+    time: '5d ago',
   },
 ] as const
+
+/** Domains shown in “cited answers” and analytics mocks */
+export const DEMO_TOP_DOMAINS = [DEMO_DOMAIN] as const

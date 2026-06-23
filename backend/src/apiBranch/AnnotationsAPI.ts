@@ -32,7 +32,9 @@ type SupabaseError = { message: string } | null;
 
 const SUPABASE_URL = process.env.SECRET_DATABASE_CONNECTION || '';
 const SUPABASE_KEY = process.env.SECRET_DATABASE_KEY || '';
-const NEXT_APP_URL = process.env.NEXT_APP_URL || 'http://localhost:3000';
+const NEXT_APP_URL =
+  process.env.NEXT_APP_URL ||
+  (process.env.NODE_ENV === 'production' ? 'https://useinline.vercel.app' : 'http://localhost:3000');
 
 const MIRROR_DEBOUNCE_MS = 30_000;
 const lastRecapCall = new Map<string, number>();

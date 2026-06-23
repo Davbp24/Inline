@@ -10,7 +10,7 @@ import {
   useReducedMotion,
 } from 'framer-motion'
 import HeroCaptureGrid from '@/components/marketing/HeroCaptureGrid'
-import HeroContextRings from '@/components/marketing/HeroContextRings'
+import HeroAtmosphere from '@/components/marketing/HeroAtmosphere'
 import { SectionLink } from '@/components/marketing/SectionLink'
 import { mktBtnPrimaryLg, mktBtnSecondaryLg } from '@/components/marketing/marketingSurfaces'
 
@@ -41,7 +41,7 @@ function HeroRotatingWord({ paused }: { paused: boolean }) {
           <motion.span
             key={word}
             layout
-            className="inline-block whitespace-nowrap"
+            className="inline-block align-baseline sm:whitespace-nowrap"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -78,15 +78,15 @@ export default function Hero() {
       ref={heroRef}
       data-hero
       data-hero-dark="false"
-      className="relative flex min-h-svh w-full flex-col overflow-hidden bg-[#FDFBF7] text-[#1C1E26]"
+      className="relative flex min-h-svh w-full flex-col overflow-hidden text-[#1C1E26]"
     >
-      <HeroContextRings />
+      <HeroAtmosphere />
 
       <motion.div
         style={{ y: reduce ? 0 : contentY }}
-        className="relative z-10 mx-auto flex h-full min-h-0 w-full max-w-4xl flex-col items-center justify-center px-6 pt-[4.5rem] pb-10 text-center sm:px-8 lg:px-10"
+        className="relative z-10 mx-auto flex h-full min-h-0 w-full max-w-4xl flex-col items-center justify-start px-5 pt-20 pb-12 text-center sm:px-8 sm:pt-28 sm:pb-20 lg:px-10 lg:pt-32 lg:pb-24"
       >
-        <motion.div {...fade(0)} className="w-full min-h-0 shrink-0">
+        <motion.div {...fade(0)} className="mt-4 w-full min-h-0 shrink-0 sm:mt-6">
           <HeroCaptureGrid />
         </motion.div>
 
@@ -94,7 +94,7 @@ export default function Hero() {
           <motion.h1
             {...fade(0.1)}
             layout
-            className="text-balance text-center text-[2.75rem] font-semibold leading-[1.06] tracking-tight text-[#1C1E26] sm:text-6xl md:text-[4.5rem]"
+            className="text-balance text-center text-[2.125rem] font-semibold leading-[1.08] tracking-tight text-[#1C1E26] sm:text-6xl md:text-[4.5rem]"
           >
             <HeroRotatingWord paused={!!reduce} /> for the web.
           </motion.h1>
@@ -106,11 +106,11 @@ export default function Hero() {
             Capture highlights, notes, and answers on any page—then search them anytime.
           </motion.p>
 
-          <motion.div {...fade(0.26)} className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/install" className={mktBtnPrimaryLg}>
+          <motion.div {...fade(0.26)} className="mt-7 flex w-full max-w-sm flex-col justify-center gap-3 sm:max-w-none sm:flex-row">
+            <Link href="/install" className={`w-full sm:w-auto ${mktBtnPrimaryLg}`}>
               Add to Chrome
             </Link>
-            <SectionLink href="/#product" className={mktBtnSecondaryLg}>
+            <SectionLink href="/#product" className={`w-full sm:w-auto ${mktBtnSecondaryLg}`}>
               See how it works
             </SectionLink>
           </motion.div>

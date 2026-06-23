@@ -17,7 +17,8 @@
  * Remove (user discards an AI edit):
  *   Hovering a persisted mark shows a small "×" badge. Clicking it
  *   restores the original text in the DOM AND removes the entry from
- *   storage, so the edit doesn't come back on the next reload.
+ *   encrypted browser/workspace storage, so the edit doesn't come back on
+ *   the next reload.
  */
 
 import { buildAIInsertMark } from '../lib/insertBadge'
@@ -31,35 +32,18 @@ export interface AIReplacement {
   timestamp: number
 }
 
-const STORAGE_KEY = 'inlineAIReplacements'
+let sessionReplacements: AIReplacement[] = []
 
 function replacementId(): string {
   return `air-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-/** Per-page localStorage key (mirrors highlightWrap.ts conventions). */
-function localKey(): string {
-  try {
-    const u = new URL(window.location.href)
-    return `${STORAGE_KEY}:${u.origin}${u.pathname}`.replace(/\/$/, '')
-  } catch {
-    return `${STORAGE_KEY}:${window.location.href}`
-  }
-}
-
 function readLocal(): AIReplacement[] {
-  try {
-    const raw = localStorage.getItem(localKey())
-    return raw ? (JSON.parse(raw) as AIReplacement[]) : []
-  } catch {
-    return []
-  }
+  return sessionReplacements
 }
 
 function writeLocal(list: AIReplacement[]): void {
-  try {
-    localStorage.setItem(localKey(), JSON.stringify(list))
-  } catch { /* storage quota / sandboxed context */ }
+  sessionReplacements = list
 }
 
 function pushToBackend(list: AIReplacement[]): void {

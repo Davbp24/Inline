@@ -4,7 +4,7 @@ import { PANEL as C, PANEL_HEADER_ICON, TOOL_TILE } from '../lib/extensionTheme'
 
 export type ToolId =
   | 'rewrite' | 'ai' | 'notes' | 'settings' | 'highlighter' | 'draw'
-  | 'layers' | 'stamps' | 'search' | 'screenshot' | 'laser' | 'share' | 'handwriting'
+  | 'layers' | 'stamps' | 'search' | 'screenshot' | 'laser' | 'handwriting'
 
 function Svg({
   size = 18,
@@ -130,18 +130,6 @@ export function IconLaser({ size = 18 }: { size?: number }) {
   )
 }
 
-export function IconShare({ size = 18 }: { size?: number }) {
-  return (
-    <Svg size={size}>
-      <circle cx="18" cy="5" r="3" />
-      <circle cx="6" cy="12" r="3" />
-      <circle cx="18" cy="19" r="3" />
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-    </Svg>
-  )
-}
-
 export function IconHandwriting({ size = 18 }: { size?: number }) {
   return (
     <Svg size={size}>
@@ -193,7 +181,6 @@ const TOOL_ICON_MAP: Record<ToolId, (props: { size?: number }) => ReactNode> = {
   search: IconSearch,
   screenshot: IconScreenshot,
   laser: IconLaser,
-  share: IconShare,
   handwriting: IconHandwriting,
 }
 

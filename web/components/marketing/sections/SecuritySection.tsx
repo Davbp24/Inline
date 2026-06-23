@@ -1,6 +1,8 @@
 import { ServerCog, ShieldCheck, KeyRound, UserCheck, Quote } from 'lucide-react'
+import Link from 'next/link'
 import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
 import { mktCard } from '@/components/marketing/marketingSurfaces'
+import { formatDisplayTitle } from '@/lib/utils'
 
 /**
  * #security — concrete, implementation-level claims only. Each point maps to
@@ -52,12 +54,19 @@ export default function SecuritySection() {
                 <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg border border-[#d6d3d1] bg-[#F4F4F2] text-[#12203f]">
                   <p.icon className="h-4.5 w-4.5" aria-hidden />
                 </div>
-                <h3 className="text-sm font-semibold text-[#1C1E26]">{p.title}</h3>
+                <h3 className="text-sm font-semibold text-[#1C1E26]">{formatDisplayTitle(p.title)}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-stone-600">{p.body}</p>
               </div>
             </Reveal>
           ))}
         </div>
+        <p className="mt-10 text-center text-sm text-stone-600">
+          Read our{' '}
+          <Link href="/privacy" className="font-medium text-[#12203f] underline underline-offset-4">
+            Privacy policy
+          </Link>{' '}
+          and Limited Use disclosure.
+        </p>
       </div>
     </section>
   )

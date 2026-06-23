@@ -5,6 +5,10 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Settings, Search, ChevronRight } from 'lucide-react'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
+
+const WORKSPACE_HOME = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
 
 export type SettingsNavItem = {
   id: string
@@ -69,7 +73,7 @@ export default function SettingsShell({
             </div>
           </div>
           <Link
-            href="/app/ws-1/dashboard"
+            href={WORKSPACE_HOME}
             className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
           >
             Exit <ChevronRight className="w-3.5 h-3.5" />

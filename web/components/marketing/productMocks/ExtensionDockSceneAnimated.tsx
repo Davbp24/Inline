@@ -15,9 +15,6 @@ import { cn } from '@/lib/utils'
 const EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 const SCENE_INTERVAL_MS = 4200
 
-/** Tall enough for the rewrite panel (footer + body) without clipping. */
-const POPUP_MIN_H = 460
-
 type DockScene = {
   id: string
   dockIndex: number
@@ -88,7 +85,7 @@ export default function ExtensionDockSceneAnimated({ className }: ExtensionDockS
   return (
     <div
       className={cn(
-        'relative flex flex-col rounded-2xl border border-[#E8DFD4] bg-white p-5 md:p-6',
+        'relative flex flex-col rounded-2xl border border-[#E8DFD4] bg-[#F5EDE3] p-4 sm:p-5 md:p-6',
         className,
       )}
       aria-live="polite"
@@ -102,10 +99,9 @@ export default function ExtensionDockSceneAnimated({ className }: ExtensionDockS
         <div className="h-1 w-4/5 rounded bg-border/60" />
       </div>
 
-      <div className="flex items-start justify-end gap-3">
+      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-end">
         <div
-          className="relative flex min-w-0 flex-1 justify-end"
-          style={{ minHeight: POPUP_MIN_H }}
+          className="relative flex min-h-[300px] w-full min-w-0 flex-1 justify-center sm:min-h-[460px] sm:justify-end"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div

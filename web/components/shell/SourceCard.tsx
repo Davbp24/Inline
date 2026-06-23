@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { FileText, Globe, NotebookPen, Sparkles } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 
 /**
  * Citation card for RAG answers. Rendered ONLY from the server-provided
@@ -21,13 +21,15 @@ export type ChatSource = {
   similarity: number | null
 }
 
+import { workspacePath } from '@/lib/workspace-routes'
+
 function sourceHref(source: ChatSource, workspaceId: string): string | null {
   if (source.sourceId.startsWith('local-doc-')) return null
   if (source.sourceType === 'note') {
-    return `/app/${workspaceId}/history/${source.sourceId}`
+    return workspacePath(workspaceId, 'history', source.sourceId)
   }
   if (source.sourceType === 'document' || source.sourceType === 'recap') {
-    return `/app/${workspaceId}/library/${source.sourceId}`
+    return workspacePath(workspaceId, 'library', source.sourceId)
   }
   return null
 }
@@ -50,7 +52,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function SourceCard({ source, workspaceId }: { source: ChatSource; workspaceId: string }) {
   const href = sourceHref(source, workspaceId)
-  const title = source.pageTitle?.trim() || source.domain || 'Untitled capture'
+  const title = formatDisplayTitle(source.pageTitle?.trim() || source.domain || 'Untitled capture')
 
   const body = (
     <>
@@ -95,7 +97,7 @@ export function SourceCardRow({ sources, workspaceId }: { sources: ChatSource[];
       <p className="mb-1 text-[9px] font-medium uppercase tracking-wide text-muted-foreground/70">
         Sources
       </p>
-      <div className="scrollbar-minimal flex gap-2 overflow-x-auto pb-1">
+      <div className="scrollbar-minimal flex gap-2 overflow-x-auto overflow-y-hidden pb-1">
         {sources.map(s => (
           <SourceCard key={`${s.sourceType}:${s.sourceId}`} source={s} workspaceId={workspaceId} />
         ))}

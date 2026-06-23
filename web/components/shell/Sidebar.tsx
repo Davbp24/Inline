@@ -19,7 +19,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { DEFAULT_WORKSPACES, withWorkspaceSlugs, slugifyWorkspaceLabel } from '@/lib/workspaces'
+import {
+  ensureUniqueWorkspaceSlug,
+  getWorkspaceSlugFromPath,
+  resolveWorkspaceId,
+  workspacePath,
+} from '@/lib/workspace-routes'
 import { useSidebar } from '@/lib/sidebar-context'
 import { signOut } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
@@ -43,7 +49,7 @@ import ThemeToggle from '@/components/shell/ThemeToggle'
 // ---------------------------------------------------------------------------
 // Types & constants
 // ---------------------------------------------------------------------------
-interface WorkspaceItem { id: string; label: string; color: string; icon: string }
+interface WorkspaceItem { id: string; label: string; slug: string; color: string; icon: string }
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Megaphone, Package, TrendingUp, FolderKanban, Lightbulb, Zap,
@@ -52,10 +58,10 @@ const DEFAULT_ICON_KEYS = ['Megaphone', 'Package', 'TrendingUp', 'FolderKanban',
 const DEFAULT_COLORS    = ['#f43f5e', '#6C91C2', '#f59e0b', '#5FA8A1', '#a855f7']
 
 const FEATURES = [
-  { href: (ws: string) => `/app/${ws}/dashboard`,  icon: LayoutDashboard, label: 'Home'            },
-  { href: (ws: string) => `/app/${ws}/history`,    icon: Clock,           label: 'Captures'        },
-  { href: (ws: string) => `/app/${ws}/analytics`,  icon: BarChart2,       label: 'Analytics'       },
-  { href: (ws: string) => `/app/${ws}/settings`,    icon: Settings,        label: 'Settings'        },
+  { href: (ws: WorkspaceItem) => workspacePath(ws, 'dashboard'), icon: LayoutDashboard, label: 'Home' },
+  { href: (ws: WorkspaceItem) => workspacePath(ws, 'history'), icon: Clock, label: 'Captures' },
+  { href: (ws: WorkspaceItem) => workspacePath(ws, 'analytics'), icon: BarChart2, label: 'Analytics' },
+  { href: (ws: WorkspaceItem) => workspacePath(ws, 'settings'), icon: Settings, label: 'Settings' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -63,18 +69,26 @@ const FEATURES = [
 // ---------------------------------------------------------------------------
 function loadWorkspaces(): WorkspaceItem[] {
   if (typeof window === 'undefined') return DEFAULT_WORKSPACES
-  try { const r = localStorage.getItem('inline-workspaces'); return r ? JSON.parse(r) : DEFAULT_WORKSPACES } catch { return DEFAULT_WORKSPACES }
+  try {
+    const r = localStorage.getItem('inline-workspaces')
+    const parsed = r ? (JSON.parse(r) as WorkspaceItem[]) : DEFAULT_WORKSPACES
+    return withWorkspaceSlugs(parsed.length ? parsed : DEFAULT_WORKSPACES) as WorkspaceItem[]
+  } catch {
+    return DEFAULT_WORKSPACES
+  }
 }
-function saveWorkspaces(ws: WorkspaceItem[]) { localStorage.setItem('inline-workspaces', JSON.stringify(ws)) }
+function saveWorkspaces(ws: WorkspaceItem[]) {
+  const migrated = withWorkspaceSlugs(ws) as WorkspaceItem[]
+  localStorage.setItem('inline-workspaces', JSON.stringify(migrated))
+}
 function loadFavorites(): string[] {
   if (typeof window === 'undefined') return []
   try { const r = localStorage.getItem('inline-favorites'); return r ? JSON.parse(r) : [] } catch { return [] }
 }
 function saveFavorites(favs: string[]) { localStorage.setItem('inline-favorites', JSON.stringify(favs)) }
 
-function getActiveWorkspace(pathname: string): string {
-  const m = pathname.match(/\/app\/(ws-[^/]+)/)
-  return m ? m[1] : 'ws-1'
+function getActiveWorkspaceId(pathname: string, workspaces: WorkspaceItem[]): string {
+  return resolveWorkspaceId(getWorkspaceSlugFromPath(pathname), workspaces)
 }
 
 function isMacPlatform() {
@@ -240,12 +254,22 @@ function InviteModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   )
 }
 
+function linkForWorkspace(
+  workspaces: WorkspaceItem[],
+  wsId: string,
+  ...segments: string[]
+): string {
+  const ws = workspaces.find(w => w.id === wsId)
+  return workspacePath(ws ?? wsId, ...segments)
+}
+
 // ---------------------------------------------------------------------------
 // Nested workspace folders (same row UI, indented children)
 // ---------------------------------------------------------------------------
 function SidebarFolderNode({
   folder,
   wsId,
+  workspaces,
   depth,
   allFolders,
   libraryDocs,
@@ -264,6 +288,7 @@ function SidebarFolderNode({
 }: {
   folder: WorkspaceFolder
   wsId: string
+  workspaces: WorkspaceItem[]
   depth: number
   allFolders: WorkspaceFolder[]
   libraryDocs: FolderDocument[]
@@ -297,7 +322,7 @@ function SidebarFolderNode({
         </button>
         <Folder className="w-3 h-3 shrink-0 text-stone-400" />
         <Link
-          href={`/app/${wsId}/folder/${folder.id}`}
+          href={linkForWorkspace(workspaces, wsId, 'folder', folder.id)}
           className="flex-1 truncate text-stone-400 hover:text-stone-700 font-medium cursor-pointer min-w-0"
           title="Open folder library"
         >
@@ -338,6 +363,7 @@ function SidebarFolderNode({
               key={child.id}
               folder={child}
               wsId={wsId}
+              workspaces={workspaces}
               depth={depth + 1}
               allFolders={allFolders}
               libraryDocs={libraryDocs}
@@ -393,7 +419,7 @@ function SidebarFolderNode({
           {folderDocs.map(doc => (
             <Link
               key={doc.id}
-              href={`/app/${wsId}/folder/${folder.id}/doc/${doc.id}`}
+              href={linkForWorkspace(workspaces, wsId, 'folder', folder.id, 'doc', doc.id)}
               className="flex items-center gap-1.5 px-1.5 py-1 rounded text-[11px] text-stone-400 hover:text-stone-700 hover:bg-stone-50 cursor-pointer truncate"
             >
               <FileText className="w-3 h-3 shrink-0 opacity-70" />
@@ -438,7 +464,7 @@ export default function Sidebar() {
   const newFolderRef = useRef<HTMLInputElement>(null)
   const newSubfolderRef = useRef<HTMLInputElement>(null)
   const pathname     = usePathname()
-  const activeWsId   = getActiveWorkspace(pathname)
+  const activeWsId   = getActiveWorkspaceId(pathname, workspaces)
 
   // Accordion expanded state per section
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -451,15 +477,16 @@ export default function Sidebar() {
   const activeWorkspace = workspaces.find(ws => ws.id === activeWsId) ?? workspaces[0]
 
   function switchWorkspace(wsId: string) {
-    if (wsId === activeWsId) return
+    const ws = workspaces.find(w => w.id === wsId)
+    if (!ws || wsId === activeWsId) return
     const segments = pathname.split('/')
     const appIdx = segments.indexOf('app')
-    if (appIdx >= 0 && segments[appIdx + 1]?.startsWith('ws-')) {
-      segments[appIdx + 1] = wsId
-      router.push(segments.join('/') || `/app/${wsId}/dashboard`)
+    if (appIdx >= 0 && segments[appIdx + 1]) {
+      const tail = segments.slice(appIdx + 2)
+      router.push(tail.length ? workspacePath(ws, ...tail) : workspacePath(ws, 'dashboard'))
       return
     }
-    router.push(`/app/${wsId}/dashboard`)
+    router.push(workspacePath(ws, 'dashboard'))
   }
 
   function refreshLibraryDocs() {
@@ -523,13 +550,21 @@ export default function Sidebar() {
       return
     }
     const idx = workspaces.length % DEFAULT_ICON_KEYS.length
-    const ws: WorkspaceItem = { id: `ws-${Date.now()}`, label: name, color: DEFAULT_COLORS[idx], icon: DEFAULT_ICON_KEYS[idx] }
-    const next = [...workspaces, ws]
+    const baseSlug = slugifyWorkspaceLabel(name)
+    const slug = ensureUniqueWorkspaceSlug(baseSlug, workspaces)
+    const ws: WorkspaceItem = {
+      id: `ws-${Date.now()}`,
+      label: name,
+      slug,
+      color: DEFAULT_COLORS[idx],
+      icon: DEFAULT_ICON_KEYS[idx],
+    }
+    const next = withWorkspaceSlugs([...workspaces, ws]) as WorkspaceItem[]
     setWorkspaces(next)
     saveWorkspaces(next)
     setNewWsName('')
     setCreatingWorkspaceInMenu(false)
-    if (andNavigate) router.push(`/app/${ws.id}/dashboard`)
+    if (andNavigate) router.push(workspacePath(ws, 'dashboard'))
   }
 
   useEffect(() => {
@@ -597,7 +632,7 @@ export default function Sidebar() {
   function newDocumentInFolder(wsId: string, folderId: string) {
     const d = createFolderDocument(wsId, folderId, 'Untitled')
     refreshLibraryDocs()
-    router.push(`/app/${wsId}/folder/${folderId}/doc/${d.id}`)
+    router.push(linkForWorkspace(workspaces, wsId, 'folder', folderId, 'doc', d.id))
   }
 
   const favoritedWorkspaces = workspaces.filter(ws => favorites.includes(ws.id))
@@ -778,7 +813,7 @@ export default function Sidebar() {
                 {favoritedWorkspaces.map(ws => {
                   const Icon = ICON_MAP[ws.icon] ?? Zap
                   return (
-                    <NavRow key={`fav-${ws.id}`} href={`/app/${ws.id}/home`} icon={Icon}
+                    <NavRow key={`fav-${ws.id}`} href={workspacePath(ws, 'home')} icon={Icon}
                       label={ws.label} collapsed={collapsed} active={activeWsId === ws.id}
                       dotColor={ws.color} onStar={() => toggleFavorite(ws.id)} starred />
                   )
@@ -792,7 +827,7 @@ export default function Sidebar() {
           <nav className="flex flex-col gap-0.5 mt-0.5 overflow-hidden transition-[max-height,opacity] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
             style={{ maxHeight: (collapsed || expandedSections.features) ? 400 : 0, opacity: (collapsed || expandedSections.features) ? 1 : 0 }}>
             {FEATURES.map(item => {
-              const href = item.href(activeWsId)
+              const href = activeWorkspace ? item.href(activeWorkspace) : '#'
               return (
                 <NavRow key={item.label} href={href} icon={item.icon} label={item.label}
                   collapsed={collapsed} active={pathname === href || pathname.startsWith(href + '/')} />
@@ -831,6 +866,7 @@ export default function Sidebar() {
                 key={folder.id}
                 folder={folder}
                 wsId={activeWsId}
+                workspaces={workspaces}
                 depth={0}
                 allFolders={folders}
                 libraryDocs={libraryDocs}

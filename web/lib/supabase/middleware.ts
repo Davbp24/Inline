@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
 import type { Database } from './types'
 
 export async function updateSession(request: NextRequest) {
@@ -38,7 +40,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/app/ws-1/dashboard'
+    url.pathname = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
     return NextResponse.redirect(url)
   }
 

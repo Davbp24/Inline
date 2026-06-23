@@ -273,3 +273,36 @@ html::-webkit-scrollbar-button:end:increment {
   width: 0;
   height: 0;
 }
+
+/* Marketing pages: scrollable document, no visible vertical scrollbar */
+html:has([data-marketing-layout]) {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html:has([data-marketing-layout])::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Marketing mocks: horizontal carousels only — never a vertical thumb */
+[data-marketing-layout] .scrollbar-minimal {
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #787774 transparent;
+}
+[data-marketing-layout] .scrollbar-minimal::-webkit-scrollbar {
+  width: 0;
+  height: 4px;
+}
+[data-marketing-layout] .scrollbar-minimal::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 119, 116, 0.6);
+  border-radius: 9999px;
+}
+[data-marketing-layout] .scrollbar-minimal::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(55, 53, 47, 0.72);
+}
+[data-marketing-layout] [class*='overflow-x-auto'],
+[data-marketing-layout] [class*='overflow-auto'] {
+  overflow-y: hidden;
+}

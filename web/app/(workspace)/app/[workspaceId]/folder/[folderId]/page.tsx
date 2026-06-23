@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import PageHeader from '@/components/shell/PageHeader'
 import { Button } from '@/components/ui/button'
 import { getWorkspaceName } from '@/lib/workspaces'
@@ -27,6 +27,7 @@ import {
   Folder,
 } from 'lucide-react'
 import { previewText } from '@/lib/utils'
+import { resolveWorkspaceIdFromBrowserPath, workspacePath } from '@/lib/workspace-routes'
 
 function FolderDocumentRow({
   doc,
@@ -37,7 +38,7 @@ function FolderDocumentRow({
   workspaceId: string
   folderId: string
 }) {
-  const href = `/app/${workspaceId}/folder/${folderId}/doc/${doc.id}`
+  const href = workspacePath(workspaceId, 'folder', folderId, 'doc', doc.id)
   const preview = previewText(doc.content) || 'Empty document'
 
   return (
@@ -67,8 +68,9 @@ function FolderDocumentRow({
 
 export default function WorkspaceFolderLibraryPage() {
   const params = useParams()
+  const pathname = usePathname()
   const router = useRouter()
-  const workspaceId = Array.isArray(params.workspaceId) ? params.workspaceId[0]! : (params.workspaceId as string)
+  const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
   const folderId = Array.isArray(params.folderId) ? params.folderId[0]! : (params.folderId as string)
   const workspaceName = getWorkspaceName(workspaceId)
 
@@ -108,7 +110,7 @@ export default function WorkspaceFolderLibraryPage() {
 
   function handleNew() {
     const d = createFolderDocument(workspaceId, folderId, 'Untitled')
-    router.push(`/app/${workspaceId}/folder/${folderId}/doc/${d.id}`)
+    router.push(workspacePath(workspaceId, 'folder', folderId, 'doc', d.id))
   }
 
   if (!folder) {
@@ -116,14 +118,14 @@ export default function WorkspaceFolderLibraryPage() {
       <div className="min-h-screen bg-background">
         <PageHeader
           crumbs={[
-            { label: workspaceName, href: `/app/${workspaceId}/dashboard` },
+            { label: workspaceName, href: workspacePath(workspaceId, 'dashboard') },
             { label: 'Library' },
           ]}
           title="Folder not found"
           subtitle="This folder may have been removed."
         />
         <div className="p-8">
-          <Link href={`/app/${workspaceId}/dashboard`} className="inline-flex items-center justify-center h-9 px-4 text-sm font-medium rounded-md border border-border bg-background hover:bg-accent/40 transition-colors cursor-pointer">
+          <Link href={workspacePath(workspaceId, 'dashboard')} className="inline-flex items-center justify-center h-9 px-4 text-sm font-medium rounded-md border border-border bg-background hover:bg-accent/40 transition-colors cursor-pointer">
             Back to dashboard
           </Link>
         </div>
@@ -132,10 +134,10 @@ export default function WorkspaceFolderLibraryPage() {
   }
 
   const crumbs = [
-    { label: workspaceName, href: `/app/${workspaceId}/dashboard` },
+    { label: workspaceName, href: workspacePath(workspaceId, 'dashboard') },
     ...breadcrumbPath.slice(0, -1).map(f => ({
       label: f.name,
-      href: `/app/${workspaceId}/folder/${f.id}`,
+      href: workspacePath(workspaceId, 'folder', f.id),
     })),
     { label: breadcrumbPath[breadcrumbPath.length - 1]?.name ?? folder.name },
   ]
@@ -164,7 +166,7 @@ export default function WorkspaceFolderLibraryPage() {
               {childFolders.map(sub => (
                 <Link
                   key={sub.id}
-                  href={`/app/${workspaceId}/folder/${sub.id}`}
+                  href={workspacePath(workspaceId, 'folder', sub.id)}
                   className="group rounded-2xl border border-border bg-card p-4 hover:border-primary/25 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start gap-3">

@@ -5,7 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Chrome } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
 import SolarSystemArt from '@/components/auth/SolarSystemArt'
+
+const WORKSPACE_HOME = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,7 +32,7 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
-    router.push('/app/ws-1/dashboard')
+    router.push(WORKSPACE_HOME)
     router.refresh()
   }
 

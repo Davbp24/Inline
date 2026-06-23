@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/primitives/Reveal'
-import { celestial, mktBtnPrimaryLg, mktBtnSecondaryLg } from '@/components/marketing/marketingSurfaces'
+import { celestial, mkt, mktBtnPrimaryLg, mktBtnSecondaryLg } from '@/components/marketing/marketingSurfaces'
 
 export default function ClosingCta() {
   return (
-    <section className="relative overflow-hidden bg-[#EBF1F7] py-20 md:py-28">
+    <section
+      className="relative overflow-hidden py-16 sm:py-20 md:py-28"
+      style={{ backgroundColor: mkt.cream }}
+    >
       <svg
         viewBox="0 0 1000 400"
         preserveAspectRatio="xMidYMid slice"
@@ -30,9 +33,9 @@ export default function ClosingCta() {
           strokeWidth="1"
           strokeDasharray="4 8"
         />
-        <circle cx="500" cy="120" r="2" fill={celestial.sparkle} fillOpacity="0.5" />
-        <circle cx="180" cy="80" r="1.5" fill={celestial.star} fillOpacity="0.4" />
-        <circle cx="820" cy="180" r="1.5" fill={celestial.star} fillOpacity="0.4" />
+        <circle cx="500" cy="120" r="2" fill={celestial.star} fillOpacity="0.55" />
+        <circle cx="180" cy="80" r="1.5" fill={celestial.star} fillOpacity="0.45" />
+        <circle cx="820" cy="180" r="1.5" fill={celestial.star} fillOpacity="0.45" />
       </svg>
       <div className="relative mx-auto max-w-3xl px-6 text-center">
         <Reveal>
@@ -44,11 +47,11 @@ export default function ClosingCta() {
             memory you can ask.
           </p>
         </Reveal>
-        <Reveal delay={0.1} className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/install" className={mktBtnPrimaryLg}>
+        <Reveal delay={0.1} className="mt-8 flex w-full max-w-sm flex-col items-center justify-center gap-3 sm:max-w-none sm:flex-row">
+          <Link href="/install" className={`w-full sm:w-auto ${mktBtnPrimaryLg}`}>
             Add to Chrome
           </Link>
-          <Link href="/auth/register" className={mktBtnSecondaryLg}>
+          <Link href="/auth/register" className={`w-full sm:w-auto ${mktBtnSecondaryLg}`}>
             Create your workspace
           </Link>
         </Reveal>

@@ -1,5 +1,10 @@
 import Link from 'next/link'
 import { SectionLink, type SectionHref } from '@/components/marketing/SectionLink'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
+import { SUPPORT_EMAIL, SUPPORT_MAILTO } from '@/lib/site-contact'
+
+const WORKSPACE_HOME = workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard')
 
 /**
  * Footer with real destinations only — section anchors, the install guide,
@@ -18,7 +23,7 @@ const LINK_COLUMNS: { section: string; items: { label: string; href: string | Se
   {
     section: 'Workspace',
     items: [
-      { label: 'Open workspace', href: '/app/ws-1/dashboard' },
+      { label: 'Open workspace', href: WORKSPACE_HOME },
       { label: 'Sign in',        href: '/auth/login' },
       { label: 'Create account', href: '/auth/register' },
     ],
@@ -27,15 +32,17 @@ const LINK_COLUMNS: { section: string; items: { label: string; href: string | Se
     section: 'Get started',
     items: [
       { label: 'Install the extension', href: '/install' },
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
     ],
   },
 ]
 
 export default function MarketingFooter() {
   return (
-    <footer className="bg-[#14161C] border-t border-white/10 text-stone-300">
-      <div className="max-w-6xl mx-auto px-6 lg:px-10 py-16">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
+    <footer className="bg-[#14161C] border-t border-white/15 text-stone-300">
+      <div className="max-w-6xl mx-auto px-5 py-12 sm:px-6 sm:py-16 lg:px-10">
+        <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
@@ -44,7 +51,7 @@ export default function MarketingFooter() {
               </div>
               <span className="font-semibold text-sm text-white">inline</span>
             </div>
-            <p className="text-xs text-stone-500 leading-relaxed max-w-[240px]">
+            <p className="text-xs text-stone-400 leading-relaxed max-w-[240px]">
               Capture context directly on the web. Turn highlights, notes,
               rewrites, and recaps into a searchable AI workspace.
             </p>
@@ -59,14 +66,14 @@ export default function MarketingFooter() {
                     {item.href.startsWith('/#') ? (
                       <SectionLink
                         href={item.href as SectionHref}
-                        className="text-xs text-stone-500 hover:text-white transition-colors"
+                        className="text-xs text-stone-300 hover:text-white transition-colors"
                       >
                         {item.label}
                       </SectionLink>
                     ) : (
                       <Link
                         href={item.href}
-                        className="text-xs text-stone-500 hover:text-white transition-colors"
+                        className="text-xs text-stone-300 hover:text-white transition-colors"
                       >
                         {item.label}
                       </Link>
@@ -78,11 +85,14 @@ export default function MarketingFooter() {
           ))}
         </div>
 
-        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-stone-500">
-            Built with curiosity and coffee.
+        <div className="mt-16 pt-8 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-stone-400">
+            Built with curiosity and coffee.{' '}
+            <a href={SUPPORT_MAILTO} className="text-stone-300 hover:text-white transition-colors">
+              {SUPPORT_EMAIL}
+            </a>
           </p>
-          <p className="text-xs text-stone-500">&copy;{new Date().getFullYear()} Inline</p>
+          <p className="text-xs text-stone-400">&copy;{new Date().getFullYear()} Inline</p>
         </div>
       </div>
     </footer>

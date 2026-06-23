@@ -12,6 +12,8 @@
  * for those.
  */
 
+import { assertSecureTransport } from './secureTransport'
+
 export type BackgroundProxyInit = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
   headers?: Record<string, string>
@@ -30,6 +32,8 @@ export async function fetchViaBackground(
   url: string,
   init: BackgroundProxyInit = {},
 ): Promise<BackgroundProxyResponse> {
+  assertSecureTransport(url)
+
   if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) {
     throw new Error('Background service worker unavailable')
   }

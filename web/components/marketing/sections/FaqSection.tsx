@@ -1,5 +1,6 @@
-import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
-import { mktCardSolid } from '@/components/marketing/marketingSurfaces'
+import { Plus } from 'lucide-react'
+import { Reveal } from '@/components/marketing/primitives/Reveal'
+import { cn } from '@/lib/utils'
 
 /**
  * #faq — native <details>/<summary> accordion: keyboard accessible, no JS,
@@ -8,54 +9,70 @@ import { mktCardSolid } from '@/components/marketing/marketingSurfaces'
 
 const FAQS: { q: string; a: string }[] = [
   {
-    q: 'What is Inline?',
-    a: 'Inline is a browser-native AI memory layer: a Chrome extension that lets you highlight, write, draw, rewrite, and ask AI on any webpage, paired with a web workspace that organizes every capture into searchable history, documents, analytics, a map, and a knowledge graph.',
+    q: 'What can Inline do for me?',
+    a: 'Inline lets you save what matters while you read—highlights, notes, drawings, rewrites, and quick summaries—right on the page. Everything lands in one place so you can come back later, search it, and ask questions about what you saved.',
   },
   {
-    q: 'Does it work on any webpage?',
-    a: 'The extension runs on standard web pages over http and https. It renders inside an isolated Shadow DOM so it doesn\u2019t collide with page styles. Browser-internal pages (like chrome:// pages and the Web Store) don\u2019t allow extensions to run. You can also disable Inline on specific sites.',
+    q: 'Does it work on the pages I read every day?',
+    a: 'Yes, on most sites you open in Chrome. A few built-in browser pages don\u2019t support extensions, and you can turn Inline off for any site you prefer not to use it on.',
   },
   {
-    q: 'How does AI search work?',
-    a: 'When you save captures and documents, Inline indexes that content inside your account. When you ask a question, it finds the most relevant saved context in your workspace and answers only from those sources. Answers include source cards, and the panel clearly says when it is answering from recent captures only.',
+    q: 'Can I ask questions about what I\u2019ve saved?',
+    a: 'Yes. Open chat in your workspace and ask in everyday language—like \u201cWhat did I highlight about bridges?\u201d Inline answers from your saved pages and notes, and points you back to where each answer came from.',
   },
   {
-    q: 'Where are my annotations stored?',
-    a: 'Annotations are saved per page to a Postgres database via Supabase, protected by row-level security so only your account can read or write them. They are mirrored into your workspace history and restored when you revisit the page.',
+    q: 'What happens to my highlights and notes?',
+    a: 'They\u2019re saved to your account and linked to the page they came from. When you revisit that page, your annotations show up again. Only you can access what\u2019s in your workspace.',
   },
   {
-    q: 'Is the ElevenLabs (read aloud) integration secure?',
-    a: 'Yes. The ElevenLabs API key lives only on the server. Read-aloud requests go through an authenticated server-side proxy with rate limiting and a voice whitelist — the key is never present in the extension, your browser, or any client storage.',
+    q: 'Can Inline read pages aloud?',
+    a: 'Yes. You can have a page or a selection read out loud while you work. It\u2019s handled securely on our side—nothing you need to set up or worry about.',
   },
   {
-    q: 'What happens if AI or text-to-speech fails?',
-    a: 'Features degrade visibly, not silently. If the AI service is unavailable you get a clear error message in the chat or panel. If cloud text-to-speech fails, Inline automatically falls back to your browser\u2019s built-in voice and tells you it did.',
+    q: 'What if something stops working?',
+    a: 'Inline tells you plainly when a feature isn\u2019t available—no silent failures. If read-aloud can\u2019t connect, it switches to your computer\u2019s built-in voice and lets you know.',
   },
   {
-    q: 'Can I use the dashboard without the extension?',
-    a: 'Yes. The workspace works on its own — you can write library documents, organize folders, search, and chat with the AI over anything already captured. The extension is what feeds new captures in from the pages you read.',
+    q: 'Can I use Inline without the Chrome extension?',
+    a: 'Yes. Your workspace stands on its own: browse what you\u2019ve already saved, write and organize documents, and chat with Inline about your material. The extension is how new captures come in while you read on the web.',
   },
 ]
 
 export default function FaqSection() {
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#EFE8DC] py-24 md:py-32">
+    <section id="faq" className="scroll-mt-24 bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
       <div className="mx-auto max-w-3xl px-6 lg:px-10">
-        <SectionHeading eyebrow="FAQ" title="Questions, answered plainly" />
-        <Reveal className="mt-12" delay={0.08}>
-          <div className={`divide-y divide-[#d6d3d1] ${mktCardSolid}`}>
-            {FAQS.map(f => (
-              <details key={f.q} className="group px-6 py-4 open:bg-[#F4F4F2]/60">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-[#1C1E26] [&::-webkit-details-marker]:hidden">
-                  {f.q}
+        <Reveal className="text-center">
+          <p className="text-sm font-semibold text-[#78716c]">FAQ</p>
+          <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
+            Questions, answered plainly
+          </h2>
+        </Reveal>
+
+        <Reveal className="mt-10 sm:mt-12" delay={0.08}>
+          <div className="overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3]">
+            {FAQS.map((f, i) => (
+              <details
+                key={f.q}
+                className={cn(
+                  'group bg-white transition-colors open:bg-[#FAF5EE]',
+                  i > 0 && 'border-t border-[#E8DFD4]',
+                )}
+              >
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden">
+                  <span className="text-left text-base font-semibold leading-snug text-[#1C1E26] sm:text-[1.05rem]">
+                    {f.q}
+                  </span>
                   <span
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#d6d3d1] text-[#78716c] transition-transform group-open:rotate-45"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E8DFD4] bg-[#FDFBF7] text-[#78716c] transition-all group-open:rotate-45 group-open:border-[#d6d3d1] group-open:bg-white"
                     aria-hidden
                   >
-                    +
+                    <Plus className="h-4 w-4" strokeWidth={2} />
                   </span>
                 </summary>
-                <p className="mt-3 pr-10 text-sm leading-relaxed text-stone-600">{f.a}</p>
+                <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground sm:px-6 sm:pb-6 sm:text-[0.9375rem]">
+                  {f.a}
+                </p>
               </details>
             ))}
           </div>

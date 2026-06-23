@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
+import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
+import { workspacePath } from '@/lib/workspace-routes'
 import {
   Mail, Key, Check, Loader2, LogOut,
   AlertTriangle,
@@ -404,7 +406,7 @@ export default function AccountSettingsPage() {
 
   return (
     <>
-      <PageHeader crumbs={[{ label: 'Account', href: '/app/ws-1/dashboard' }, { label: 'Settings' }]} />
+      <PageHeader crumbs={[{ label: 'Account', href: workspacePath(DEFAULT_WORKSPACES[0]!, 'dashboard') }, { label: 'Settings' }]} />
 
       <div className="px-6 pb-12">
         <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">Account Settings</h1>

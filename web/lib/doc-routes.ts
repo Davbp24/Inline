@@ -1,3 +1,5 @@
+import { workspacePath } from '@/lib/workspace-routes'
+
 /**
  * URL helpers for workspace documents.
  *
@@ -7,7 +9,7 @@
 
 /** Canonical in-app href for a folder document (flat route). */
 export function documentHref(workspaceId: string, docId: string): string {
-  return `/app/${workspaceId}/doc/${docId}`
+  return workspacePath(workspaceId, 'doc', docId)
 }
 
 /** True when an id would break dynamic `[docId]` / `[documentId]` matching. */

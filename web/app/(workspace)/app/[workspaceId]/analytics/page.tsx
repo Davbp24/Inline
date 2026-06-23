@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import PageHeader from '@/components/shell/PageHeader'
 import { getWorkspaceName } from '@/lib/workspaces'
+import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
 import { fetchDashboardStats, fetchCaptureTimeSeries } from '@/lib/data'
 import AnalyticsCharts from '@/components/analytics/AnalyticsCharts'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -30,14 +31,15 @@ export default async function AnalyticsPage({
 }: {
   params: Promise<{ workspaceId: string }>
 }) {
-  const { workspaceId } = await params
+  const { workspaceId: routeSegment } = await params
+  const workspaceId = resolveWorkspaceId(routeSegment)
   const workspaceName   = getWorkspaceName(workspaceId)
 
   return (
     <div className="min-h-full bg-white dark:bg-[#0A1430]">
       <PageHeader
         crumbs={[
-          { label: workspaceName, href: `/app/${workspaceId}/dashboard` },
+          { label: workspaceName, href: workspacePath(workspaceId, 'dashboard') },
           { label: 'Analytics' },
         ]}
       />

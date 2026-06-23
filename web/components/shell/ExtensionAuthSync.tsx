@@ -7,13 +7,14 @@
  * falls back to the anon client, and public.notes never gets a user_id — which
  * is why History / Analytics / Graph would otherwise show empty.
  *
- * Requires NEXT_PUBLIC_CHROME_EXTENSION_ID and NEXT_PUBLIC_INLINE_BACKEND_URL
- * (optional, defaults to http://localhost:3030) in .env.local.
+ * Requires NEXT_PUBLIC_CHROME_EXTENSION_ID. Optional NEXT_PUBLIC_INLINE_BACKEND_URL
+ * overrides the annotation API origin (defaults to the site origin in production).
  */
 
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl, resolveExtensionBackendBase } from '@/lib/inline-origin'
 
 type ChromeLike = {
   runtime?: {
@@ -21,11 +22,7 @@ type ChromeLike = {
   }
 }
 
-function extractWorkspaceId(pathname: string | null): string {
-  if (!pathname) return ''
-  const m = pathname.match(/^\/app\/([^/]+)/)
-  return m ? decodeURIComponent(m[1]) : ''
-}
+import { resolveWorkspaceIdFromBrowserPath } from '@/lib/workspace-routes'
 
 function sendToExtension(
   extId: string,
@@ -57,14 +54,13 @@ export default function ExtensionAuthSync() {
 
     const apiBase =
       (typeof window !== 'undefined' ? window.location.origin : '') ||
-      'http://localhost:3000'
-    const backendBase =
-      process.env.NEXT_PUBLIC_INLINE_BACKEND_URL || 'http://localhost:3030'
+      getSiteUrl()
+    const backendBase = resolveExtensionBackendBase()
 
     const supabase = createClient()
 
     const push = (session: { access_token?: string; user?: { id?: string } } | null) => {
-      const workspaceId = extractWorkspaceId(pathname)
+      const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
       sendToExtension(extId, {
         accessToken: session?.access_token ?? '',
         userId:      session?.user?.id ?? '',

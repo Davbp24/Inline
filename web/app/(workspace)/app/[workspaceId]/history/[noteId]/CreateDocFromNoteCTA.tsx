@@ -7,6 +7,7 @@ import { createFolderDocument, loadFolderDocuments } from '@/lib/workspace-libra
 import { loadWorkspaceFolders, getRootFolders } from '@/lib/workspace-folders'
 import { prettyNotePreview } from '@/lib/note-preview'
 import type { Note } from '@/lib/types'
+import { workspacePath } from '@/lib/workspace-routes'
 
 interface Props {
   workspaceId: string
@@ -33,7 +34,7 @@ export default function CreateDocFromNoteCTA({ workspaceId, noteTitle, noteConte
         all[idx].content = `<p>${readable.replace(/\n/g, '</p><p>')}</p>`
         localStorage.setItem('inline-folder-documents', JSON.stringify(all))
       }
-      router.push(`/app/${workspaceId}/doc/${doc.id}`)
+      router.push(workspacePath(workspaceId, 'doc', doc.id))
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,6 @@
 import { FileText, Sparkles, Star } from 'lucide-react'
 import { DEMO_LIBRARY_DOCS } from '@/components/marketing/productMocks/sampleData'
-import { cn } from '@/lib/utils'
+import { cn, formatDisplayTitle } from '@/lib/utils'
 
 type LibraryDocumentsMockProps = {
   className?: string
@@ -20,7 +20,7 @@ export default function LibraryDocumentsMock({ className, limit = 4 }: LibraryDo
           <Star className="absolute right-3 top-3 h-4 w-4 text-muted-foreground/40" aria-hidden />
           <div>
             <p className="line-clamp-1 pr-6 text-base font-semibold tracking-tight text-foreground">
-              {doc.title}
+              {formatDisplayTitle(doc.title)}
             </p>
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{doc.preview}</p>
           </div>

@@ -38,6 +38,9 @@ export const product = {
   panelShadow: '0 22px 70px -42px rgba(28, 30, 38, 0.38)',
   toolbarShadow:
     '0 14px 40px -8px rgba(28, 30, 38, 0.34), 0 6px 18px -4px rgba(28, 30, 38, 0.2)',
+  /** Floating Ask Inline pill — softer than toolbar chrome */
+  chatPillShadow:
+    '0 6px 18px -6px rgba(28, 30, 38, 0.1), 0 2px 6px -2px rgba(28, 30, 38, 0.06)',
   inputGlow: '0 0 0 3px rgba(75, 131, 196, 0.10)',
 } as const
 
@@ -50,14 +53,26 @@ export const celestial = {
   hub: '#12203f',
 } as const
 
+/** Hero icon tile — soft glass keycap (inset highlight + drop shadow) */
 export const mktTileShadow =
-  'shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_6px_14px_-5px_rgba(180,158,132,0.15),0_2px_5px_-2px_rgba(160,138,118,0.09)]'
+  'rgba(255, 255, 255, 0.9) 0px 1px 0px inset, rgba(200, 200, 210, 0.6) 0px 6px 10px -6px inset, rgba(0, 0, 0, 0.18) 0px 8px 24px -10px'
 
-export const mktLogoTileShadow =
-  'shadow-[0_6px_14px_-5px_rgba(140,118,98,0.18),0_2px_5px_-2px_rgba(160,138,118,0.1)]'
+/** Center-row tiles — slightly deeper elevation */
+export const mktTileShadowEmphasis =
+  'rgba(255, 255, 255, 0.9) 0px 1px 0px inset, rgba(200, 200, 210, 0.6) 0px 6px 10px -6px inset, rgba(0, 0, 0, 0.22) 0px 10px 28px -10px'
+
+export const mktLogoTileShadow = mktTileShadowEmphasis
 
 export const mktHeroAmbient =
-  'radial-gradient(ellipse 92% 82% at 50% 52%, rgba(217, 196, 176, 0.2) 0%, rgba(245, 237, 227, 0.08) 46%, transparent 76%)'
+  'radial-gradient(rgba(232, 160, 130, 0.18) 0%, rgba(232, 160, 130, 0.06) 35%, transparent 70%)'
+
+/** Frosted hero tile fill — keep alpha low so backdrop blur reads */
+export const mktHeroTileGlass =
+  'linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.28) 100%)'
+
+export const mktHeroTileBorder = '1px solid rgba(255, 255, 255, 0.72)'
+
+export const mktHeroTileBackdrop = 'blur(20px) saturate(165%)'
 
 /** Product-shaped card on cream sections */
 export const mktCard =
@@ -68,10 +83,10 @@ export const mktCardSolid =
   'rounded-xl border border-[#d6d3d1] bg-white p-6'
 
 export const mktBtnPrimary =
-  'inline-flex items-center justify-center rounded-full bg-[#1C1E26] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#13151B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+  'inline-flex items-center justify-center rounded-full bg-[#1B1B1B] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
 export const mktBtnPrimaryLg =
-  'inline-flex items-center justify-center rounded-full bg-[#1C1E26] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#13151B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+  'inline-flex items-center justify-center rounded-full bg-[#1B1B1B] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
 export const mktBtnSecondary =
   'inline-flex items-center justify-center rounded-full border border-[#d6d3d1] bg-white px-6 py-2.5 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#a8a29e] hover:bg-[#F4F4F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'

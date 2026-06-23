@@ -13,9 +13,9 @@ function PairCard({
   children: ReactNode
 }) {
   return (
-    <article className="flex h-full flex-col rounded-[1.75rem] border border-[#E8DFD4] bg-[#FAF5EE] p-6 md:p-8">
+    <article className="flex h-full flex-col rounded-[1.75rem] border border-[#E8DFD4] bg-[#FAF5EE] p-5 sm:p-6 md:p-8">
       <div className="shrink-0">
-        <h3 className="text-2xl font-semibold tracking-tight text-[#1C1E26] md:text-[1.75rem]">
+        <h3 className="text-xl font-semibold tracking-tight text-[#1C1E26] sm:text-2xl md:text-[1.75rem]">
           {title}
         </h3>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">{description}</p>
@@ -43,7 +43,7 @@ function RecapStatusCard() {
 
 export default function MaintainingPairSection() {
   return (
-    <section className="bg-[#FDFBF7] py-24 md:py-32">
+    <section className="bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <div className="grid items-stretch gap-5 lg:grid-cols-2">
           <Reveal className="h-full">

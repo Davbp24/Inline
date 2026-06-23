@@ -5,7 +5,7 @@ import { ExternalLink, Clock, Globe, Tag, MapPin, FileText, PenTool, BrainCircui
 import type { Note, NoteType } from '@/lib/types'
 import { formatDistanceToNow, format } from 'date-fns'
 import { prettyNotePreview } from '@/lib/note-preview'
-import { truncateDisplayUrl } from '@/lib/utils'
+import { formatDisplayTitle, truncateDisplayUrl } from '@/lib/utils'
 
 const TYPE_META: Record<NoteType, { label: string; icon: React.ElementType; color: string; bg: string }> = {
   text:         { label: 'Text Note',   icon: FileText,     color: '#6C91C2', bg: '#DCE6F4' },
@@ -131,7 +131,7 @@ export default function NoteDetailSheet({ note, onClose }: NoteDetailSheetProps)
               {/* Structured metadata — macOS inspector style */}
               <div className="divide-y divide-slate-100">
                 <MetaRow icon={Globe} label="Page Title">
-                  <span className="font-medium">{note.pageTitle}</span>
+                  <span className="font-medium">{formatDisplayTitle(note.pageTitle)}</span>
                 </MetaRow>
 
                 <MetaRow icon={Clock} label="Captured">
