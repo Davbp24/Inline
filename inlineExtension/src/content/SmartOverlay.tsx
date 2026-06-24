@@ -14,6 +14,14 @@ import { fetchViaBackground } from '../lib/backgroundFetch'
 import { buildAIInsertMark } from '../lib/insertBadge'
 import { saveAIReplacement } from './aiReplacements'
 import { TOOLBAR as TB, HIGHLIGHT_SWATCHES, FONT, PANEL as C } from '../lib/extensionTheme'
+import {
+  FloatingPanelShell,
+  BlockDiffView,
+  PanelResultCard,
+  ReviewFooter,
+  GhostFooterButton,
+  Spinner,
+} from '../components/panelKit'
 import FormattedAiText from '../components/FormattedAiText'
 import { GUEST_AI_LIMIT, reserveAiPrompt } from '../lib/aiAccess'
 import {
@@ -83,7 +91,6 @@ async function serverTask(
 
 /* ─── Theme (floating toolbar — matches web chat) ─── */
 const DARK = C.text
-const CREAM = C.bg
 const SURFACE = C.bg
 const BORDER = C.border
 const PANEL_BORDER = C.border
@@ -581,6 +588,30 @@ export default function SmartOverlay() {
     return 'Shortened'
   }
 
+  function aiTaskSubtitle(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten'): string {
+    if (task === 'summarize') return 'Summary update'
+    if (task === 'rephrase') return 'Rephrase update'
+    if (task === 'rewrite') return 'Rewrite update'
+    return 'Shorten update'
+  }
+
+  function dismissAiResult() {
+    setAiResult(null)
+  }
+
+  /** Discard the AI suggestion and restore the original highlighted text. */
+  function handleRejectAiResult() {
+    const span = lastHighlightSpan.current
+    const originalText = lastOriginalText.current
+    if (span?.parentNode) {
+      const text = document.createTextNode(originalText || span.textContent || '')
+      span.parentNode.replaceChild(text, span)
+    }
+    lastHighlightSpan.current = null
+    lastOriginalText.current = ''
+    setAiResult(null)
+  }
+
   async function runAiTask(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten', instruction?: string) {
     restoreSavedSelection()
     const wrapped = wrapSelectionWithHighlight(task)
@@ -990,12 +1021,12 @@ export default function SmartOverlay() {
             zIndex: 2147483647,
             background: SURFACE,
             border: `1px solid ${PANEL_BORDER}`,
-            borderRadius: 13,
+            borderRadius: C.radius,
             pointerEvents: 'auto',
             width: 192,
             padding: '6px',
             fontFamily: FONT,
-            boxShadow: TB.shadow,
+            boxShadow: C.shadowOuter,
           }}
           onClick={e => e.stopPropagation()}
         >
@@ -1081,70 +1112,99 @@ export default function SmartOverlay() {
 
       {/* ── Page risk panel ── */}
       {riskOpen && (
-        <div style={{ position: 'fixed', right: 16, top: 16, width: 'min(100vw - 32px, 340px)', maxHeight: '70vh', overflow: 'auto', zIndex: 2147483646, background: CREAM, border: '1px solid rgba(15,18,23,0.10)', borderRadius: 16, padding: '14px 16px', pointerEvents: 'auto', fontFamily: FONT, fontSize: 12, boxShadow: TB.shadow }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <strong style={{ fontSize: 13, color: DARK }}>Page risk analysis</strong>
-            <button type="button" onClick={() => setRiskOpen(false)}
-              style={{ border: '1px solid rgba(15,18,23,0.10)', borderRadius: 6, background: '#fff', cursor: 'pointer', padding: '2px 7px', fontSize: 13, color: DARK }}>×</button>
-          </div>
-          {riskLoading
-            ? <p style={{ color: '#6B7280', margin: 0 }}>Analysing…</p>
-            : <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: DARK, lineHeight: 1.5 }}>{riskText}</pre>}
-        </div>
+        <FloatingPanelShell
+          title="Ask"
+          subtitle="Page risk analysis"
+          width={342}
+          tool="ai"
+          onClose={() => setRiskOpen(false)}
+          footer={!riskLoading && riskText ? (
+            <ReviewFooter
+              onBack={() => setRiskOpen(false)}
+              showReject={false}
+              showApprove={false}
+            />
+          ) : undefined}
+        >
+          <PanelResultCard>
+            {riskLoading ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: C.textMuted, fontSize: 14 }}>
+                <Spinner size={16} /> Analysing…
+              </span>
+            ) : (
+              <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: FONT, fontSize: 13.5, lineHeight: 1.55 }}>{riskText}</pre>
+            )}
+          </PanelResultCard>
+        </FloatingPanelShell>
       )}
 
       {/* ── Inline AI result card (replaces window.alert) ── */}
-      {aiResult && (
-        <div
-          className="inline-toolbar"
-          style={{
-            position: 'fixed', right: 16, top: 16,
-            width: 'min(100vw - 32px, 360px)', maxHeight: '70vh', overflow: 'auto',
-            zIndex: 2147483646,
-            background: CREAM, border: '1px solid rgba(15,18,23,0.10)', borderRadius: 16,
-            padding: '14px 16px', pointerEvents: 'auto',
-            fontFamily: FONT, fontSize: 12,
-            boxShadow: TB.shadow,
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <strong style={{ fontSize: 13, color: DARK }}>{aiResult.title}</strong>
-            <button type="button" onClick={() => setAiResult(null)}
-              style={{ border: '1px solid rgba(15,18,23,0.10)', borderRadius: 6, background: '#fff', cursor: 'pointer', padding: '2px 7px', fontSize: 13, color: DARK }}>×</button>
-          </div>
-          {aiResult.loading
-            ? <p style={{ color: '#6B7280', margin: 0 }}>Thinking…</p>
-            : <FormattedAiText text={aiResult.body} style={{ fontSize: 12, lineHeight: 1.5, color: DARK }} />}
-          {!aiResult.loading && aiResult.body && (
-            <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'flex-end' }}>
-              <button type="button"
-                onClick={() => { void navigator.clipboard.writeText(aiResult.body).catch(() => {}) }}
-                style={{ border: '1px solid rgba(15,18,23,0.10)', borderRadius: 8, padding: '5px 10px', background: '#fff', fontSize: 11, cursor: 'pointer', fontWeight: 600, color: DARK }}>Copy</button>
-              {/* Insert + persist — only shown for the three AI text tasks
-                  and only when we still have a live highlight span to
-                  replace. Once clicked we set `inserted: true` so the
-                  button flips to a confirmation state. */}
-              {aiResult.task && !aiResult.body.startsWith('[Error]') && (
-                <button type="button"
-                  disabled={aiResult.inserted || !lastHighlightSpan.current}
-                  onClick={handleInsertAiResult}
-                  title={aiResult.inserted
-                    ? 'The AI edit is now part of the page and will come back on reload. Hover it and click × to remove.'
-                    : 'Replace the highlighted text with this result. Persists across reloads.'}
-                  style={{
-                    border: 'none', borderRadius: 8,
-                    padding: '5px 12px', fontSize: 11,
-                    cursor: aiResult.inserted ? 'default' : 'pointer', fontWeight: 700,
-                    background: aiResult.inserted ? '#16a34a' : DARK,
-                    color: '#fff',
-                    opacity: aiResult.inserted || !lastHighlightSpan.current ? 0.85 : 1,
-                  }}
-                >{aiResult.inserted ? 'Inserted ✓' : 'Insert'}</button>
+      {aiResult && (() => {
+        const isError = !aiResult.loading && aiResult.body.startsWith('[Error]')
+        const isReview = !!aiResult.task && !isError && !aiResult.loading
+        const original = lastOriginalText.current
+        const canApprove = isReview && !aiResult.inserted && !!lastHighlightSpan.current
+
+        return (
+          <FloatingPanelShell
+            className="inline-toolbar"
+            title="Ask"
+            subtitle={
+              aiResult.loading ? 'Thinking…'
+                : isError ? 'Something went wrong'
+                  : aiResult.task ? aiTaskSubtitle(aiResult.task)
+                    : aiResult.title
+            }
+            width={342}
+            tool="ai"
+            onClose={dismissAiResult}
+            footer={!aiResult.loading && aiResult.body ? (
+              isReview ? (
+                <ReviewFooter
+                  onBack={dismissAiResult}
+                  onReject={handleRejectAiResult}
+                  onApprove={handleInsertAiResult}
+                  approveLabel={aiResult.inserted ? 'Approved' : 'Approve'}
+                  approveDisabled={!canApprove}
+                />
+              ) : isError ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: 8, padding: '12px 16px',
+                }}>
+                  <GhostFooterButton label="Back" onClick={dismissAiResult} />
+                  <GhostFooterButton
+                    label="Copy"
+                    onClick={() => { void navigator.clipboard.writeText(aiResult.body).catch(() => {}) }}
+                  />
+                </div>
+              ) : (
+                <ReviewFooter
+                  onBack={dismissAiResult}
+                  showReject={false}
+                  showApprove={false}
+                />
+              )
+            ) : undefined}
+          >
+            <PanelResultCard>
+              {aiResult.loading ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: C.textMuted, fontSize: 14, fontStyle: 'italic' }}>
+                  <Spinner size={16} /> Putting together the best answer…
+                </span>
+              ) : isError ? (
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: '#991B1B' }}>
+                  {aiResult.body.replace(/^\[Error\]\s*/, '')}
+                </p>
+              ) : isReview && original ? (
+                <BlockDiffView original={original} updated={aiResult.body} />
+              ) : (
+                <FormattedAiText text={aiResult.body} style={{ fontSize: 13.5, lineHeight: 1.55 }} />
               )}
-            </div>
-          )}
-        </div>
-      )}
+            </PanelResultCard>
+          </FloatingPanelShell>
+        )
+      })()}
 
       <GlobalDragHandler setAnchors={setAnchors} dragRef={dragRef} />
     </>
@@ -1161,25 +1221,35 @@ function AnchorPanel({
   onClose: () => void
 }) {
   return (
-    <div
+    <FloatingPanelShell
       className="inline-anchor"
-      style={{ position: 'fixed', left: note.x, top: note.y, width: 240, zIndex: 2147483645, background: CREAM, border: '1px solid rgba(15,18,23,0.10)', borderRadius: 14, overflow: 'hidden', pointerEvents: 'auto', fontFamily: FONT, boxShadow: TB.shadow }}
+      title="Note"
+      subtitle="Drag header to move"
+      width={260}
+      bareBody
+      position={{ left: note.x, top: note.y }}
+      zIndex={2147483645}
+      onClose={onClose}
+      onHeaderMouseDown={e => {
+        dragRef.current = { id: note.id, ox: e.clientX - note.x, oy: e.clientY - note.y }
+        e.preventDefault()
+      }}
+      headerCursor="grab"
     >
-      <div
-        onMouseDown={e => { dragRef.current = { id: note.id, ox: e.clientX - note.x, oy: e.clientY - note.y }; e.preventDefault() }}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 11px', background: '#F6F5F3', borderBottom: '1px solid rgba(15,18,23,0.06)', cursor: 'grab', userSelect: 'none' }}
-      >
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', letterSpacing: 1 }}>⠿ ANCHOR NOTE</span>
-        <button type="button" onClick={onClose}
-          style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 15, padding: 0, lineHeight: 1 }}>×</button>
+      <div style={{ padding: '12px 14px' }}>
+        <textarea
+          value={note.text}
+          onChange={e => onChange(e.target.value)}
+          placeholder="Start typing…"
+          style={{
+            display: 'block', width: '100%', boxSizing: 'border-box',
+            border: `1px solid ${C.border}`, borderRadius: C.radiusSm,
+            padding: '8px 10px', fontSize: 12, resize: 'vertical', minHeight: 90,
+            outline: 'none', fontFamily: FONT, color: DARK, background: C.inputBg,
+          }}
+        />
       </div>
-      <textarea
-        value={note.text}
-        onChange={e => onChange(e.target.value)}
-        placeholder="Start typing…"
-        style={{ display: 'block', width: '100%', boxSizing: 'border-box', border: 'none', padding: '8px 10px', fontSize: 12, resize: 'vertical', minHeight: 90, outline: 'none', fontFamily: FONT, color: DARK, background: CREAM }}
-      />
-    </div>
+    </FloatingPanelShell>
   )
 }
 

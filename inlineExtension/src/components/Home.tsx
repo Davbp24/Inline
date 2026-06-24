@@ -282,6 +282,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
   )
   const colRef = useRef<HTMLDivElement>(null)
   const panelWrapRef = useRef<HTMLDivElement>(null)
+  const flyoutRef = useRef<HTMLDivElement>(null)
 
   /* Inject the spinner keyframes into the shadow root once mounted. */
   useEffect(() => {
@@ -391,6 +392,14 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     setActivePanel(null)
     emitDockPanelClosed()
   }, [])
+
+  /** Open/close Annotate or More tools flyout; dismisses the main panel when opening. */
+  const toggleDockGroup = useCallback((groupId: DockGroupId) => {
+    requestHaptic()
+    const isClosing = openGroup === groupId
+    if (!isClosing) closePanel()
+    setOpenGroup(g => g === groupId ? null : groupId)
+  }, [openGroup, closePanel])
 
   /* Spawn a sticky note (page object). */
   const spawnNote = useCallback(() => {
@@ -561,16 +570,30 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     return () => document.removeEventListener('pointerdown', onPointerDown, true)
   }, [activePanel, closePanel])
 
-  /* ─── Escape: cancel mode, then close panel ─── */
+  /* ─── Outside-click: close Annotate / More tools flyout ─── */
+  useEffect(() => {
+    if (!openGroup) return
+    const onPointerDown = (e: Event) => {
+      const path = (e as Event & { composedPath?: () => EventTarget[] }).composedPath?.() ?? []
+      if (flyoutRef.current && path.includes(flyoutRef.current)) return
+      if (colRef.current && path.includes(colRef.current)) return
+      setOpenGroup(null)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [openGroup])
+
+  /* ─── Escape: cancel mode, then close flyout, then close panel ─── */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       if (laserActive) { e.stopPropagation(); setLaserActive(false); return }
+      if (openGroup) { e.stopPropagation(); setOpenGroup(null); return }
       if (activePanel) { e.stopPropagation(); closePanel() }
     }
     document.addEventListener('keydown', onKey, true)
     return () => document.removeEventListener('keydown', onKey, true)
-  }, [laserActive, activePanel, closePanel])
+  }, [laserActive, openGroup, activePanel, closePanel])
 
   const handlePaletteAction = useCallback((actionId: string) => {
     switch (actionId) {
@@ -932,10 +955,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
                         icon={item.icon}
                         label={item.label}
                         active={groupActive}
-                        onClick={() => {
-                          requestHaptic()
-                          setOpenGroup(g => g === item.id ? null : item.id)
-                        }}
+                        onClick={() => toggleDockGroup(item.id)}
                       />
                     )
                   })}
@@ -948,6 +968,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
             <AnimatePresence>
               {dockOpen && openGroup && (
                 <motion.div
+                  ref={flyoutRef}
                   key={openGroup}
                   initial={{ opacity: 0, x: 8, scale: 0.98 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
