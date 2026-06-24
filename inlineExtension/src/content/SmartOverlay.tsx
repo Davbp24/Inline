@@ -16,6 +16,13 @@ import { saveAIReplacement } from './aiReplacements'
 import { TOOLBAR as TB, HIGHLIGHT_SWATCHES, FONT, PANEL as C } from '../lib/extensionTheme'
 import FormattedAiText from '../components/FormattedAiText'
 import { GUEST_AI_LIMIT, reserveAiPrompt } from '../lib/aiAccess'
+import {
+  emitDockPanelDismiss,
+  emitSelectionUiActive,
+  onDockPanelClosed,
+  onDockPanelOpen,
+  onSelectionUiDismiss,
+} from './inlineUiCoordinator'
 
 type Pt = { x: number; y: number }
 type AnchorNote = { id: string; x: number; y: number; text: string }
@@ -32,6 +39,7 @@ async function tryWindowAi(task: string, text: string): Promise<string | null> {
     const session = await create.call(w.ai!.languageModel!)
     const prompt =
       task === 'summarize' ? `Summarize in 3 short bullets:\n\n${text}` :
+      task === 'rephrase'  ? `Rephrase clearly, same meaning:\n\n${text}` :
       task === 'shorten'   ? `Shorten by ~40%, keep meaning:\n\n${text}` :
       `Rewrite clearly, same meaning:\n\n${text}`
     return await session.prompt(prompt.slice(0, 8000))
@@ -232,6 +240,7 @@ function ContextMenuItem({ item }: { item: CtxItem }) {
   return (
     <button
       type="button"
+      onMouseDown={e => e.preventDefault()}
       onClick={item.action}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -284,7 +293,7 @@ export default function SmartOverlay() {
     title: string
     body: string
     loading?: boolean
-    task?: 'summarize' | 'rewrite' | 'shorten'
+    task?: 'summarize' | 'rephrase' | 'rewrite' | 'shorten'
     instruction?: string
     inserted?: boolean
   } | null>(null)
@@ -297,6 +306,32 @@ export default function SmartOverlay() {
   const selRef = useRef('')
   const subInputRef = useRef<HTMLInputElement>(null)
   const anchorSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Mirrors for synchronous reads inside mouseup-driven refreshSelection.
+  const ctxMenuRef = useRef(false)
+  const ctxRewriteRef = useRef(false)
+  const suppressSelectionChromeRef = useRef(false)
+
+  /** Hide toolbar/context chrome only — keeps savedRangeRef, selRef, and DOM highlights. */
+  const dismissSelectionChrome = useCallback(() => {
+    setToolbar(null)
+    setSubPanel(null)
+    setColorRow(false)
+    setCtxMenu(null)
+    setCtxRewrite(null)
+    setCtxRewriteInput('')
+  }, [])
+
+  /** Full teardown when Inline is hidden globally. */
+  const dismissAllSurfaces = useCallback(() => {
+    dismissSelectionChrome()
+    setAiResult(null)
+    setRiskOpen(false)
+    setRiskText('')
+    setRiskLoading(false)
+    suppressSelectionChromeRef.current = false
+    selRef.current = ''
+    savedRangeRef.current = null
+  }, [dismissSelectionChrome])
 
   /* ── Load persisted anchor notes on mount ── */
   useEffect(() => {
@@ -350,6 +385,7 @@ export default function SmartOverlay() {
       // reason the selection went away is because focus moved into our
       // own input. The pill stays anchored at its current position.
       if (subPanelRef.current) return
+      suppressSelectionChromeRef.current = false
       setToolbar(null); setSubPanel(null); setColorRow(false); selRef.current = ''
       savedRangeRef.current = null
       return
@@ -359,11 +395,21 @@ export default function SmartOverlay() {
     const rect = range.getBoundingClientRect()
     if (!rect.width && !rect.height) { setToolbar(null); return }
     selRef.current = sel!.toString()
-    // Keep the Range snapshot fresh while the user is actively selecting.
-    // Once a subpanel opens we stop overwriting this so the pre-focus
-    // snapshot survives until the user commits via Go / Enter.
     try { savedRangeRef.current = range.cloneRange() } catch { /* ignore */ }
-    setToolbar({ x: rect.left + rect.width / 2, y: rect.top + window.scrollY })
+
+    // Context menu or dock panel owns focus — keep refs fresh but don't
+    // resurrect the horizontal toolbar on top of them.
+    if (ctxMenuRef.current || ctxRewriteRef.current || suppressSelectionChromeRef.current) return
+
+    setCtxMenu(null)
+    setCtxRewrite(null)
+    setToolbar(prev => {
+      if (!prev) {
+        emitDockPanelDismiss()
+        emitSelectionUiActive('toolbar')
+      }
+      return { x: rect.left + rect.width / 2, y: rect.top + window.scrollY }
+    })
   }, [])
 
   useEffect(() => {
@@ -380,15 +426,21 @@ export default function SmartOverlay() {
       if (!sel || sel.isCollapsed || !sel.toString().trim()) return
       e.preventDefault()
       selRef.current = sel.toString()
-      // Snapshot the range so we can restore the selection later — opening
-      // the custom-rewrite input will steal focus, which in turn collapses
-      // the live selection. Cloning lets us call wrapSelectionWithHighlight
-      // after the user hits Go.
       try { savedRangeRef.current = sel.getRangeAt(0).cloneRange() }
       catch { savedRangeRef.current = null }
+      suppressSelectionChromeRef.current = false
+      ctxMenuRef.current = true
+      setToolbar(null)
+      setSubPanel(null)
+      setColorRow(false)
+      emitDockPanelDismiss()
+      emitSelectionUiActive('contextMenu')
       setCtxMenu({ x: e.clientX, y: e.clientY })
     }
-    const dismiss = () => setCtxMenu(null)
+    const dismiss = () => {
+      ctxMenuRef.current = false
+      setCtxMenu(null)
+    }
     document.addEventListener('contextmenu', handler)
     document.addEventListener('click', dismiss)
     return () => {
@@ -396,6 +448,49 @@ export default function SmartOverlay() {
       document.removeEventListener('click', dismiss)
     }
   }, [])
+
+  /* Cross-component focus coordination */
+  useEffect(() => {
+    const offDismiss = onSelectionUiDismiss(() => {
+      dismissSelectionChrome()
+    })
+    const offDockOpen = onDockPanelOpen(() => {
+      suppressSelectionChromeRef.current = true
+      dismissSelectionChrome()
+    })
+    const offDockClosed = onDockPanelClosed(() => {
+      suppressSelectionChromeRef.current = false
+      // Re-show the toolbar if the user still has an active selection.
+      requestAnimationFrame(() => {
+        if (suppressSelectionChromeRef.current) return
+        if (ctxMenuRef.current || ctxRewriteRef.current) return
+        const sel = window.getSelection()
+        if (!sel || sel.isCollapsed || !sel.toString().trim()) return
+        try {
+          const range = sel.getRangeAt(0)
+          const rect = range.getBoundingClientRect()
+          if (!rect.width && !rect.height) return
+          selRef.current = sel.toString()
+          savedRangeRef.current = range.cloneRange()
+          setToolbar({ x: rect.left + rect.width / 2, y: rect.top + window.scrollY })
+        } catch { /* ignore invalid range */ }
+      })
+    })
+    const onHideAll = (e: Event) => {
+      const hidden = (e as CustomEvent<{ hidden: boolean }>).detail?.hidden
+      if (hidden) dismissAllSurfaces()
+    }
+    document.addEventListener('inline:hideAll', onHideAll)
+    return () => {
+      offDismiss()
+      offDockOpen()
+      offDockClosed()
+      document.removeEventListener('inline:hideAll', onHideAll)
+    }
+  }, [dismissSelectionChrome, dismissAllSurfaces])
+
+  useEffect(() => { ctxMenuRef.current = !!ctxMenu }, [ctxMenu])
+  useEffect(() => { ctxRewriteRef.current = !!ctxRewrite }, [ctxRewrite])
 
   // Auto-focus the custom rewrite input whenever it opens.
   useEffect(() => {
@@ -422,6 +517,7 @@ export default function SmartOverlay() {
     const instruction = ctxRewriteInput.trim()
     if (!instruction) return
     if (!restoreSavedSelection()) return
+    ctxRewriteRef.current = false
     setCtxRewrite(null)
     setCtxRewriteInput('')
     savedRangeRef.current = null
@@ -460,26 +556,53 @@ export default function SmartOverlay() {
     setSubInput('')
   }
 
+  function runCtxAiTask(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten', instruction?: string) {
+    restoreSavedSelection()
+    ctxMenuRef.current = false
+    setCtxMenu(null)
+    void runAiTask(task, instruction)
+  }
+
   /** Reapply the saved selection (if any) before calling runAiTask so the
    *  live selection is non-collapsed when wrapSelectionWithHighlight runs.
    *  Used by every pill button that triggers an AI task — not just custom
    *  rewrite — so selection loss never silently swallows a click. */
-  function runPillAiTask(task: 'summarize' | 'rewrite' | 'shorten', instruction?: string) {
+  function runPillAiTask(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten', instruction?: string) {
     // Prefer the saved Range because the live selection has almost
     // certainly been collapsed by the time the click handler runs.
     restoreSavedSelection()
     void runAiTask(task, instruction)
   }
 
-  async function runAiTask(task: 'summarize' | 'rewrite' | 'shorten', instruction?: string) {
+  function aiTaskLabel(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten'): string {
+    if (task === 'summarize') return 'Summary'
+    if (task === 'rephrase') return 'Rephrased'
+    if (task === 'rewrite') return 'Rewritten'
+    return 'Shortened'
+  }
+
+  async function runAiTask(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten', instruction?: string) {
+    restoreSavedSelection()
     const wrapped = wrapSelectionWithHighlight(task)
-    if (!wrapped) return
+    if (!wrapped) {
+      ctxMenuRef.current = false
+      ctxRewriteRef.current = false
+      dismissSelectionChrome()
+      setAiResult({
+        title: 'Selection lost',
+        body: 'Highlight the paragraph you want to change, then try again.',
+        loading: false,
+      })
+      return
+    }
     // Remember the highlighted span + its original text so the user can
     // click "Insert" later to make the edit persistent across reloads.
     lastHighlightSpan.current = wrapped.span
     lastOriginalText.current = wrapped.text
-    setToolbar(null); setSubPanel(null); setCtxMenu(null)
-    const label = task === 'summarize' ? 'Summary' : task === 'rewrite' ? 'Rephrased' : 'Shortened'
+    ctxMenuRef.current = false
+    ctxRewriteRef.current = false
+    dismissSelectionChrome()
+    const label = aiTaskLabel(task)
     setAiResult({ title: label, body: '', loading: true, task, instruction })
     let out = await tryWindowAi(task, wrapped.text)
     if (!out) {
@@ -584,10 +707,10 @@ export default function SmartOverlay() {
 
   /* Context menu items */
   const ctxItems: CtxItem[] = [
-    { label: 'Highlight', icon: <IHighlight />, action: () => { wrapSelectionWithHighlight('extract'); setCtxMenu(null) } },
-    { label: 'Summarize', icon: <IAi />, action: () => { void runAiTask('summarize'); setCtxMenu(null) } },
-    { label: 'Rephrase', icon: <IEdit />, action: () => { void runAiTask('rewrite'); setCtxMenu(null) } },
-    { label: 'Shorten', icon: <IGrid />, action: () => { void runAiTask('shorten'); setCtxMenu(null) } },
+    { label: 'Highlight', icon: <IHighlight />, action: () => { restoreSavedSelection(); wrapSelectionWithHighlight('extract'); setCtxMenu(null) } },
+    { label: 'Summarize', icon: <IAi />, action: () => runCtxAiTask('summarize') },
+    { label: 'Rephrase', icon: <IEdit />, action: () => runCtxAiTask('rephrase') },
+    { label: 'Shorten', icon: <IGrid />, action: () => runCtxAiTask('shorten') },
     // Custom Rewrite — opens a free-form instruction prompt at the context
     // menu position. The user's instruction is forwarded to runAiTask so
     // it shares the same "Insert + persist" flow as the pill's custom
@@ -597,8 +720,10 @@ export default function SmartOverlay() {
       icon: <IEdit />,
       action: () => {
         const pt = ctxMenu
+        ctxMenuRef.current = false
         setCtxMenu(null)
         if (!pt) return
+        ctxRewriteRef.current = true
         setCtxRewriteInput('')
         setCtxRewrite(pt)
       },
@@ -657,7 +782,7 @@ export default function SmartOverlay() {
             <Sep />
 
             <TBtn isText onClick={() => runPillAiTask('summarize')} title="Summarize">Summarize</TBtn>
-            <TBtn isText onClick={() => runPillAiTask('rewrite')} title="Rephrase">Rephrase</TBtn>
+            <TBtn isText onClick={() => runPillAiTask('rephrase')} title="Rephrase">Rephrase</TBtn>
             <TBtn isText onClick={() => runPillAiTask('shorten')} title="Shorten">Shorten</TBtn>
             <TBtn active={subPanel === 'rewrite'} onClick={() => toggleSub('rewrite')} title="Custom rewrite">
               <IEdit />
@@ -857,6 +982,7 @@ export default function SmartOverlay() {
       {ctxMenu && (
         <div
           className="inline-toolbar"
+          onMouseDown={e => e.preventDefault()}
           style={{
             position: 'fixed',
             left: Math.min(ctxMenu.x, window.innerWidth - 200),

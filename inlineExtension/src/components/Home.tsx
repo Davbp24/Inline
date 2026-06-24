@@ -36,6 +36,13 @@ import { isAiBusy } from '../lib/panelLock'
 import { ensurePanelKeyframes } from './panelKit'
 import { loadSettings } from '../lib/extensionSettings'
 import { DEFAULT_WEB_URL } from '../lib/inlineUrls'
+import {
+  emitDockPanelClosed,
+  emitDockPanelOpen,
+  emitSelectionUiDismiss,
+  onDockPanelDismiss,
+  onSelectionUiActive,
+} from '../content/inlineUiCoordinator'
 
 type PanelId =
   | 'rewrite' | 'ai' | 'notes' | 'settings' | 'highlighter' | 'draw'
@@ -382,6 +389,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
 
   const closePanel = useCallback(() => {
     setActivePanel(null)
+    emitDockPanelClosed()
   }, [])
 
   /* Spawn a sticky note (page object). */
@@ -412,10 +420,35 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     requestHaptic()
     setDockOpen(true)
     setOpenGroup(null)
-    if (id === 'notes') { spawnNote(); return }
-    if (id === 'screenshot') { captureScreenshot(); return }
-    if (id === 'laser') { setLaserActive(p => !p); return }
-    if (PANEL_TOOLS.has(id)) setActivePanel(p => (p === id ? null : id))
+    if (id === 'notes') {
+      emitSelectionUiDismiss()
+      spawnNote()
+      return
+    }
+    if (id === 'screenshot') {
+      emitSelectionUiDismiss()
+      captureScreenshot()
+      return
+    }
+    if (id === 'laser') {
+      setLaserActive(p => {
+        if (!p) emitSelectionUiDismiss()
+        return !p
+      })
+      return
+    }
+    if (PANEL_TOOLS.has(id)) {
+      setActivePanel(p => {
+        const next = p === id ? null : id
+        if (next) {
+          emitSelectionUiDismiss()
+          emitDockPanelOpen(next)
+        } else {
+          emitDockPanelClosed()
+        }
+        return next
+      })
+    }
   }, [spawnNote, captureScreenshot])
 
   /** The launcher opens the flagship Ask Inline surface (or toggles it shut). */
@@ -424,7 +457,14 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     setDockOpen(v => {
       const next = !v
       setOpenGroup(null)
-      setActivePanel(next ? 'ai' : null)
+      if (next) {
+        emitSelectionUiDismiss()
+        emitDockPanelOpen('ai')
+        setActivePanel('ai')
+      } else {
+        setActivePanel(null)
+        emitDockPanelClosed()
+      }
       return next
     })
   }, [])
@@ -436,6 +476,7 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
         closePanel(); setLaserActive(false); setScreenshotUrl(null)
         setDockOpen(false)
         setOpenGroup(null)
+        emitSelectionUiDismiss()
         document.dispatchEvent(new CustomEvent('inline:hideAll', { detail: { hidden: true } }))
       } else {
         document.dispatchEvent(new CustomEvent('inline:hideAll', { detail: { hidden: false } }))
@@ -448,11 +489,32 @@ export default function Home({ selectedText, originalRange }: HomeProps) {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ hidden: boolean }>).detail
       setHidden(detail.hidden)
-    if (detail.hidden) { closePanel(); setLaserActive(false); setScreenshotUrl(null); setDockOpen(false); setOpenGroup(null) }
+    if (detail.hidden) {
+      closePanel(); setLaserActive(false); setScreenshotUrl(null)
+      setDockOpen(false); setOpenGroup(null)
+      emitSelectionUiDismiss()
+    }
     }
     document.addEventListener('inline:hideAll', handler)
     return () => document.removeEventListener('inline:hideAll', handler)
   }, [closePanel])
+
+  /* Collapse dock panel/flyouts when selection UI takes focus (rail stays). */
+  useEffect(() => {
+    const collapseDockPanel = () => {
+      setOpenGroup(null)
+      setActivePanel(current => {
+        if (current !== null) emitDockPanelClosed()
+        return null
+      })
+    }
+    const offSelection = onSelectionUiActive(() => { collapseDockPanel() })
+    const offDismiss = onDockPanelDismiss(collapseDockPanel)
+    return () => {
+      offSelection()
+      offDismiss()
+    }
+  }, [])
 
   /* ─── Panel anchor: measure the rail's left edge, sit just left of it ─── */
   const recomputePanelRight = useCallback(() => {
