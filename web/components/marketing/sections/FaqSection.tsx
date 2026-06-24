@@ -50,7 +50,7 @@ export default function FaqSection() {
         </Reveal>
 
         <Reveal className="mt-10 sm:mt-12" delay={0.08}>
-          <div className="overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3]">
+          <div className="overflow-hidden rounded-xl border border-[#E8DFD4] bg-[#F5EDE3]">
             {FAQS.map((f, i) => (
               <details
                 key={f.q}

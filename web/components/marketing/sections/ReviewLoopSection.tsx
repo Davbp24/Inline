@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { Reveal } from '@/components/marketing/primitives/Reveal'
+import { ProductVisualRing } from '@/components/marketing/primitives/ProductVisualRing'
 import { WorkspaceDashboardPreviewMock } from '@/components/marketing/productMocks'
 import { mktBtnSecondary } from '@/components/marketing/marketingSurfaces'
 import { DEFAULT_WORKSPACES } from '@/lib/workspaces'
@@ -29,7 +30,9 @@ export default function ReviewLoopSection() {
         </Reveal>
 
         <Reveal delay={0.08} className="mt-10 w-full md:mt-14">
-          <WorkspaceDashboardPreviewMock />
+          <ProductVisualRing innerRadius="2xl">
+            <WorkspaceDashboardPreviewMock />
+          </ProductVisualRing>
         </Reveal>
       </div>
     </section>

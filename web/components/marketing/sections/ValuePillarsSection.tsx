@@ -20,7 +20,7 @@ const PILLARS = [
     href: '/#extension',
     mockSlot: 'min-h-[200px] md:min-h-[220px]',
     mock: (
-      <div className="mx-auto w-full max-w-none overflow-hidden rounded-t-2xl border border-b-0 border-border bg-background px-3 pt-3 md:w-[108%]">
+      <div className="mx-auto w-full max-w-none overflow-hidden rounded-t-2xl border border-b-0 border-border bg-background px-3 pt-3 xl:w-[108%]">
         <p className="mb-2 px-1 text-sm font-semibold text-[#37352F]">Web Captures</p>
         <DashboardCapturesMock limit={2} size="compact" />
       </div>
@@ -51,7 +51,7 @@ const PILLARS = [
     href: '/#rag',
     mockSlot: 'min-h-[280px] md:min-h-[300px]',
     mock: (
-      <div className="mx-auto flex min-h-[240px] w-full max-w-none flex-col overflow-hidden rounded-t-2xl border border-b-0 border-border bg-card px-3 py-4 sm:min-h-[280px] md:w-[108%] md:min-h-[300px]">
+      <div className="mx-auto flex min-h-[240px] w-full max-w-none flex-col overflow-hidden rounded-t-2xl border border-b-0 border-border bg-card px-3 py-4 sm:min-h-[280px] md:min-h-[300px] xl:w-[108%]">
         <WorkspaceChatMock
           variant="conversation"
           dense
@@ -77,10 +77,10 @@ export default function ValuePillarsSection() {
           title="Finally, a web memory layer that does its job"
         />
 
-        <div className="mt-14 grid gap-5 md:grid-cols-3">
+        <div className="mt-14 grid min-w-0 gap-5 xl:grid-cols-3">
           {PILLARS.map((pillar, i) => (
-            <Reveal key={pillar.label} delay={i * 0.08}>
-              <article className="flex min-h-0 w-full flex-col overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3] sm:min-h-[380px] md:aspect-2/3">
+            <Reveal key={pillar.label} delay={i * 0.08} className="min-w-0">
+              <article className="flex min-h-0 min-w-0 w-full flex-col overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3] sm:min-h-[380px] xl:aspect-2/3">
                 <div className="flex shrink-0 flex-col items-center px-6 pb-4 pt-8 text-center md:px-7 md:pt-9">
                   <p className={`text-sm font-semibold ${pillar.labelColor}`}>{pillar.label}</p>
                   <h3 className="mt-3 max-w-[16rem] text-balance text-lg font-semibold leading-snug tracking-tight text-[#1C1E26] sm:text-xl">

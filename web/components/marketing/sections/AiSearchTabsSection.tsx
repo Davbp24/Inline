@@ -7,6 +7,7 @@ import WorkspaceChatMock, {
   type WorkspaceChatScenario,
 } from '@/components/marketing/productMocks/WorkspaceChatMock'
 import { DEMO_BRIDGE_SOURCES } from '@/components/marketing/productMocks/sampleData'
+import { ProductVisualRing } from '@/components/marketing/primitives/ProductVisualRing'
 import { formatDisplayTitle } from '@/lib/utils'
 
 const SCENARIOS: { id: string; label: string; scenario: WorkspaceChatScenario }[] = [
@@ -91,12 +92,14 @@ export default function AiSearchTabsSection() {
         </Reveal>
 
         <Reveal delay={0.1} className="mt-10 text-left">
-          <WorkspaceChatMock
-            variant="panel"
-            scenario={scenario}
-            sessionTitle="Bridge research"
-            elevated={false}
-          />
+          <ProductVisualRing>
+            <WorkspaceChatMock
+              variant="panel"
+              scenario={scenario}
+              sessionTitle="Bridge research"
+              elevated={false}
+            />
+          </ProductVisualRing>
         </Reveal>
       </div>
     </section>

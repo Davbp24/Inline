@@ -23,6 +23,7 @@ type WorkspaceChatMockProps = {
   elevated?: boolean
   /** Tighter layout for marketing pillar cards. */
   dense?: boolean
+  hideSourceScrollbar?: boolean
 }
 
 const DEFAULT_SCENARIO: WorkspaceChatScenario = {
@@ -59,6 +60,7 @@ export default function WorkspaceChatMock({
   badgeShape = 'circle',
   elevated = true,
   dense = false,
+  hideSourceScrollbar = false,
 }: WorkspaceChatMockProps) {
   if (variant === 'pill') {
     return (
@@ -112,7 +114,11 @@ export default function WorkspaceChatMock({
           <div className="max-w-[92%]">
             <p className="text-sm leading-relaxed text-foreground">{scenario.assistantMessage}</p>
             {scenario.sources && scenario.sources.length > 0 && (
-              <SourceCardRow sources={scenario.sources} workspaceId={DEMO_WORKSPACE_ID} />
+              <SourceCardRow
+                sources={scenario.sources}
+                workspaceId={DEMO_WORKSPACE_ID}
+                hideScrollbar={hideSourceScrollbar}
+              />
             )}
           </div>
         </div>
@@ -176,7 +182,11 @@ export default function WorkspaceChatMock({
                 'Saved capture')}
             </p>
           ) : (
-            <SourceCardRow sources={scenario.sources} workspaceId={DEMO_WORKSPACE_ID} />
+            <SourceCardRow
+              sources={scenario.sources}
+              workspaceId={DEMO_WORKSPACE_ID}
+              hideScrollbar={hideSourceScrollbar}
+            />
           )
         )}
       </div>

@@ -93,7 +93,7 @@ export default function HeroCaptureGrid() {
   return (
     <div
       className="relative mx-auto mb-6 flex w-full max-w-[52rem] shrink-0 items-center justify-center px-2"
-      style={{ height: 'clamp(280px, 36vh, 360px)' }}
+      style={{ height: 'clamp(220px, 56vw, 360px)' }}
       aria-hidden
     >
       <div
@@ -105,7 +105,7 @@ export default function HeroCaptureGrid() {
       />
 
       <div
-        className="relative mx-auto h-[332px] w-[820px] max-w-full origin-center scale-[0.58] sm:scale-[0.88] md:scale-100"
+        className="relative mx-auto h-[332px] w-[820px] max-w-full origin-center scale-[0.4] min-[420px]:scale-[0.46] sm:scale-[0.68] md:scale-[0.84] lg:scale-100"
         style={{
           maskImage:
             'radial-gradient(50% 60% at 50% 55%, black 25%, transparent 90%)',

@@ -9,6 +9,8 @@ export { default as ExtensionHighlighterPanelMock } from './ExtensionHighlighter
 export { default as ExtensionSelectionToolbarMock } from './ExtensionSelectionToolbarMock'
 export * from './ExtensionPanelShellMock'
 export { default as ExtensionRefreshRoutineMock } from './ExtensionRefreshRoutineMock'
+export { default as ExtensionRefreshRoutineMockAnimated } from './ExtensionRefreshRoutineMockAnimated'
+export { default as RecapStatusCardAnimated } from './RecapStatusCardAnimated'
 export { default as ExtensionRecapResultMock } from './ExtensionRecapResultMock'
 export { default as ExtensionToolbarMock } from './ExtensionToolbarMock'
 export { default as DashboardCapturesMock } from './DashboardCapturesMock'

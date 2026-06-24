@@ -323,9 +323,10 @@ export function BlockDiffView({ original, updated }: { original: string; updated
 export function PanelResultCard({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div style={{
-      padding: 15, border: `1px solid ${C.border}`, borderRadius: C.radius,
-      background: C.surfaceBubble, minHeight: 48,
-      maxHeight: 280, overflowY: 'auto', ...style,
+      minHeight: 48,
+      maxHeight: 280,
+      overflowY: 'auto',
+      ...style,
     }}>
       {children}
     </div>

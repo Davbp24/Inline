@@ -20,15 +20,15 @@ export default function ContextLayerSection() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid items-stretch gap-8 lg:grid-cols-2">
-          <Reveal delay={0.06} className="flex h-full flex-col">
+        <div className="mt-14 grid min-w-0 items-stretch gap-8 lg:grid-cols-2">
+          <Reveal delay={0.06} className="flex h-full min-w-0 flex-col">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[#4B83C4]">
               Chrome extension
             </p>
             <ExtensionDockSceneMock className="h-full" />
           </Reveal>
 
-          <Reveal delay={0.1} className="flex h-full flex-col">
+          <Reveal delay={0.1} className="flex h-full min-w-0 flex-col">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[#4B83C4]">
               Workspace chat
             </p>
@@ -43,14 +43,14 @@ export default function ContextLayerSection() {
 
         <Reveal delay={0.14} className="mt-10">
           <div className="w-full overflow-hidden rounded-2xl border border-[#E8DFD4] bg-[#F5EDE3] p-4 sm:p-6 md:p-8">
-            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col items-center gap-5 lg:flex-row lg:items-center lg:justify-between">
               <ExtensionAskPanelMock
                 compact
                 elevated={false}
                 className="w-full max-w-[342px] shrink-0"
               />
-              <AskThoughtTrace className="w-full max-w-sm sm:flex-1 sm:px-6" />
-              <p className="text-center text-sm text-muted-foreground sm:max-w-[12rem] sm:shrink-0 sm:text-left">
+              <AskThoughtTrace className="w-full max-w-sm lg:flex-1 lg:px-6" />
+              <p className="text-center text-sm text-muted-foreground lg:max-w-[12rem] lg:shrink-0 lg:text-left">
                 Same Ask panel on the page
               </p>
             </div>

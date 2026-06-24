@@ -40,7 +40,7 @@ const DOCK_SCENES: DockScene[] = [
     dockIndex: 2,
     label: 'Selection toolbar',
     popup: (
-      <div className="flex w-full items-start justify-center pt-8">
+      <div className="flex w-full items-start justify-center pt-3 sm:pt-8">
         <ExtensionSelectionToolbarMock />
       </div>
     ),
@@ -99,9 +99,9 @@ export default function ExtensionDockSceneAnimated({ className }: ExtensionDockS
         <div className="h-1 w-4/5 rounded bg-border/60" />
       </div>
 
-      <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-end">
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-end sm:gap-4">
         <div
-          className="relative flex min-h-[300px] w-full min-w-0 flex-1 justify-center sm:min-h-[460px] sm:justify-end"
+          className="relative flex min-h-[210px] w-full min-w-0 flex-1 justify-center sm:min-h-[460px] sm:justify-end"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -117,7 +117,13 @@ export default function ExtensionDockSceneAnimated({ className }: ExtensionDockS
           </AnimatePresence>
         </div>
 
-        <ExtensionDockMock activeIndex={scene.dockIndex} className="shrink-0" />
+        <ExtensionDockMock
+          activeIndex={scene.dockIndex}
+          orientation="horizontal"
+          showNotebook={false}
+          className="shrink-0 sm:hidden"
+        />
+        <ExtensionDockMock activeIndex={scene.dockIndex} className="hidden shrink-0 sm:flex" />
       </div>
     </div>
   )

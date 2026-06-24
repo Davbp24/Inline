@@ -119,7 +119,7 @@ export default function WorkspaceDashboardHeroMock({
         className,
       )}
     >
-      <aside className="hidden w-[220px] shrink-0 flex-col border-r border-border bg-[#FDFBF7] md:flex">
+      <aside className="hidden w-[220px] shrink-0 flex-col border-r border-border bg-[#FDFBF7] lg:flex">
         <div className="border-b border-border p-3">
           <div className="flex items-center justify-between gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-foreground">
             <span className="truncate">Marketing Team</span>

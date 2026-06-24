@@ -18,7 +18,6 @@ import {
 import DashboardCapturesMock from '@/components/marketing/productMocks/DashboardCapturesMock'
 import LibraryDocumentsMock from '@/components/marketing/productMocks/LibraryDocumentsMock'
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
-import { product } from '@/components/marketing/marketingSurfaces'
 import { cn } from '@/lib/utils'
 import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 
@@ -68,10 +67,9 @@ export default function WorkspaceDashboardPreviewMock({ className }: WorkspaceDa
         'flex w-full min-h-[480px] overflow-hidden rounded-2xl border border-[#E8DFD4] bg-white sm:h-[600px] md:h-[640px]',
         className,
       )}
-      style={{ boxShadow: product.panelShadow }}
       aria-label="Workspace dashboard preview"
     >
-      <aside className="hidden w-[200px] shrink-0 flex-col border-r border-border bg-[#FDFBF7] md:flex">
+      <aside className="hidden w-[200px] shrink-0 flex-col border-r border-border bg-[#FDFBF7] lg:flex">
         <div className="border-b border-border p-3">
           <div className="flex items-center justify-between gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-foreground">
             <span className="truncate">Marketing Team</span>
