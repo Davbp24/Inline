@@ -45,10 +45,10 @@ export default function ExtensionRecapResultMock({
         <div className="flex min-h-0 flex-1 flex-col justify-end px-4 pb-[15%]">
           <div className="space-y-1.5 text-xs">
             <p className="rounded bg-[#FEE2E2] px-2 py-1 text-[#991B1B] line-through">
-              How loads transfer (outdated summary)
+              Opening summary (outdated)
             </p>
             <p className="rounded bg-[#DCFCE7] px-2 py-1 text-[#166534]">
-              Towers carry deck loads directly through stay cables.
+              Updated recap reflects your latest highlights.
             </p>
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
@@ -66,15 +66,14 @@ export default function ExtensionRecapResultMock({
         <>
           <div className="flex flex-1 flex-col px-5 py-4">
             <p className="text-sm leading-relaxed text-foreground">
-              Updating the overview to reflect your new highlights on cable-stayed load paths and tower
-              geometry.
+              Updating the overview to reflect your new highlights and sticky notes from this page.
             </p>
             <div className="mt-3 space-y-1.5 text-xs">
               <p className="rounded bg-[#FEE2E2] px-2 py-1 text-[#991B1B] line-through">
-                How loads transfer (outdated summary)
+                Opening summary (outdated)
               </p>
               <p className="rounded bg-[#DCFCE7] px-2 py-1 text-[#166534]">
-                Towers carry deck loads directly through stay cables.
+                Updated recap reflects your latest highlights.
               </p>
             </div>
           </div>

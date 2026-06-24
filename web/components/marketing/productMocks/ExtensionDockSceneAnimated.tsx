@@ -9,7 +9,7 @@ import ExtensionDockMock from '@/components/marketing/productMocks/ExtensionDock
 import ExtensionHighlighterPanelMock from '@/components/marketing/productMocks/ExtensionHighlighterPanelMock'
 import ExtensionRewritePanelMock from '@/components/marketing/productMocks/ExtensionRewritePanelMock'
 import ExtensionSearchPanelMock from '@/components/marketing/productMocks/ExtensionSearchPanelMock'
-import ExtensionSelectionToolbarMock from '@/components/marketing/productMocks/ExtensionSelectionToolbarMock'
+import ExtensionDockFlyoutMock from '@/components/marketing/productMocks/ExtensionDockFlyoutMock'
 import { cn } from '@/lib/utils'
 
 const EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
@@ -36,12 +36,12 @@ const DOCK_SCENES: DockScene[] = [
     popup: <ExtensionHighlighterPanelMock className="w-full" />,
   },
   {
-    id: 'selection',
-    dockIndex: 2,
-    label: 'Selection toolbar',
+    id: 'more',
+    dockIndex: 4,
+    label: 'More tools flyout',
     popup: (
-      <div className="flex w-full items-start justify-center pt-3 sm:pt-8">
-        <ExtensionSelectionToolbarMock />
+      <div className="flex w-full justify-end">
+        <ExtensionDockFlyoutMock group="utility" activeItem="layers" />
       </div>
     ),
   },
@@ -55,7 +55,7 @@ const DOCK_SCENES: DockScene[] = [
     id: 'rewrite',
     dockIndex: 1,
     label: 'Rewrite selection',
-    popup: <ExtensionRewritePanelMock className="w-full" />,
+    popup: <ExtensionRewritePanelMock className="w-full" compact />,
   },
   {
     id: 'search',

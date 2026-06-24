@@ -24,12 +24,14 @@ type WorkspaceChatMockProps = {
   /** Tighter layout for marketing pillar cards. */
   dense?: boolean
   hideSourceScrollbar?: boolean
+  /** User bubble alignment in dense conversation layout. */
+  userAlign?: 'start' | 'end'
 }
 
 const DEFAULT_SCENARIO: WorkspaceChatScenario = {
-  userMessage: 'What did I highlight about cable-stayed vs suspension bridge load distribution?',
+  userMessage: 'What did I highlight in the opening section?',
   assistantMessage:
-    'You highlighted that cable-stayed towers take deck loads directly through stay cables [1], while suspension designs hang the deck from main cables anchored at both ends [2]. Your recap adds that cable-stayed construction is typically faster [3].',
+    'You highlighted the main claim in paragraph two [1], a supporting example later on [2], and a sticky note comparing it to another article [3].',
   sources: DEMO_BRIDGE_SOURCES,
 }
 
@@ -40,7 +42,7 @@ function UserBubble({ content, dense }: { content: string; dense?: boolean }) {
       className={cn(
         'inline-block bg-[#1B1B1B] text-white',
         dense
-          ? 'max-w-[85%] rounded-2xl px-3 py-1.5 text-[12px] leading-snug'
+          ? 'max-w-[95%] rounded-2xl px-3 py-1.5 text-[12px] leading-snug'
           : cn(
               'ml-auto max-w-[82%] bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground',
               multiline ? 'rounded-2xl' : 'rounded-full',
@@ -56,11 +58,12 @@ export default function WorkspaceChatMock({
   className,
   scenario = DEFAULT_SCENARIO,
   variant = 'conversation',
-  sessionTitle = 'Bridge research',
+  sessionTitle = 'Reading session',
   badgeShape = 'circle',
   elevated = true,
   dense = false,
   hideSourceScrollbar = false,
+  userAlign = 'end',
 }: WorkspaceChatMockProps) {
   if (variant === 'pill') {
     return (
@@ -144,7 +147,9 @@ export default function WorkspaceChatMock({
     <div className={cn(dense ? 'flex min-h-0 flex-1 flex-col gap-2' : 'space-y-4', className)}>
       <div
         className={cn(
-          dense ? 'flex shrink-0 justify-end' : 'flex flex-row-reverse items-start gap-2',
+          dense
+            ? cn('flex shrink-0', userAlign === 'start' ? 'justify-start' : 'justify-end')
+            : 'flex flex-row-reverse items-start gap-2',
         )}
       >
         {!dense && (

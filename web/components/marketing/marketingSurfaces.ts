@@ -16,6 +16,7 @@ export const mkt = {
   lavender: '#EFEAF5',
   borderWarm: '#E8DFD4',
   borderSoft: '#E5D9CC',
+  espresso: '#4A3228',
 } as const
 
 /** Extension + chat panel (canonical product chrome) */
@@ -88,11 +89,26 @@ export const mktBtnPrimary =
 export const mktBtnPrimaryLg =
   'inline-flex items-center justify-center rounded-full bg-[#1B1B1B] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
+/** Nav sign-in style — bordered, cream fill */
+export const mktBtnSignIn =
+  'inline-flex items-center justify-center rounded-full border border-[#D9CFC2] bg-[#FAF5EE]/60 px-5 py-2 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#C9B49A] hover:bg-[#FDFBF7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+
+export const mktBtnSignInLg =
+  'inline-flex items-center justify-center rounded-full border border-[#D9CFC2] bg-[#FAF5EE]/60 px-7 py-3 text-sm font-semibold text-[#1C1E26] transition-colors hover:border-[#C9B49A] hover:bg-[#FDFBF7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+
 export const mktBtnSecondary =
-  'inline-flex items-center justify-center rounded-full border border-[#d6d3d1] bg-white px-6 py-2.5 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#a8a29e] hover:bg-[#F4F4F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+  'inline-flex items-center justify-center rounded-full bg-[#1B1B1B] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
 export const mktBtnSecondaryLg =
+  'inline-flex items-center justify-center rounded-full bg-[#1B1B1B] px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#141414] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+
+/** White secondary CTA — hero only */
+export const mktBtnSecondaryHeroLg =
   'inline-flex items-center justify-center rounded-full border border-[#d6d3d1] bg-white px-7 py-3 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#a8a29e] hover:bg-[#F4F4F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+
+/** Transparent CTA — black text + border, fills black on hover */
+export const mktBtnGhost =
+  'inline-flex items-center justify-center rounded-full border border-[#1C1E26] bg-transparent px-4 py-1.5 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#1B1B1B] hover:bg-[#1B1B1B] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
 export const mktEyebrow =
   'text-xs font-semibold uppercase tracking-[0.18em] text-[#78716c]'

@@ -19,7 +19,7 @@ import DashboardCapturesMock from '@/components/marketing/productMocks/Dashboard
 import LibraryDocumentsMock from '@/components/marketing/productMocks/LibraryDocumentsMock'
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
 import { cn } from '@/lib/utils'
-import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
+import { DEMO_DOMAIN, DEMO_PAGE_TITLE } from '@/components/marketing/productMocks/sampleData'
 
 type WorkspaceDashboardPreviewMockProps = {
   className?: string
@@ -43,19 +43,19 @@ const ACTIVITY_FEED = [
   {
     icon: Sparkles,
     label: 'Recap update approved',
-    sub: `${DEMO_DOMAIN} · Cable-stayed bridge design`,
+    sub: `${DEMO_DOMAIN} · ${DEMO_PAGE_TITLE}`,
     time: '2h ago',
   },
   {
     icon: FileText,
     label: 'Highlight saved',
-    sub: `Bridge load distribution · ${DEMO_DOMAIN}`,
+    sub: `Follow-up reading · ${DEMO_DOMAIN}`,
     time: '5h ago',
   },
   {
     icon: BrainCircuit,
     label: 'Answer cited your captures',
-    sub: 'Ask Inline · bridge research chat',
+    sub: 'Ask Inline · reading session',
     time: '1d ago',
   },
 ] as const

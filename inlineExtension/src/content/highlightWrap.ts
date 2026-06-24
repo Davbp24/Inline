@@ -99,6 +99,7 @@ export function wrapRangeWithHighlight(
 
   const newRange = document.createRange()
   newRange.selectNode(span)
+  document.dispatchEvent(new CustomEvent('inline:highlightAdded'))
   return { text, title: meta.title, span, range: newRange }
 }
 
@@ -163,6 +164,7 @@ export function restoreHighlights(): void {
         if (!Array.isArray(remote) || remote.length === 0) return
         sessionHighlights = remote
         applyHighlights(remote)
+        document.dispatchEvent(new CustomEvent('inline:highlightsRestored'))
       },
     )
   } catch { /* extension context unavailable */ }

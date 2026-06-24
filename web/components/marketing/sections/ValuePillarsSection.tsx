@@ -10,6 +10,7 @@ import {
 } from '@/components/marketing/productMocks'
 import { DEMO_BRIDGE_SOURCES } from '@/components/marketing/productMocks/sampleData'
 import { cn } from '@/lib/utils'
+import { mktBtnGhost } from '@/components/marketing/marketingSurfaces'
 
 const PILLARS = [
   {
@@ -57,9 +58,9 @@ const PILLARS = [
           dense
           className="flex min-h-0 flex-1 flex-col"
           scenario={{
-            userMessage: 'Cable-stayed vs suspension bridges?',
+            userMessage: 'How do these two articles compare?',
             assistantMessage:
-              'Stay cables carry deck loads directly to towers [1].',
+              'Your highlights emphasize the core claim in paragraph two [1].',
             sources: DEMO_BRIDGE_SOURCES.slice(0, 1),
           }}
         />
@@ -88,7 +89,7 @@ export default function ValuePillarsSection() {
                   </h3>
                   <SectionLink
                     href={pillar.href}
-                    className="mt-5 inline-flex items-center gap-1 rounded-full border border-[#1C1E26] px-4 py-1.5 text-sm font-medium text-[#1C1E26] transition-colors hover:bg-[#1C1E26] hover:text-white"
+                    className={cn('mt-5 gap-1', mktBtnGhost)}
                   >
                     {pillar.cta}
                     <ChevronRight className="h-3.5 w-3.5" aria-hidden />

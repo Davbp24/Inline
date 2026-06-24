@@ -1,8 +1,9 @@
 import { Reveal } from '@/components/marketing/primitives/Reveal'
 import AskThoughtTrace from '@/components/marketing/AskThoughtTrace'
+import { mkt } from '@/components/marketing/marketingSurfaces'
 import {
   ExtensionAskPanelMock,
-  ExtensionDockSceneMock,
+  ExtensionDockSceneHighlightAnimated,
   WorkspaceChatMock,
 } from '@/components/marketing/productMocks'
 
@@ -22,19 +23,25 @@ export default function ContextLayerSection() {
 
         <div className="mt-14 grid min-w-0 items-stretch gap-8 lg:grid-cols-2">
           <Reveal delay={0.06} className="flex h-full min-w-0 flex-col">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[#4B83C4]">
+            <p
+              className="mb-4 text-xs font-semibold uppercase tracking-[0.14em]"
+              style={{ color: mkt.espresso }}
+            >
               Chrome extension
             </p>
-            <ExtensionDockSceneMock className="h-full" />
+            <ExtensionDockSceneHighlightAnimated className="h-full" />
           </Reveal>
 
           <Reveal delay={0.1} className="flex h-full min-w-0 flex-col">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-[#4B83C4]">
+            <p
+              className="mb-4 text-xs font-semibold uppercase tracking-[0.14em]"
+              style={{ color: mkt.espresso }}
+            >
               Workspace chat
             </p>
             <WorkspaceChatMock
               variant="panel"
-              sessionTitle="Bridge research"
+              sessionTitle="Reading session"
               elevated={false}
               className="h-full w-full"
             />

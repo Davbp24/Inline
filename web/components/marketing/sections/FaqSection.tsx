@@ -41,7 +41,7 @@ const FAQS: { q: string; a: string }[] = [
 export default function FaqSection() {
   return (
     <section id="faq" className="scroll-mt-24 bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
-      <div className="mx-auto max-w-3xl px-6 lg:px-10">
+      <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <Reveal className="text-center">
           <p className="text-sm font-semibold text-[#78716c]">FAQ</p>
           <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">

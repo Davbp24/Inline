@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/primitives/Reveal'
-import { celestial, mkt, mktBtnPrimaryLg, mktBtnSecondaryLg } from '@/components/marketing/marketingSurfaces'
+import { celestial, mkt, mktBtnPrimaryLg, mktBtnSignInLg } from '@/components/marketing/marketingSurfaces'
 
 export default function ClosingCta() {
   return (
@@ -51,7 +51,7 @@ export default function ClosingCta() {
           <Link href="/install" className={`w-full sm:w-auto ${mktBtnPrimaryLg}`}>
             Add to Chrome
           </Link>
-          <Link href="/auth/register" className={`w-full sm:w-auto ${mktBtnSecondaryLg}`}>
+          <Link href="/auth/register" className={`w-full sm:w-auto ${mktBtnSignInLg}`}>
             Create your workspace
           </Link>
         </Reveal>

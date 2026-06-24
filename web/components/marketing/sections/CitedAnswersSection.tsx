@@ -10,6 +10,7 @@ import {
   DEMO_WORKSPACE_ID,
 } from '@/components/marketing/productMocks/sampleData'
 import { cn } from '@/lib/utils'
+import { mktBtnGhost } from '@/components/marketing/marketingSurfaces'
 
 const DOMAINS = DEMO_TOP_DOMAINS
 
@@ -18,7 +19,7 @@ const SOURCE_CARD_WIDTH =
 
 /** White product mock — scrolls inside the fixed card height when content is tall. */
 const MOCK_SHELL =
-  'mx-auto flex w-full max-w-none min-h-0 max-h-full flex-col overflow-x-hidden overflow-y-auto rounded-t-2xl border border-b-0 border-border bg-card px-3 py-3 pb-4 xl:w-[108%]'
+  'mr-auto flex w-full min-h-0 max-h-full flex-col overflow-x-hidden overflow-y-auto rounded-t-2xl border border-b-0 border-border bg-card px-3 py-3 pb-4 xl:px-4'
 
 const CARDS = [
   {
@@ -34,9 +35,9 @@ const CARDS = [
           variant="conversation"
           className="shrink-0"
           scenario={{
-            userMessage: 'What did I save about bridge loads?',
+            userMessage: 'What did I save about the main argument?',
             assistantMessage:
-              'Stay cables carry deck loads directly [1]. Recap notes faster construction [2].',
+              'Your highlights cover the core claim [1]. Your recap adds context from a sticky note [2].',
             sources: DEMO_BRIDGE_SOURCES.slice(0, 2),
           }}
         />
@@ -60,14 +61,14 @@ const CARDS = [
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Retrieval scope
         </p>
-        <div className="mt-2 space-y-2 text-xs">
-          <div className="flex items-center justify-between">
+        <div className="mt-2 w-full space-y-2 text-xs">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-foreground">Your workspace</span>
-            <span className="text-[#22C55E]">Full access</span>
+            <span className="shrink-0 text-[#22C55E]">Full access</span>
           </div>
-          <div className="flex items-center justify-between text-muted-foreground">
+          <div className="flex items-center justify-between gap-3 text-muted-foreground">
             <span>Other workspaces</span>
-            <span className="flex items-center gap-1">
+            <span className="flex shrink-0 items-center gap-1">
               <Lock className="h-3 w-3" aria-hidden />
               No access
             </span>
@@ -94,7 +95,7 @@ const CARDS = [
           scenario={{
             userMessage: `Compare what I saved on ${DEMO_DOMAIN}.`,
             assistantMessage:
-              'Suspension decks hang from anchored cables [1]. Cable-stayed towers carry loads directly [2].',
+              'One capture covers the introduction and definitions [1]. A second save emphasizes supporting examples [2].',
             sources: DEMO_BRIDGE_SOURCES.slice(0, 2),
             recencyNote: `Searching captures across ${DEMO_DOMAIN} in your workspace.`,
           }}
@@ -123,7 +124,7 @@ export default function CitedAnswersSection() {
         <Reveal delay={0.06} className="mt-8 flex justify-center">
           <SectionLink
             href="/#rag"
-            className="inline-flex items-center gap-1 rounded-full border border-[#1C1E26] px-5 py-2 text-sm font-medium text-[#1C1E26] transition-colors hover:bg-[#1C1E26] hover:text-white"
+            className={cn('gap-1', mktBtnGhost)}
           >
             Explore AI search
             <ChevronRight className="h-4 w-4" aria-hidden />
@@ -154,14 +155,14 @@ export default function CitedAnswersSection() {
                   </h3>
                   <SectionLink
                     href={card.href}
-                    className="mt-5 inline-flex items-center gap-1 rounded-full border border-[#1C1E26] px-4 py-1.5 text-sm font-medium text-[#1C1E26] transition-colors hover:bg-[#1C1E26] hover:text-white"
+                    className={cn('mt-5 gap-1', mktBtnGhost)}
                   >
                     {card.cta}
                     <ChevronRight className="h-3.5 w-3.5" aria-hidden />
                   </SectionLink>
                 </div>
 
-                <div className="mt-auto flex min-h-0 flex-1 w-full flex-col justify-end overflow-hidden">
+                <div className="mt-auto flex min-h-0 flex-1 w-full flex-col items-start justify-end overflow-hidden">
                   {card.mock}
                 </div>
               </article>

@@ -1,11 +1,13 @@
 export { default as ExtensionAskPanelMock } from './ExtensionAskPanelMock'
 export { default as ExtensionDockMock } from './ExtensionDockMock'
 export { default as ExtensionDockSceneMock } from './ExtensionDockSceneMock'
+export { default as ExtensionDockSceneHighlightAnimated } from './ExtensionDockSceneHighlightAnimated'
 export { default as ExtensionDockSceneAnimated } from './ExtensionDockSceneAnimated'
 export { default as ExtensionAskPanelIdleMock, ExtensionPageRecapPanelMock } from './ExtensionAskPanelIdleMock'
 export { default as ExtensionRewritePanelMock } from './ExtensionRewritePanelMock'
 export { default as ExtensionSearchPanelMock } from './ExtensionSearchPanelMock'
 export { default as ExtensionHighlighterPanelMock } from './ExtensionHighlighterPanelMock'
+export { default as ExtensionDockFlyoutMock } from './ExtensionDockFlyoutMock'
 export { default as ExtensionSelectionToolbarMock } from './ExtensionSelectionToolbarMock'
 export * from './ExtensionPanelShellMock'
 export { default as ExtensionRefreshRoutineMock } from './ExtensionRefreshRoutineMock'
@@ -18,6 +20,8 @@ export { default as WorkspaceChatMock } from './WorkspaceChatMock'
 export type { WorkspaceChatScenario } from './WorkspaceChatMock'
 export { default as WorkspaceDashboardPreviewMock } from './WorkspaceDashboardPreviewMock'
 export { default as WorkspaceDashboardHeroMock } from './WorkspaceDashboardHeroMock'
+export type { DashboardHeroPage } from './WorkspaceDashboardHeroMock'
+export { default as WorkspaceDashboardHeroAnimated } from './WorkspaceDashboardHeroAnimated'
 export {
   MockActivityHeatmap,
   MockCaptureVolumeChart,

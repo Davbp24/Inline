@@ -1,6 +1,6 @@
 import { Reveal } from '@/components/marketing/primitives/Reveal'
 import { ProductVisualRing } from '@/components/marketing/primitives/ProductVisualRing'
-import WorkspaceDashboardHeroMock from '@/components/marketing/productMocks/WorkspaceDashboardHeroMock'
+import WorkspaceDashboardHeroAnimated from '@/components/marketing/productMocks/WorkspaceDashboardHeroAnimated'
 
 export default function DashboardShowcaseSection() {
   return (
@@ -22,7 +22,7 @@ export default function DashboardShowcaseSection() {
               className="overflow-hidden rounded-2xl border border-border bg-white"
               aria-label="Inline workspace dashboard preview"
             >
-              <WorkspaceDashboardHeroMock compact />
+              <WorkspaceDashboardHeroAnimated />
             </div>
           </ProductVisualRing>
         </Reveal>
