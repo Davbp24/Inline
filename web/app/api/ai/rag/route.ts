@@ -7,6 +7,7 @@ import {
   dedupeSources,
   fetchRecentNotes,
   formatSourcesForPrompt,
+  MIN_DISPLAY_SIMILARITY,
   retrieveRelevantChunks,
   type RagSource,
 } from '@/lib/ai/rag/retrieval'
@@ -73,15 +74,35 @@ export async function POST(request: Request) {
     const retrieval = await retrieveRelevantChunks(sb, workspaceId, message)
 
     let chunks = retrieval.chunks
+    let usingRecency = false
     if (chunks.length === 0 && retrieval.mode === 'recency') {
       chunks = await fetchRecentNotes(sb, workspaceId)
+      usingRecency = chunks.length > 0
     }
 
-    const mode: 'semantic' | 'none' =
-      chunks.length > 0 || retrieval.mode === 'semantic' ? 'semantic' : 'none'
+    const mode: 'semantic' | 'recency' | 'none' =
+      retrieval.mode === 'semantic' && chunks.length > 0
+        ? 'semantic'
+        : usingRecency
+          ? 'recency'
+          : chunks.length > 0
+            ? 'semantic'
+            : 'none'
 
-    const sources: RagSource[] = dedupeSources(chunks)
-    const contextBlock = formatSourcesForPrompt(chunks, sources)
+    const sources: RagSource[] = mode === 'semantic'
+      ? dedupeSources(chunks).filter(
+          s => s.similarity == null || s.similarity >= MIN_DISPLAY_SIMILARITY,
+        )
+      : []
+
+    const contextBlock = mode === 'recency'
+      ? chunks
+          .map((chunk) => {
+            const label = chunk.page_title || chunk.domain || chunk.source_type
+            return `(recent capture — ${label})\n${chunk.chunk_text.slice(0, 1200)}`
+          })
+          .join('\n\n')
+      : formatSourcesForPrompt(chunks, sources)
 
     // Client-side library docs (localStorage folders) are extra context but
     // are also surfaced as citable sources without links.
@@ -108,7 +129,9 @@ export async function POST(request: Request) {
     const retrievalNote =
       mode === 'semantic'
         ? 'The numbered sources below were retrieved from this workspace (semantic search over saved captures and documents).'
-        : 'No captures or documents were found for this workspace.'
+        : mode === 'recency'
+          ? 'Recent captures are included as background context only — they are not numbered sources. Do not cite [n] unless semantic sources are listed.'
+          : 'No captures or documents were found for this workspace.'
 
     const systemPrompt = `${INLINE_SYSTEM_CONTEXT}
 
@@ -127,7 +150,7 @@ The user is chatting from workspace "${workspaceId || 'unknown'}". ${retrievalNo
 - No markdown bold, asterisks, hashes, or headings.
 - Keep answers short unless the user asks for detail. Group related captures instead of dumping every source number.
 
-${contextBlock ? `# Retrieved sources\n${contextBlock}` : '# Retrieved sources\n(none — the workspace has no matching captures)'}
+${contextBlock ? (mode === 'recency' ? `# Recent captures (background only — do not cite)\n${contextBlock}` : `# Retrieved sources\n${contextBlock}`) : '# Retrieved sources\n(none — the workspace has no matching captures)'}
 
 ${docsContext ? `# Library documents provided by the user\n${docsContext}` : ''}`
 

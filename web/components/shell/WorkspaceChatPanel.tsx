@@ -41,6 +41,14 @@ import {
   type WorkspaceChatSession,
 } from '@/lib/workspace-chat-sessions'
 import { SourceCardRow, type ChatSource } from '@/components/shell/SourceCard'
+import { extractCitationRefs } from '@/lib/ai/rag/citations'
+
+function citedSourcesForMessage(sources: ChatSource[] | undefined, content: string): ChatSource[] {
+  if (!sources?.length || !content.trim()) return []
+  const refs = extractCitationRefs(content)
+  if (refs.size === 0) return []
+  return sources.filter(s => refs.has(s.ref))
+}
 
 const EASE = [0.22, 1, 0.36, 1] as const
 const PANEL_OPEN_DURATION = 0.38
@@ -886,9 +894,12 @@ export default function WorkspaceChatPanel() {
                         error={m.error}
                       />
                     )}
-                    {m.role === 'assistant' && !loading && m.sources && m.sources.length > 0 && (
-                      <SourceCardRow sources={m.sources} workspaceId={wsId} />
-                    )}
+                    {m.role === 'assistant' && !loading && (() => {
+                      const cited = citedSourcesForMessage(m.sources, m.content)
+                      return cited.length > 0 ? (
+                        <SourceCardRow sources={cited} workspaceId={wsId} />
+                      ) : null
+                    })()}
                     {m.role === 'assistant' && m.content && !loading && (
                       <button
                         type="button"

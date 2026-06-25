@@ -1,6 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { embedText } from './embeddings'
 import { safeSnippet } from './text'
+import { MIN_DISPLAY_SIMILARITY, extractCitationRefs, filterSourcesForDisplay } from './citations'
+
+export { MIN_DISPLAY_SIMILARITY, extractCitationRefs, filterSourcesForDisplay }
 
 /**
  * Semantic retrieval over public.workspace_embeddings with a recency-based
@@ -135,12 +138,12 @@ export async function retrieveRelevantChunks(
 export async function fetchRecentNotes(
   supabase: AnyClient,
   workspaceId: string,
-  limit = 30,
+  limit = 12,
 ): Promise<RetrievedChunk[]> {
   const { data } = await supabase
     .from('notes')
     .select('id, page_title, domain, page_url, content, type, created_at')
-    .or(`workspace_id.eq.${workspaceId},workspace_id.is.null`)
+    .or(`workspace_id.eq.${workspaceId},workspace_id.is.null,workspace_id.eq.dashboard`)
     .order('created_at', { ascending: false })
     .limit(limit)
 
