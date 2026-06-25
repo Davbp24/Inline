@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   BarChart2,
   ChevronDown,
   ChevronRight,
@@ -120,41 +119,20 @@ export default function WorkspaceDocumentsPreviewMock({
       </aside>
 
       <div className="relative flex min-w-0 flex-1 flex-col bg-background">
-        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-2.5 sm:px-5">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
-              <ArrowLeft className="h-4 w-4" aria-hidden />
-            </span>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E3E2DE] bg-[#EDEBE8] text-sm font-bold text-[#37352F]">
-              P
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">{DEMO_PAGE_TITLE_RECAP}</p>
-              <p className="truncate text-[11px] text-muted-foreground">
-                Marketing Team · Auto Recaps
-              </p>
-            </div>
-          </div>
-          <span className="hidden text-xs text-muted-foreground sm:inline">
-            <Clock className="mr-1 inline h-3 w-3" aria-hidden />
-            Auto-saving
-          </span>
-        </div>
+        <nav
+          aria-label="Breadcrumb"
+          className="flex shrink-0 min-w-0 flex-wrap items-center gap-1.5 border-b border-border bg-card px-4 py-3 text-xs text-muted-foreground sm:px-6"
+        >
+          <span>Marketing Team</span>
+          <ChevronRight className="h-3 w-3 shrink-0 opacity-50" aria-hidden />
+          <span>Auto Recaps</span>
+          <ChevronRight className="h-3 w-3 shrink-0 opacity-50" aria-hidden />
+          <span className="truncate font-medium text-foreground">{DEMO_PAGE_TITLE_RECAP}</span>
+        </nav>
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto scrollbar-minimal">
-            <div className="border-b border-border bg-card px-4 py-4 sm:px-6">
-              <nav
-                aria-label="Breadcrumb"
-                className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted-foreground"
-              >
-                <span>Marketing Team</span>
-                <ChevronRight className="h-3 w-3 shrink-0 opacity-50" aria-hidden />
-                <span>Auto Recaps</span>
-                <ChevronRight className="h-3 w-3 shrink-0 opacity-50" aria-hidden />
-                <span className="truncate font-medium text-foreground">{DEMO_PAGE_TITLE_RECAP}</span>
-              </nav>
-
+            <div className="bg-card px-4 py-4 sm:px-6">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">
                   <Sparkles className="h-3 w-3" aria-hidden />
@@ -222,9 +200,9 @@ export default function WorkspaceDocumentsPreviewMock({
               {CAPTURES_ON_PAGE.map(item => (
                 <div
                   key={item.excerpt}
-                  className="rounded-lg border border-border bg-background px-2.5 py-2"
+                  className="rounded-md bg-[#F7F6F3] px-2.5 py-2"
                 >
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <p className="text-[10px] font-semibold capitalize tracking-wide text-muted-foreground">
                     {item.label}
                   </p>
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground">
@@ -232,7 +210,7 @@ export default function WorkspaceDocumentsPreviewMock({
                   </p>
                 </div>
               ))}
-              <div className="rounded-lg border border-amber-200/80 bg-amber-50/80 px-2.5 py-2">
+              <div className="rounded-lg bg-amber-50/80 px-2.5 py-2">
                 <p className="flex items-center gap-1 text-[10px] font-medium text-amber-800">
                   <Star className="h-3 w-3" aria-hidden />
                   Recap synced with workspace

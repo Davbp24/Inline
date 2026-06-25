@@ -110,8 +110,8 @@ export const DEMO_LIBRARY_DOCS = [
 
 /** Static HTML for marketing recap document preview — mirrors auto-recap editor output. */
 export const DEMO_RECAP_DOCUMENT_HTML = `
-<h2>Overview</h2>
-<p>4 captures from <strong>${DEMO_PAGE_TITLE}</strong> (${DEMO_DOMAIN}). 3/24/2026, 2:15 PM – 3/24/2026, 4:48 PM.</p>
+<h2>Overview <span class="recap-overview-range">3/24/2026, 2:15 PM – 3/24/2026, 4:48 PM</span></h2>
+<p>4 captures from <strong>${DEMO_PAGE_TITLE}</strong> (${DEMO_DOMAIN}).</p>
 <p>The recap reflects your latest highlights on the core claim and a supporting example from later in the article.</p>
 <h3>Key takeaways</h3>
 <ul class="recap-bullets">

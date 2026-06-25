@@ -192,10 +192,21 @@
 
 /* Auto-recap — subtle timeline metadata, content-first */
 .auto-recap-document .ProseMirror h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
   font-size: 1.125rem;
   margin-top: 1.75rem;
   margin-bottom: 0.5rem;
   color: #334155;
+}
+
+.auto-recap-document .ProseMirror h2 .recap-overview-range {
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: #94a3b8;
+  letter-spacing: 0.01em;
 }
 
 .auto-recap-document .ProseMirror h2:first-of-type {
