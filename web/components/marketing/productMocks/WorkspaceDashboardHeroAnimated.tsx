@@ -62,7 +62,6 @@ export default function WorkspaceDashboardHeroAnimated({
               dense
               variant="conversation"
               elevated={false}
-              userAlign="start"
               scenario={{
                 userMessage: 'What did I save about the main argument?',
                 assistantMessage:

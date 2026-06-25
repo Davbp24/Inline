@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ChevronRight, Lock } from 'lucide-react'
 import { Reveal } from '@/components/marketing/primitives/Reveal'
 import { SectionLink } from '@/components/marketing/SectionLink'
@@ -18,18 +19,42 @@ const SOURCE_CARD_WIDTH =
   '[--source-card-mobile-width:min(11rem,calc(100vw-6rem))] [&_.scrollbar-minimal>*]:w-[var(--source-card-mobile-width)] md:[&_.scrollbar-minimal>*]:w-40'
 
 /** White product mock — scrolls inside the fixed card height when content is tall. */
-const MOCK_SHELL =
-  'mr-auto flex w-full min-h-0 max-h-full flex-col overflow-x-hidden overflow-y-auto rounded-t-2xl border border-b-0 border-border bg-card px-3 py-3 pb-4 xl:px-4'
+const MOCK_SHELL_BASE =
+  'mr-auto flex w-full max-h-full flex-col overflow-x-hidden overflow-y-auto rounded-t-2xl border border-b-0 border-border bg-card px-3 pt-8 pb-4 sm:pt-10 xl:px-4'
 
-const CARDS = [
+const CARD_HEIGHT = {
+  short: 'min-h-[200px] sm:min-h-[220px]',
+  medium: 'min-h-[220px] sm:min-h-[250px]',
+  tall: 'min-h-[280px] sm:min-h-[300px]',
+} as const
+
+type CardHeight = keyof typeof CARD_HEIGHT
+
+/** Tan outer frame — same height for every card in the row. */
+const ARTICLE_SHELL = 'flex h-full min-h-[420px] w-full flex-col overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3] sm:min-h-[460px]'
+
+function mockShell(height: CardHeight) {
+  return cn(MOCK_SHELL_BASE, CARD_HEIGHT[height])
+}
+
+const CARDS: {
+  label: string
+  labelColor: string
+  title: string
+  cta: string
+  href: '/#rag'
+  height: CardHeight
+  mock: ReactNode
+}[] = [
   {
     label: 'Source citations',
     labelColor: 'text-[#2563EB]',
     title: 'Real source cards from retrieval',
     cta: 'See citations',
-    href: '/#rag' as const,
+    href: '/#rag',
+    height: 'medium',
     mock: (
-      <div className={MOCK_SHELL}>
+      <div className={mockShell('medium')}>
         <WorkspaceChatMock
           dense
           variant="conversation"
@@ -51,13 +76,44 @@ const CARDS = [
     ),
   },
   {
+    label: 'Cross-page',
+    labelColor: 'text-[#C2410C]',
+    title: 'Answers across every capture on a site',
+    cta: 'Try cross-page ask',
+    href: '/#rag',
+    height: 'tall',
+    mock: (
+      <div className={mockShell('tall')}>
+        <WorkspaceChatMock
+          dense
+          variant="conversation"
+          className="shrink-0"
+          scenario={{
+            userMessage: `Compare what I saved on ${DEMO_DOMAIN}.`,
+            assistantMessage:
+              'One capture covers the introduction and definitions [1]. A second save emphasizes supporting examples [2].',
+            sources: DEMO_BRIDGE_SOURCES.slice(0, 2),
+            recencyNote: `Searching captures across ${DEMO_DOMAIN} in your workspace.`,
+          }}
+        />
+        <div className={cn('mt-2 min-w-0 shrink-0', SOURCE_CARD_WIDTH)}>
+          <SourceCardRow
+            sources={DEMO_BRIDGE_SOURCES.slice(0, 2)}
+            workspaceId={DEMO_WORKSPACE_ID}
+          />
+        </div>
+      </div>
+    ),
+  },
+  {
     label: 'Workspace only',
     labelColor: 'text-[#B45309]',
     title: 'Semantic search scoped to you',
     cta: 'How scope works',
-    href: '/#rag' as const,
+    href: '/#rag',
+    height: 'short',
     mock: (
-      <div className={MOCK_SHELL}>
+      <div className={mockShell('short')}>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Retrieval scope
         </p>
@@ -80,36 +136,7 @@ const CARDS = [
       </div>
     ),
   },
-  {
-    label: 'Cross-page',
-    labelColor: 'text-[#C2410C]',
-    title: 'Answers across every capture on a site',
-    cta: 'Try cross-page ask',
-    href: '/#rag' as const,
-    mock: (
-      <div className={MOCK_SHELL}>
-        <WorkspaceChatMock
-          dense
-          variant="conversation"
-          className="shrink-0"
-          scenario={{
-            userMessage: `Compare what I saved on ${DEMO_DOMAIN}.`,
-            assistantMessage:
-              'One capture covers the introduction and definitions [1]. A second save emphasizes supporting examples [2].',
-            sources: DEMO_BRIDGE_SOURCES.slice(0, 2),
-            recencyNote: `Searching captures across ${DEMO_DOMAIN} in your workspace.`,
-          }}
-        />
-        <div className={cn('mt-2 min-w-0 shrink-0', SOURCE_CARD_WIDTH)}>
-          <SourceCardRow
-            sources={DEMO_BRIDGE_SOURCES.slice(0, 2)}
-            workspaceId={DEMO_WORKSPACE_ID}
-          />
-        </div>
-      </div>
-    ),
-  },
-] as const
+]
 
 export default function CitedAnswersSection() {
   return (
@@ -144,10 +171,10 @@ export default function CitedAnswersSection() {
           </div>
         </Reveal>
 
-        <div className="mt-14 grid min-w-0 gap-5 xl:grid-cols-3">
+        <div className="mt-14 grid min-w-0 gap-5 xl:grid-cols-3 xl:items-stretch">
           {CARDS.map((card, i) => (
-            <Reveal key={card.label} delay={0.1 + i * 0.04} className="min-w-0">
-              <article className="flex min-h-0 min-w-0 w-full flex-col overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3] sm:min-h-[380px] xl:aspect-2/3">
+            <Reveal key={card.label} delay={0.1 + i * 0.04} className="flex min-h-0 min-w-0 h-full">
+              <article className={ARTICLE_SHELL}>
                 <div className="flex shrink-0 flex-col items-center px-6 pb-4 pt-8 text-center md:px-7 md:pt-9">
                   <p className={cn('text-sm font-semibold', card.labelColor)}>{card.label}</p>
                   <h3 className="mt-3 max-w-[16rem] text-balance text-lg font-semibold leading-snug tracking-tight text-[#1C1E26] sm:text-xl">

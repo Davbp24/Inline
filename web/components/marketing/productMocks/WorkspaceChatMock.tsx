@@ -5,7 +5,7 @@ import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
 import { SourceCardRow, type ChatSource } from '@/components/shell/SourceCard'
 import { product } from '@/components/marketing/marketingSurfaces'
 import { DEMO_BRIDGE_SOURCES, DEMO_WORKSPACE_ID } from '@/components/marketing/productMocks/sampleData'
-import { cn, formatDisplayTitle } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 
 export type WorkspaceChatScenario = {
   userMessage: string
@@ -42,7 +42,7 @@ function UserBubble({ content, dense }: { content: string; dense?: boolean }) {
       className={cn(
         'inline-block bg-[#1B1B1B] text-white',
         dense
-          ? 'max-w-[95%] rounded-2xl px-3 py-1.5 text-[12px] leading-snug'
+          ? 'max-w-[88%] rounded-2xl px-3 py-1.5 text-[12px] leading-snug'
           : cn(
               'ml-auto max-w-[82%] bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground',
               multiline ? 'rounded-2xl' : 'rounded-2xl sm:rounded-full',
@@ -148,7 +148,7 @@ export default function WorkspaceChatMock({
       <div
         className={cn(
           dense
-            ? cn('flex shrink-0', userAlign === 'start' ? 'justify-start' : 'justify-end')
+            ? cn('flex w-full shrink-0', userAlign === 'start' ? 'justify-start' : 'justify-end')
             : 'flex flex-row-reverse items-start gap-2',
         )}
       >
@@ -176,23 +176,12 @@ export default function WorkspaceChatMock({
         {scenario.recencyNote && (
           <p className="mt-2 text-[9px] text-muted-foreground/80">{scenario.recencyNote}</p>
         )}
-        {scenario.sources && scenario.sources.length > 0 && (
-          dense ? (
-            <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
-              <span className="font-mono text-[10px] text-foreground/70">
-                [{scenario.sources[0].ref}]
-              </span>{' '}
-              {formatDisplayTitle(scenario.sources[0].pageTitle?.trim() ||
-                scenario.sources[0].domain ||
-                'Saved capture')}
-            </p>
-          ) : (
+        {scenario.sources && scenario.sources.length > 0 && !dense && (
             <SourceCardRow
               sources={scenario.sources}
               workspaceId={DEMO_WORKSPACE_ID}
               hideScrollbar={hideSourceScrollbar}
             />
-          )
         )}
       </div>
     </div>

@@ -23,6 +23,7 @@ import type { ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import DashboardCapturesMock from '@/components/marketing/productMocks/DashboardCapturesMock'
 import LibraryDocumentsMock from '@/components/marketing/productMocks/LibraryDocumentsMock'
+import MarketingSidebarFolderList from '@/components/marketing/productMocks/MarketingSidebarFolderList'
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
 import {
   MockActivityHeatmap,
@@ -176,9 +177,28 @@ export default function WorkspaceDashboardHeroMock({
       )}
 
       {page === 'captures' && (
-        <section>
-          <DashboardCapturesMock limit={compact ? 4 : 5} size={compact ? 'compact' : 'default'} />
-        </section>
+        <>
+          <section>
+            <DashboardCapturesMock limit={compact ? 4 : 5} size={compact ? 'compact' : 'default'} />
+          </section>
+
+          <section>
+            <h4 className="mb-3 text-sm font-semibold text-foreground">Recently saved</h4>
+            <DashboardCapturesMock
+              limit={compact ? 3 : 4}
+              offset={1}
+              size={compact ? 'compact' : 'default'}
+            />
+          </section>
+
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-foreground">Linked recaps</h4>
+              <span className="text-xs font-medium text-muted-foreground">Auto Recaps</span>
+            </div>
+            <LibraryDocumentsMock limit={compact ? 2 : 3} />
+          </section>
+        </>
       )}
 
       {(page === 'home' || page === 'analytics') && (
@@ -285,7 +305,7 @@ export default function WorkspaceDashboardHeroMock({
     <div
       className={cn(
         'flex w-full bg-white',
-        compact ? 'min-h-[440px] overflow-hidden sm:h-[580px] md:h-[660px]' : 'min-h-[680px] lg:min-h-[760px]',
+        compact ? 'min-h-[440px] overflow-hidden sm:h-[640px] md:h-[720px]' : 'min-h-[680px] lg:min-h-[760px]',
         className,
       )}
     >
@@ -317,14 +337,13 @@ export default function WorkspaceDashboardHeroMock({
             </div>
           ))}
 
-          <p className="mb-1 mt-4 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Folders
-          </p>
-          {['Research', 'Auto Recaps', 'me'].map(folder => (
-            <div key={folder} className="rounded-md px-2.5 py-2 text-xs text-muted-foreground">
-              {folder}
-            </div>
-          ))}
+          <MarketingSidebarFolderList
+            folders={[
+              { label: 'Research' },
+              { label: 'Auto Recaps' },
+              { label: 'me' },
+            ]}
+          />
         </nav>
 
         <div className="space-y-2 border-t border-border p-3">
@@ -344,8 +363,16 @@ export default function WorkspaceDashboardHeroMock({
         </div>
       </aside>
 
-      <div className="relative min-w-0 flex-1 bg-background">
-        <div className="border-b border-border bg-card px-4 py-3 sm:px-6">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-background">
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-white via-white/92 to-transparent',
+            compact ? 'h-28 sm:h-36' : 'h-32 sm:h-40',
+          )}
+          aria-hidden
+        />
+
+        <div className="shrink-0 border-b border-border bg-card px-4 py-3 sm:px-6">
           <nav className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span>Marketing Team</span>
             <ChevronRight className="h-3 w-3" aria-hidden />
@@ -353,7 +380,12 @@ export default function WorkspaceDashboardHeroMock({
           </nav>
         </div>
 
-        <div className={cn('px-3 sm:px-6 lg:pr-8', compact ? 'space-y-4 py-4 pb-16 sm:space-y-5 sm:pb-20' : 'space-y-8 py-6 pb-28')}>
+        <div
+          className={cn(
+            'min-h-0 flex-1 overflow-y-auto scrollbar-minimal px-3 sm:px-6 lg:pr-8',
+            compact ? 'space-y-4 py-4 pb-16 sm:space-y-5 sm:pb-20' : 'space-y-8 py-6 pb-28',
+          )}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3
@@ -382,7 +414,7 @@ export default function WorkspaceDashboardHeroMock({
         </div>
 
         {chatFooter ?? (
-          <div className={cn('absolute inset-x-0 flex justify-center px-3 sm:px-4', compact ? 'bottom-3' : 'bottom-5')}>
+          <div className={cn('absolute inset-x-0 z-20 flex justify-center px-3 sm:px-4', compact ? 'bottom-3' : 'bottom-5')}>
             <WorkspaceChatMock variant="pill" elevated />
           </div>
         )}

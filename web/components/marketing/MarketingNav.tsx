@@ -31,9 +31,6 @@ function InlineWordmark({ onDark }: { onDark: boolean }) {
         )}
       >
         inline
-        <span className={cn('ml-0.5 text-base align-top sm:text-lg', onDark ? 'text-white/60' : 'text-stone-400')}>
-          ~
-        </span>
       </span>
     </Link>
   )

@@ -17,7 +17,7 @@ export default function DashboardShowcaseSection() {
         </Reveal>
 
         <Reveal delay={0.08} className="mt-12 md:mt-14">
-          <ProductVisualRing innerRadius="2xl">
+          <ProductVisualRing innerRadius="2xl" tone="navy">
             <div
               className="overflow-hidden rounded-2xl border border-border bg-white"
               aria-label="Inline workspace dashboard preview"

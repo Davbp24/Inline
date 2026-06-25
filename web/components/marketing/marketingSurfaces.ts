@@ -18,9 +18,55 @@ export const mkt = {
   borderSoft: '#E5D9CC',
   espresso: '#4A3228',
   burntRed: '#8B3329',
+  burntOrange: '#C45A2E',
   /** 2-tone marketing cards — distinct from navy, brown, and burnt red */
   deepTeal: '#2A5F58',
 } as const
+
+/** Spaced frame around product mocks — saturated fill, no outer border */
+export const mktProductRing = {
+  tan: '#C9A574',
+  navy: '#2E4A72',
+  burntRed: '#8B3329',
+  espresso: '#4A3228',
+  burntOrange: '#B84E1F',
+} as const
+
+export type MktProductRingTone = keyof typeof mktProductRing
+
+/** Blurred mesh washes for frosted product rings — paired with mktProductRing base. */
+export const mktProductRingMesh: Record<MktProductRingTone, string[]> = {
+  tan: [
+    'radial-gradient(circle at 88% 10%, rgba(255, 210, 150, 0.5) 0%, transparent 46%)',
+    'radial-gradient(circle at 10% 90%, rgba(140, 95, 55, 0.55) 0%, transparent 50%)',
+    'radial-gradient(ellipse 85% 70% at 48% 42%, rgba(230, 190, 140, 0.45) 0%, transparent 72%)',
+    'linear-gradient(155deg, #B8884E 0%, #C9A574 52%, #A67A42 100%)',
+  ],
+  navy: [
+    'radial-gradient(circle at 90% 8%, rgba(120, 165, 220, 0.45) 0%, transparent 44%)',
+    'radial-gradient(circle at 8% 92%, #0B1735 0%, rgba(11, 23, 53, 0.7) 30%, transparent 54%)',
+    'radial-gradient(ellipse 88% 72% at 50% 44%, rgba(70, 110, 170, 0.4) 0%, transparent 70%)',
+    'linear-gradient(160deg, #1a3050 0%, #2E4A72 48%, #24386D 100%)',
+  ],
+  burntRed: [
+    'radial-gradient(circle at 86% 12%, rgba(220, 140, 120, 0.42) 0%, transparent 44%)',
+    'radial-gradient(circle at 12% 88%, #5C2018 0%, rgba(92, 32, 24, 0.65) 32%, transparent 52%)',
+    'radial-gradient(ellipse 85% 70% at 50% 45%, rgba(180, 80, 65, 0.38) 0%, transparent 68%)',
+    'linear-gradient(155deg, #6B2820 0%, #8B3329 50%, #742A22 100%)',
+  ],
+  espresso: [
+    'radial-gradient(circle at 88% 10%, rgba(180, 140, 115, 0.4) 0%, transparent 45%)',
+    'radial-gradient(circle at 10% 90%, #2A1C16 0%, rgba(42, 28, 22, 0.7) 30%, transparent 52%)',
+    'radial-gradient(ellipse 85% 70% at 48% 42%, rgba(120, 85, 68, 0.35) 0%, transparent 70%)',
+    'linear-gradient(155deg, #3A2720 0%, #4A3228 52%, #36241E 100%)',
+  ],
+  burntOrange: [
+    'radial-gradient(circle at 88% 10%, rgba(255, 180, 110, 0.48) 0%, transparent 44%)',
+    'radial-gradient(circle at 10% 90%, #7A3010 0%, rgba(122, 48, 16, 0.65) 30%, transparent 52%)',
+    'radial-gradient(ellipse 85% 70% at 50% 44%, rgba(220, 120, 60, 0.4) 0%, transparent 68%)',
+    'linear-gradient(155deg, #9A4018 0%, #B84E1F 50%, #8C3C18 100%)',
+  ],
+}
 
 /** Extension + chat panel (canonical product chrome) */
 export const product = {

@@ -30,7 +30,7 @@ export default function ReviewLoopSection() {
         </Reveal>
 
         <Reveal delay={0.08} className="mt-10 w-full md:mt-14">
-          <ProductVisualRing innerRadius="2xl">
+          <ProductVisualRing innerRadius="2xl" tone="burntRed">
             <WorkspaceDocumentsPreviewMock />
           </ProductVisualRing>
         </Reveal>

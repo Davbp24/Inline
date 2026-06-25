@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import DashboardCapturesMock from '@/components/marketing/productMocks/DashboardCapturesMock'
 import LibraryDocumentsMock from '@/components/marketing/productMocks/LibraryDocumentsMock'
+import MarketingSidebarFolderList from '@/components/marketing/productMocks/MarketingSidebarFolderList'
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
 import { cn } from '@/lib/utils'
 import { DEMO_DOMAIN, DEMO_PAGE_TITLE } from '@/components/marketing/productMocks/sampleData'
@@ -97,14 +98,9 @@ export default function WorkspaceDashboardPreviewMock({ className }: WorkspaceDa
             </div>
           ))}
 
-          <p className="mb-1 mt-4 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Folders
-          </p>
-          {['Research', 'Auto Recaps'].map(folder => (
-            <div key={folder} className="rounded-md px-2.5 py-2 text-xs text-muted-foreground">
-              {folder}
-            </div>
-          ))}
+          <MarketingSidebarFolderList
+            folders={[{ label: 'Research' }, { label: 'Auto Recaps' }]}
+          />
         </nav>
 
         <div className="space-y-2 border-t border-border p-3">

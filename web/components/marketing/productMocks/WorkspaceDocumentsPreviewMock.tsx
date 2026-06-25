@@ -14,6 +14,7 @@ import {
   Star,
 } from 'lucide-react'
 import LibraryDocumentsMock from '@/components/marketing/productMocks/LibraryDocumentsMock'
+import MarketingSidebarFolderList from '@/components/marketing/productMocks/MarketingSidebarFolderList'
 import {
   DEMO_DOMAIN,
   DEMO_PAGE_TITLE_RECAP,
@@ -83,22 +84,7 @@ export default function WorkspaceDocumentsPreviewMock({
             </div>
           ))}
 
-          <p className="mb-1 mt-4 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Folders
-          </p>
-          {FOLDERS.map(folder => (
-            <div
-              key={folder.label}
-              className={cn(
-                'rounded-md px-2.5 py-2 text-xs',
-                folder.active
-                  ? 'bg-[#F1F1EF] font-semibold text-[#37352F]'
-                  : 'text-muted-foreground',
-              )}
-            >
-              {folder.label}
-            </div>
-          ))}
+          <MarketingSidebarFolderList folders={FOLDERS} />
         </nav>
 
         <div className="space-y-2 border-t border-border p-3">

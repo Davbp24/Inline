@@ -90,7 +90,7 @@ export default function AiSearchTabsSection() {
         </Reveal>
 
         <Reveal delay={0.1} className="mt-10 text-left">
-          <ProductVisualRing>
+          <ProductVisualRing tone="burntOrange">
             <WorkspaceChatMock
               variant="panel"
               scenario={scenario}
