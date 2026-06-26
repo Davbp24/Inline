@@ -3,6 +3,7 @@ import { PANEL as C, FONT } from '../lib/extensionTheme'
 import { loadSettings } from '../lib/extensionSettings'
 import { fetchViaBackground } from '../lib/backgroundFetch'
 import { GUEST_AI_LIMIT, reserveAiPrompt } from '../lib/aiAccess'
+import FormattedAiText from './FormattedAiText'
 
 interface CropOverlayProps {
   screenshot: string
@@ -214,11 +215,8 @@ export default function CropOverlay({ screenshot, onClose }: CropOverlayProps) {
               </svg>
             </button>
           </div>
-          <div style={{
-            padding: 18, fontSize: 13, lineHeight: 1.65, color: C.text,
-            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-          }}>
-            {result}
+          <div style={{ padding: 18, fontSize: 13, lineHeight: 1.65, color: C.text, wordBreak: 'break-word' }}>
+            <FormattedAiText text={result} style={{ fontSize: 13, lineHeight: 1.65 }} />
           </div>
           <div style={{
             padding: '10px 16px', borderTop: `1px solid ${C.divider}`,

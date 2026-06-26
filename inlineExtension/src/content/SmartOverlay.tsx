@@ -1132,7 +1132,7 @@ export default function SmartOverlay() {
                 <Spinner size={16} /> Analysing…
               </span>
             ) : (
-              <pre style={{ whiteSpace: 'pre-wrap', margin: 0, fontFamily: FONT, fontSize: 13.5, lineHeight: 1.55 }}>{riskText}</pre>
+              <FormattedAiText text={riskText} style={{ fontSize: 13.5, lineHeight: 1.55 }} />
             )}
           </PanelResultCard>
         </FloatingPanelShell>

@@ -16,6 +16,7 @@ import {
   LayoutDashboard, Clock, Settings,
   FileText, Loader2, Download, BarChart3, UserRound,
 } from 'lucide-react'
+import { stripMarkdownToPlainText } from '@/lib/ai-text-format'
 
 const NAV_COMMANDS = [
   { label: 'Home',            icon: LayoutDashboard, path: 'dashboard', shortcut: 'G D' },
@@ -161,7 +162,7 @@ export default function CommandPalette() {
                     <div className="flex items-center gap-2 w-full">
                       <FileText className="w-4 h-4 shrink-0 text-muted-foreground" />
                       <span className="text-sm font-medium truncate flex-1">
-                        {(note.content || note.page_title || 'Untitled capture').slice(0, 70)}
+                        {stripMarkdownToPlainText(note.content || note.page_title || 'Untitled capture').slice(0, 70)}
                       </span>
                       <span className="text-[10px] text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
                         {note.type}

@@ -78,7 +78,7 @@ export async function saveAIResultToHistory(entry: HistoryEntry): Promise<void> 
       type: typeMap[entry.kind],
       tags: tagMap[entry.kind],
       content: entry.selection
-        ? `**${entry.kind}**\n\n> ${entry.selection}\n\n${entry.result}`
+        ? `> ${entry.selection}\n\n${entry.result}`
         : entry.result,
     }
 

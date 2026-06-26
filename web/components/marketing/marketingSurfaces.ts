@@ -154,7 +154,7 @@ export const mktBtnSecondaryLg =
 
 /** White secondary CTA — hero only */
 export const mktBtnSecondaryHeroLg =
-  'inline-flex items-center justify-center rounded-full border border-[#d6d3d1] bg-white px-7 py-3 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#a8a29e] hover:bg-[#F4F4F2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
+  'inline-flex items-center justify-center rounded-full border border-[#a8a29e] bg-[#F4F4F2] px-7 py-3 text-sm font-medium text-[#1C1E26] transition-colors hover:border-[#d6d3d1] hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
 /** Transparent CTA — black text + border, fills black on hover */
 export const mktBtnGhost =

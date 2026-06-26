@@ -28,15 +28,6 @@ function formatCitations(text: string): string {
   })
 }
 
-function stripInlineMarkdown(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '$1')
-    .replace(/__(.+?)__/g, '$1')
-    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '$1')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/^#{1,6}\s+/gm, '')
-}
-
 function reflowDomainList(text: string): string {
   const host = '(?:localhost|[a-z0-9][\\w.-]*\\.[a-z]{2,})'
   const citation = '\\[(?:\\d+\\s*[,–-]\\s*)*\\d+\\]'
@@ -60,8 +51,13 @@ function reflowDomainList(text: string): string {
   return intro ? `${intro}\n\n${bullets.join('\n')}` : bullets.join('\n')
 }
 
+export function prepareAssistantTextForDisplay(text: string): string {
+  return reflowDomainList(formatCitations(text))
+}
+
+/** @deprecated Use prepareAssistantTextForDisplay — formatting is rendered, not stripped. */
 export function normalizeAssistantText(text: string): string {
-  return reflowDomainList(formatCitations(stripInlineMarkdown(text)))
+  return prepareAssistantTextForDisplay(text)
 }
 
 export function getChatGreeting(): string {

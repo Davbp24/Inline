@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import InsightsLoadingStatus from '@/components/insights/InsightsLoadingStatus'
 import { chatEmptyFadeContainer, chatEmptyFadeItem } from '@/components/chat/chat-motion'
+import FormattedAiText from '@/components/ui/formatted-ai-text'
 import { cn } from '@/lib/utils'
 
 export type InsightsStats = {
@@ -55,18 +56,14 @@ export default function InsightsSummary({
       {narrative && (
         inline ? (
           <Section className="space-y-2" {...sectionProps}>
-            <p className={cn('text-sm leading-relaxed text-foreground', compact && 'text-xs')}>
-              {narrative}
-            </p>
+            <FormattedAiText text={narrative} className={compact ? '!text-xs' : undefined} />
           </Section>
         ) : (
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               What you&apos;re researching
             </p>
-            <p className={cn('leading-relaxed text-foreground', compact ? 'text-sm' : 'text-base')}>
-              {narrative}
-            </p>
+            <FormattedAiText text={narrative} size={compact ? 'sm' : 'base'} />
           </div>
         )
       )}

@@ -117,7 +117,7 @@ export default function DocumentSideRail({
       </div>
 
       {footer && (
-        <div className="shrink-0 bg-muted/20">
+        <div className="shrink-0 border-t border-border/40 bg-card">
           {footer}
         </div>
       )}

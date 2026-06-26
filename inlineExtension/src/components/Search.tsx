@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { PANEL as C, FONT } from '../lib/extensionTheme'
+import { stripMarkdownToPlainText } from '../lib/aiTextFormat'
 import { loadSettings } from '../lib/extensionSettings'
 import { fetchViaBackground } from '../lib/backgroundFetch'
 import { PanelShell, PanelLoading, PanelEmpty, Segmented } from './panelKit'
@@ -109,13 +110,14 @@ export default function Search({ onClose }: SearchProps) {
   }, [query, runSearch])
 
   const snippet = (text: string) => {
+    const plain = stripMarkdownToPlainText(text)
     const max = 120
-    if (text.length <= max) return text
-    const lower = text.toLowerCase()
+    if (plain.length <= max) return plain
+    const lower = plain.toLowerCase()
     const idx = lower.indexOf(query.toLowerCase())
-    if (idx < 0) return text.slice(0, max) + '...'
+    if (idx < 0) return plain.slice(0, max) + '...'
     const start = Math.max(0, idx - 40)
-    return (start > 0 ? '...' : '') + text.slice(start, start + max) + '...'
+    return (start > 0 ? '...' : '') + plain.slice(start, start + max) + '...'
   }
 
   return (

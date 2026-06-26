@@ -81,7 +81,7 @@ export default function ValuePillarsSection() {
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <SectionHeading
           eyebrow="The quiet problem"
-          title="More tabs isn\u2019t more progress"
+          title="More tabs isn't more progress"
         />
 
         <div className="mt-14 grid min-w-0 gap-5 xl:grid-cols-3">

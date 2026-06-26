@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Loader2, RotateCcw } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import FormattedAiText from '@/components/ui/formatted-ai-text'
 import AiFeedbackBar from '@/components/ai/AiFeedbackBar'
 
 export type KnowledgeTopic = 'interview' | 'concepts' | 'connections' | 'gaps'
@@ -179,13 +180,17 @@ export default function KnowledgeCardDeck({
                 className="absolute inset-0 flex items-center justify-center rounded-xl border border-border bg-muted/50 p-6 text-center"
                 style={{ backfaceVisibility: 'hidden' }}
               >
-                <p className="text-sm font-medium text-foreground leading-relaxed">{current.front}</p>
+                <div className="text-sm font-medium text-foreground leading-relaxed">
+                  <FormattedAiText text={current.front} className="!space-y-0 text-center" />
+                </div>
               </div>
               <div
                 className="absolute inset-0 flex items-center justify-center rounded-xl border border-primary/30 bg-primary/5 p-6 text-center"
                 style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
               >
-                <p className="text-sm text-foreground leading-relaxed">{current.back}</p>
+                <div className="text-sm text-foreground leading-relaxed">
+                  <FormattedAiText text={current.back} className="!space-y-0 text-center" />
+                </div>
               </div>
             </motion.div>
           </div>

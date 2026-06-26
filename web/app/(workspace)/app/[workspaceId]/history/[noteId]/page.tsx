@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { fetchNoteById, fetchExtractionsForNote } from '@/lib/data'
 import { ArrowLeft, Globe, Calendar, Tag, MapPin, FileText } from 'lucide-react'
 import CreateDocFromNoteCTA from './CreateDocFromNoteCTA'
-import { prettyNotePreview } from '@/lib/note-preview'
+import { FormattedAiOutput, FormattedNoteContent } from '@/components/history/FormattedNoteContent'
+import { stripMarkdownToPlainText } from '@/lib/ai-text-format'
 import { formatDisplayTitle, truncateDisplayUrl } from '@/lib/utils'
 import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
 
@@ -94,9 +95,7 @@ export default async function NoteDetailPage({
             Original Text
           </h2>
           <div className="workspace-surface p-4">
-            <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-              {prettyNotePreview(note) || '(no content)'}
-            </p>
+            <FormattedNoteContent note={note} />
           </div>
         </section>
 
@@ -162,7 +161,7 @@ function humanizeKey(key: string) {
 
 function formatValue(value: unknown): string {
   if (value == null) return 'Not provided'
-  if (typeof value === 'string') return value
+  if (typeof value === 'string') return stripMarkdownToPlainText(value)
   if (typeof value === 'number' || typeof value === 'boolean') return String(value)
   if (Array.isArray(value)) return value.map(formatValue).join(', ')
   if (typeof value === 'object') {
@@ -175,7 +174,7 @@ function formatValue(value: unknown): string {
 
 function ReadableExtraction({ data }: { data: unknown }) {
   if (typeof data === 'string') {
-    return <p className="whitespace-pre-wrap leading-relaxed">{data}</p>
+    return <FormattedAiOutput text={data} />
   }
 
   if (Array.isArray(data)) {

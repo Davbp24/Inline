@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode, type CSSProperties, type MouseEvent } from 'react'
 import { InlineChatBadge } from './InlineChatIcon'
+import FormattedAiText from './FormattedAiText'
 import { ToolHeaderIcon, type ToolId } from './toolIcons'
 import { PANEL as C, CHAT, FONT, BRAND_GRADIENT, PANEL_HEADER_ICON, DOCK_CLEARANCE, Z } from '../lib/extensionTheme'
 
@@ -287,21 +288,21 @@ export const DIFF = {
 
 export function DiffRemovedBlock({ children }: { children: ReactNode }) {
   return (
-    <p style={{
+    <div style={{
       margin: 0, padding: '4px 8px', borderRadius: C.radiusSm,
       background: DIFF.removedBg, color: DIFF.removedText,
       textDecoration: 'line-through', fontSize: 12, lineHeight: 1.45,
-    }}>{children}</p>
+    }}>{children}</div>
   )
 }
 
 export function DiffAddedBlock({ children }: { children: ReactNode }) {
   return (
-    <p style={{
+    <div style={{
       margin: 0, padding: '4px 8px', borderRadius: C.radiusSm,
       background: DIFF.addedBg, color: DIFF.addedText,
       fontSize: 12, lineHeight: 1.45,
-    }}>{children}</p>
+    }}>{children}</div>
   )
 }
 
@@ -310,12 +311,20 @@ export function BlockDiffView({ original, updated }: { original: string; updated
   const oldText = original.trim()
   const newText = updated.trim()
   if (!oldText) {
-    return <DiffAddedBlock>{newText}</DiffAddedBlock>
+    return (
+      <DiffAddedBlock>
+        <FormattedAiText text={newText} style={{ fontSize: 12, lineHeight: 1.45 }} />
+      </DiffAddedBlock>
+    )
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <DiffRemovedBlock>{oldText}</DiffRemovedBlock>
-      <DiffAddedBlock>{newText}</DiffAddedBlock>
+      <DiffRemovedBlock>
+        <FormattedAiText text={oldText} style={{ fontSize: 12, lineHeight: 1.45 }} />
+      </DiffRemovedBlock>
+      <DiffAddedBlock>
+        <FormattedAiText text={newText} style={{ fontSize: 12, lineHeight: 1.45 }} />
+      </DiffAddedBlock>
     </div>
   )
 }
