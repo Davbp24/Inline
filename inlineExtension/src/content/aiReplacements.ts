@@ -102,6 +102,28 @@ export function saveAIReplacement(
   return id
 }
 
+/**
+ * Persist a manual (user-typed) text replacement. The caller replaces the
+ * selection with a plain text node; on restore we replay the same swap.
+ */
+export function saveManualReplacement(originalText: string, manualText: string): string {
+  const id = replacementId()
+
+  const entry: AIReplacement = {
+    id,
+    originalText,
+    aiText: manualText,
+    task: 'manual',
+    timestamp: Date.now(),
+  }
+
+  const next = [...readLocal(), entry]
+  writeLocal(next)
+  pushToBackend(next)
+
+  return id
+}
+
 function removeReplacementById(id: string): void {
   const next = readLocal().filter(r => r.id !== id)
   writeLocal(next)
@@ -199,7 +221,8 @@ function applyReplacements(list: AIReplacement[]): void {
   if (!body) return
 
   for (const r of list) {
-    if (!r.originalText || r.originalText.length < 3) continue
+    if (!r.originalText?.trim()) continue
+    if (r.task !== 'manual' && r.originalText.length < 3) continue
     // Already rendered? Skip.
     if (document.querySelector(`[data-inline-ai-id="${CSS.escape(r.id)}"]`)) continue
 
@@ -227,12 +250,17 @@ function applyReplacements(list: AIReplacement[]): void {
         range.setStart(node, idx)
         range.setEnd(node, idx + r.originalText.length)
 
-        const mark = buildAIInsertMark(r.aiText, r.task, r.instruction)
-        mark.setAttribute('data-inline-ai-id', r.id)
-        range.deleteContents()
-        range.insertNode(mark)
+        if (r.task === 'manual') {
+          range.deleteContents()
+          range.insertNode(document.createTextNode(r.aiText))
+        } else {
+          const mark = buildAIInsertMark(r.aiText, r.task, r.instruction)
+          mark.setAttribute('data-inline-ai-id', r.id)
+          range.deleteContents()
+          range.insertNode(mark)
 
-        attachRemoveHandler(mark, r.id)
+          attachRemoveHandler(mark, r.id)
+        }
       } catch { /* range invalid — skip, try next match */ }
 
       break

@@ -12,7 +12,7 @@ import { loadSettings } from '../lib/extensionSettings'
 import { speakWithElevenLabs } from '../lib/elevenLabsTts'
 import { fetchViaBackground } from '../lib/backgroundFetch'
 import { buildAIInsertMark } from '../lib/insertBadge'
-import { saveAIReplacement } from './aiReplacements'
+import { saveAIReplacement, saveManualReplacement } from './aiReplacements'
 import { TOOLBAR as TB, HIGHLIGHT_SWATCHES, FONT, PANEL as C } from '../lib/extensionTheme'
 import {
   FloatingPanelShell,
@@ -581,6 +581,32 @@ export default function SmartOverlay() {
     void runAiTask(task, instruction)
   }
 
+  /** Replace the pill's saved selection with user-typed text (no AI). */
+  function runManualRewriteFromPill() {
+    const newText = subInput.trim()
+    if (!newText) return
+    if (!restoreSavedSelection()) return
+
+    const range = savedRangeRef.current
+    if (!range) return
+
+    try {
+      const originalText = range.toString()
+      if (!originalText.trim()) return
+
+      range.deleteContents()
+      range.insertNode(document.createTextNode(newText))
+      saveManualReplacement(originalText, newText)
+
+      setSubPanel(null)
+      setToolbar(null)
+      setSubInput('')
+      savedRangeRef.current = null
+      selRef.current = ''
+      window.getSelection()?.removeAllRanges()
+    } catch { /* range detached */ }
+  }
+
   function aiTaskLabel(task: 'summarize' | 'rephrase' | 'rewrite' | 'shorten'): string {
     if (task === 'summarize') return 'Summary'
     if (task === 'rephrase') return 'Rephrased'
@@ -815,7 +841,7 @@ export default function SmartOverlay() {
             <TBtn isText onClick={() => runPillAiTask('summarize')} title="Summarize">Summarize</TBtn>
             <TBtn isText onClick={() => runPillAiTask('rephrase')} title="Rephrase">Rephrase</TBtn>
             <TBtn isText onClick={() => runPillAiTask('shorten')} title="Shorten">Shorten</TBtn>
-            <TBtn active={subPanel === 'rewrite'} onClick={() => toggleSub('rewrite')} title="Custom rewrite">
+            <TBtn active={subPanel === 'rewrite'} onClick={() => toggleSub('rewrite')} title="Manual rewrite">
               <IEdit />
             </TBtn>
 
@@ -920,11 +946,11 @@ export default function SmartOverlay() {
                 onChange={e => setSubInput(e.target.value)}
                 onKeyDown={e => {
                   if (e.key === 'Enter' && subInput.trim()) {
-                    runPillAiTask('rewrite', subInput.trim())
+                    runManualRewriteFromPill()
                   }
                   if (e.key === 'Escape') setSubPanel(null)
                 }}
-                placeholder="How should I rewrite this?"
+                placeholder="Replace selection with…"
                 style={{
                   flex: 1, padding: '8px 10px',
                   border: 'none',
@@ -937,7 +963,7 @@ export default function SmartOverlay() {
                 disabled={!subInput.trim()}
                 onClick={() => {
                   if (!subInput.trim()) return
-                  runPillAiTask('rewrite', subInput.trim())
+                  runManualRewriteFromPill()
                 }}
                 style={{
                   padding: '7px 16px', borderRadius: 9999, border: 'none',
