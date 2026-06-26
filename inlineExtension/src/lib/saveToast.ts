@@ -1,15 +1,13 @@
 export type SaveToastResponse = {
   ok?: boolean
-  queued?: boolean
   storageMode?: 'local' | 'workspace'
+  error?: string
 }
 
 export function emitSaveToast(response: SaveToastResponse | undefined): void {
-  if (!response?.ok && !response?.queued) return
-  const synced = response.storageMode === 'workspace'
+  if (!response?.ok) return
+  if (response.storageMode !== 'workspace') return
   document.dispatchEvent(new CustomEvent('inline:toast', {
-    detail: synced
-      ? { message: 'Saved to Workspace', tone: 'success', action: 'dashboard' }
-      : { message: 'Saved to browser.', tone: 'local' },
+    detail: { message: 'Saved to Workspace', tone: 'success', action: 'dashboard' },
   }))
 }

@@ -11,8 +11,9 @@ import { wrapSelectionWithHighlight } from './highlightWrap'
 import { loadSettings } from '../lib/extensionSettings'
 import { speakWithElevenLabs } from '../lib/elevenLabsTts'
 import { fetchViaBackground } from '../lib/backgroundFetch'
-import { buildAIInsertMark } from '../lib/insertBadge'
-import { saveAIReplacement, saveManualReplacement } from './aiReplacements'
+import { buildAIInsertMark, buildManualInsertMark } from '../lib/insertBadge'
+import { saveAIReplacement } from './aiReplacements'
+import { saveManualRewrite } from './manualRewrites'
 import { TOOLBAR as TB, HIGHLIGHT_SWATCHES, FONT, PANEL as C } from '../lib/extensionTheme'
 import {
   FloatingPanelShell,
@@ -585,18 +586,28 @@ export default function SmartOverlay() {
   function runManualRewriteFromPill() {
     const newText = subInput.trim()
     if (!newText) return
-    if (!restoreSavedSelection()) return
 
-    const range = savedRangeRef.current
-    if (!range) return
+    const saved = savedRangeRef.current
+    if (!saved) return
+
+    let range: Range
+    try {
+      range = saved.cloneRange()
+    } catch {
+      return
+    }
+
+    const originalText = range.toString()
+    if (!originalText.trim()) return
+
+    // Best-effort: re-highlight for the user, but the clone above is what we mutate.
+    restoreSavedSelection()
 
     try {
-      const originalText = range.toString()
-      if (!originalText.trim()) return
-
       range.deleteContents()
-      range.insertNode(document.createTextNode(newText))
-      saveManualReplacement(originalText, newText)
+      const wrapper = buildManualInsertMark(newText)
+      range.insertNode(wrapper)
+      saveManualRewrite(wrapper, originalText, newText)
 
       setSubPanel(null)
       setToolbar(null)

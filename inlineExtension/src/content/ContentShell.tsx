@@ -4,6 +4,7 @@ import PanelHost from './PanelHost'
 import SmartOverlay from './SmartOverlay'
 import StickyNotesManager from './StickyNotesManager'
 import { restoreAIReplacements } from './aiReplacements'
+import { restoreManualRewrites } from './manualRewrites'
 import { restoreDrawings } from './drawingsRestore'
 import { restoreHandwriting } from './handwritingRestore'
 import { restoreHighlights } from './highlightWrap'
@@ -36,6 +37,7 @@ export default function ContentShell() {
       restoreDrawings()
       restoreHandwriting()
       restoreAIReplacements()
+      restoreManualRewrites()
     }, 800)
     return () => window.clearTimeout(timer)
   }, [accepted])

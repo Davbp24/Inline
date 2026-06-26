@@ -6,69 +6,84 @@
  * user (Bearer JWT) or userId fallback.
  */
 
-import { loadSettings } from './extensionSettings'
-import { fetchViaBackground } from './backgroundFetch'
-import { looksLikeJwt } from './aiAccess'
+import { loadSettings } from "./extensionSettings";
+import { fetchViaBackground } from "./backgroundFetch";
+import { looksLikeJwt } from "./aiAccess";
 
 type HistoryEntryKind =
-  | 'ai-rephrase'
-  | 'ai-shorten'
-  | 'ai-summarize'
-  | 'ai-rewrite'
-  | 'ai-custom'
-  | 'clip'
+  | "ai-rephrase"
+  | "ai-shorten"
+  | "ai-summarize"
+  | "ai-rewrite"
+  | "ai-custom"
+  | "manual-rewrite"
+  | "clip";
 
 export interface HistoryEntry {
-  kind: HistoryEntryKind
-  selection?: string
-  result: string
-  pageUrl?: string
-  pageTitle?: string
-  workspaceId?: string
+  kind: HistoryEntryKind;
+  selection?: string;
+  result: string;
+  pageUrl?: string;
+  pageTitle?: string;
+  workspaceId?: string;
 }
 
 function guessPage(): { pageUrl: string; pageTitle: string } {
-  if (typeof window === 'undefined') return { pageUrl: '', pageTitle: '' }
-  return { pageUrl: window.location?.href ?? '', pageTitle: document?.title ?? '' }
+  if (typeof window === "undefined") return { pageUrl: "", pageTitle: "" };
+  return {
+    pageUrl: window.location?.href ?? "",
+    pageTitle: document?.title ?? "",
+  };
 }
 
-export async function saveAIResultToHistory(entry: HistoryEntry): Promise<void> {
+export async function saveAIResultToHistory(
+  entry: HistoryEntry,
+): Promise<void> {
   try {
-    const { pageUrl, pageTitle } = guessPage()
-    const { apiBaseUrl, accessToken } = await loadSettings()
+    const { pageUrl, pageTitle } = guessPage();
+    const { apiBaseUrl, accessToken } = await loadSettings();
 
-    const storage = await new Promise<{ inlineActiveWorkspaceId?: string; inlineUserId?: string }>(
-      (resolve) => {
-        chrome.storage.local.get(['inlineActiveWorkspaceId', 'inlineUserId'], (r) => {
-          resolve(r as { inlineActiveWorkspaceId?: string; inlineUserId?: string })
-        })
-      },
-    )
+    const storage = await new Promise<{
+      inlineActiveWorkspaceId?: string;
+      inlineUserId?: string;
+    }>((resolve) => {
+      chrome.storage.local.get(
+        ["inlineActiveWorkspaceId", "inlineUserId"],
+        (r) => {
+          resolve(
+            r as { inlineActiveWorkspaceId?: string; inlineUserId?: string },
+          );
+        },
+      );
+    });
 
-    const workspaceId = entry.workspaceId ?? storage.inlineActiveWorkspaceId ?? ''
-    const userId = storage.inlineUserId ?? ''
-    if (!looksLikeJwt(accessToken) || !workspaceId) return
+    const workspaceId =
+      entry.workspaceId ?? storage.inlineActiveWorkspaceId ?? "";
+    const userId = storage.inlineUserId ?? "";
+    if (!looksLikeJwt(accessToken) || !workspaceId) return;
 
     // The notes.type column has a CHECK constraint, so every AI action is
     // written as 'ai-summary' and differentiated via tags. UI filters and
     // counts should read tags for fine-grained distinctions.
     const tagMap: Record<HistoryEntryKind, string[]> = {
-      'ai-rephrase':  ['ai', 'rephrase'],
-      'ai-shorten':   ['ai', 'shorten'],
-      'ai-summarize': ['ai', 'summary'],
-      'ai-rewrite':   ['ai', 'rewrite'],
-      'ai-custom':    ['ai', 'custom'],
-      'clip':         ['clip'],
-    }
+      "ai-rephrase": ["ai", "rephrase"],
+      "ai-shorten": ["ai", "shorten"],
+      "ai-summarize": ["ai", "summary"],
+      "ai-rewrite": ["ai", "rewrite"],
+      "ai-custom": ["ai", "custom"],
+      "manual-rewrite": ["manual", "rewrite"],
+      clip: ["clip"],
+    };
 
     const typeMap: Record<HistoryEntryKind, string> = {
-      'ai-rephrase':  'ai-summary',
-      'ai-shorten':   'ai-summary',
-      'ai-summarize': 'ai-summary',
-      'ai-rewrite':   'ai-summary',
-      'ai-custom':    'ai-summary',
-      'clip':         'clip',
-    }
+      "ai-rephrase": "ai-summary",
+      "ai-shorten": "ai-summary",
+      "ai-summarize": "ai-summary",
+      "ai-rewrite": "ai-summary",
+      "ai-custom": "ai-summary",
+      "manual-rewrite": "text",
+      clip: "clip",
+    };
 
     const body = {
       pageUrl: entry.pageUrl ?? pageUrl,
@@ -80,17 +95,30 @@ export async function saveAIResultToHistory(entry: HistoryEntry): Promise<void> 
       content: entry.selection
         ? `> ${entry.selection}\n\n${entry.result}`
         : entry.result,
-    }
+    };
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    headers.Authorization = `Bearer ${accessToken}`
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    headers.Authorization = `Bearer ${accessToken}`;
 
     await fetchViaBackground(`${apiBaseUrl}/api/clip`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify(body),
-    })
+    });
   } catch {
     /* best-effort: a failed history write should never block the UI */
   }
+}
+
+export async function saveManualEditToHistory(
+  originalText: string,
+  manualText: string,
+): Promise<void> {
+  await saveAIResultToHistory({
+    kind: "manual-rewrite",
+    selection: originalText,
+    result: manualText,
+  });
 }
