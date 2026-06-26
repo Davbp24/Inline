@@ -9,6 +9,7 @@
 
 import type { Note } from './types'
 import { stripHtml } from './utils'
+import { formatAiKindLabel, stripMarkdownToPlainText } from './ai-text-format'
 
 const AI_TAG_LABELS: Record<string, string> = {
   rephrase:  'AI rephrase',
@@ -61,11 +62,11 @@ function describeHandwriting(content: string): string {
 }
 
 function stripMarkdownHeaderPrefix(text: string): string {
-  return text
-    .replace(/^\*\*([a-z0-9-]+)\*\*\s*/i, '')
-    .replace(/^>\s*/, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return stripMarkdownToPlainText(
+    text
+      .replace(/^\*\*([a-z0-9-]+)\*\*\s*/i, '')
+      .replace(/^>\s*/, ''),
+  )
 }
 
 /**
@@ -99,7 +100,7 @@ export function prettyNotePreview(note: Pick<Note, 'content' | 'type' | 'tags' |
   const featureLabel = tags
     .map(t => FEATURE_TAG_LABELS[t])
     .find(Boolean)
-  const body = stripHtml(raw).replace(/\s+/g, ' ').trim()
+  const body = stripMarkdownToPlainText(stripHtml(raw))
 
   if (!body) return featureLabel ?? note.domain ?? 'Capture'
   if (featureLabel && featureLabel !== 'Clip') return `${featureLabel}: ${body}`

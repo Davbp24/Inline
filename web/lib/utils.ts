@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { stripMarkdownToPlainText } from './ai-text-format'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -42,13 +43,7 @@ export function stripHtml(html: string): string {
     }
   }
 
-  // Strip common markdown decorations so previews read as plain sentences.
-  out = out
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/^#{1,6}\s*/gm, '')
-    .replace(/^>\s*/gm, '')
-    .replace(/`([^`]+)`/g, '$1')
+  out = stripMarkdownToPlainText(out)
 
   return out.replace(/\s+/g, ' ').trim()
 }

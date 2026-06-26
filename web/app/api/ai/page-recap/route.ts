@@ -148,7 +148,7 @@ export async function POST(request: Request) {
         const body = (n.content ?? '').trim()
         const stamp = new Date(n.updated_at ?? n.created_at).toLocaleString()
         const bullet = body ? body.replace(/\n+/g, ' ').slice(0, 500) : '_empty_'
-        return `- **${stamp}** — ${bullet}`
+        return `- ${stamp} — ${bullet}`
       }).join('\n')
       return `## ${heading}\n\n${rows}`
     })

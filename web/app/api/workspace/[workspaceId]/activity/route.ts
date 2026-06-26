@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAndUserFromRequest } from '@/lib/ai-key'
+import { stripMarkdownToPlainText } from '@/lib/ai-text-format'
 
 export async function GET(
   request: Request,
@@ -44,7 +45,9 @@ export async function GET(
       label:    n.page_title || n.domain || 'Untitled',
       sub:      n.domain,
       type:     n.type,
-      snippet:  typeof n.content === 'string' ? n.content.slice(0, 120) : '',
+      snippet:  typeof n.content === 'string'
+        ? stripMarkdownToPlainText(n.content).slice(0, 120)
+        : '',
       time:     n.created_at,
     })),
     ...exs.map(e => ({
