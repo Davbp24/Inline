@@ -71,7 +71,7 @@ export default function DocumentSideRail({
 
   return (
     <aside
-      className="flex h-full w-[min(100vw-2rem,280px)] shrink-0 flex-col border-l border-border/40 bg-card"
+      className="flex h-full w-[min(100vw-2rem,400px)] shrink-0 flex-col border-l border-border/40 bg-card"
       aria-label={title}
     >
       <div className="shrink-0 px-3 pt-2.5 pb-2">
@@ -117,7 +117,7 @@ export default function DocumentSideRail({
       </div>
 
       {footer && (
-        <div className="shrink-0 bg-muted/20">
+        <div className="shrink-0 border-t border-border/40 bg-card">
           {footer}
         </div>
       )}

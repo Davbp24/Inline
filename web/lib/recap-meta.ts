@@ -23,7 +23,7 @@ export interface RecapStats {
   typeBreakdown: Record<string, number>
 }
 
-export type RecapInsightKind = 'stale' | 'new-captures' | 'ai-summary' | 'duplicate-context' | 'thin'
+export type RecapInsightKind = 'stale' | 'new-captures' | 'duplicate-context' | 'thin'
 
 export interface RecapInsight {
   id: string
@@ -109,34 +109,12 @@ export function buildRecapInsights(doc: FolderDocument, notes: Note[]): RecapIns
     return ts > acc ? ts : acc
   }, 0)
 
-  if (doc.recapStale) {
+  if (doc.recapStale && newestNoteMs > doc.updatedAt) {
     insights.push({
-      id: 'stale',
-      kind: 'stale',
-      title: 'Recap edited manually',
-      body: 'Your edits are preserved. Regenerate to merge in new captures from the source page.',
-    })
-    if (newestNoteMs > doc.updatedAt) {
-      insights.push({
-        id: 'new-captures',
-        kind: 'new-captures',
-        title: 'New captures available',
-        body: 'There are captures on the source page that are not reflected in this recap.',
-      })
-    }
-  }
-
-  const aiNote = [...notes]
-    .filter(n => n.type === 'ai-summary' || captureTypeSlug(n) === 'ai')
-    .sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())[0]
-
-  if (aiNote) {
-    const snippet = (aiNote.content ?? '').replace(/<[^>]+>/g, ' ').trim().slice(0, 160)
-    insights.push({
-      id: 'ai-summary',
-      kind: 'ai-summary',
-      title: 'Page summary',
-      body: snippet ? `${snippet}${snippet.length >= 160 ? '…' : ''}` : 'An AI summary exists for this page.',
+      id: 'new-captures',
+      kind: 'new-captures',
+      title: 'New captures available',
+      body: 'There are captures on the source page that are not reflected in this recap.',
     })
   }
 
