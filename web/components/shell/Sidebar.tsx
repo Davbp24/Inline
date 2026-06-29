@@ -8,7 +8,7 @@ import {
   Search, Plus, UserPlus, Zap, Megaphone, Package, TrendingUp,
   FolderKanban, Lightbulb, Star, X, Check, PanelLeftClose,
   ChevronDown, BarChart2, Folder, FolderPlus, ChevronRight,
-  FileText, FilePlus, GripVertical, RefreshCw, Gauge,
+  FileText, FilePlus, GripVertical, RefreshCw,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
@@ -61,7 +61,6 @@ const FEATURES = [
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'dashboard'), icon: LayoutDashboard, label: 'Home', guideId: 'nav-home' },
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'history'), icon: Clock, label: 'Captures', guideId: 'nav-captures' },
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'analytics'), icon: BarChart2, label: 'Analytics', guideId: 'nav-analytics' },
-  { href: (ws: WorkspaceItem) => workspacePath(ws, 'usage'), icon: Gauge, label: 'Usage', guideId: 'nav-usage' },
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'settings'), icon: Settings, label: 'Settings', guideId: 'nav-settings' },
 ]
 

@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAndUserFromRequest } from '@/lib/ai-key'
-import { runAgentPipeline } from '@/lib/ai/agents/orchestrator'
+import { runAgentGraph } from '@/lib/ai/graph'
 import { logAgentRun, totalUsage } from '@/lib/ai/agents/persistence'
 import { AGENT_INTENTS, type AgentContext, type AgentIntent } from '@/lib/ai/agents/types'
 
 /**
- * POST /api/ai/route — the multi-agent coordinator endpoint.
+ * POST /api/ai/route — the multi-agent coordinator endpoint (LangGraph).
  *
  * Body:
  *   { userPrompt, selectedText?, pageUrl?, pageTitle?, pageContent?,
- *     workspaceId?, intent?, confirm?, params?, surface? }
+ *     workspaceId?, intent?, confirm?, params?, surface?, threadId? }
  *
- * Flow: auth -> router picks an intent -> the matching agent runs (reusing the
- * existing RAG pipeline) -> evaluator pass -> run + usage persisted -> JSON.
+ * Flow: auth -> LangGraph (router -> agent -> evaluate, with a human-in-the-loop
+ * interrupt on state-changing actions) -> run + usage persisted -> JSON.
+ *
+ * Human-in-the-loop: a state-changing request without `confirm: true` pauses and
+ * returns `{ needsConfirmation: true, threadId, interrupt }`. Re-POST the same
+ * `threadId` with `confirm: true` to approve (or `confirm: false` to reject) and
+ * the run resumes from the checkpoint.
  */
 
 const MAX_PROMPT_CHARS = 8000
@@ -36,7 +41,12 @@ export async function POST(request: Request) {
   const userPrompt = typeof body.userPrompt === 'string' ? body.userPrompt.slice(0, MAX_PROMPT_CHARS) : ''
   const selectedText = typeof body.selectedText === 'string' ? body.selectedText.slice(0, MAX_PAGE_CHARS) : undefined
 
-  if (!userPrompt.trim() && !selectedText?.trim()) {
+  // A threadId means "resume an interrupted run" (the checkpoint already holds
+  // the original prompt/state), so the prompt/selection requirement is skipped.
+  const threadId = typeof body.threadId === 'string' && body.threadId.trim() ? body.threadId.trim() : undefined
+  const isResume = Boolean(threadId)
+
+  if (!isResume && !userPrompt.trim() && !selectedText?.trim()) {
     return NextResponse.json({ error: 'userPrompt or selectedText is required' }, { status: 400 })
   }
 
@@ -61,8 +71,33 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await runAgentPipeline(ctx)
+    // Resume an interrupted run (confirm:true approves, confirm:false rejects),
+    // otherwise start a fresh run on a new thread.
+    const result = await runAgentGraph(ctx, {
+      threadId,
+      resume: isResume ? (ctx.confirm ? true : { approved: false }) : undefined,
+    })
     const { estCostUsd: _cost, ...usageTotals } = totalUsage(result)
+
+    // Paused for human approval: nothing was executed or logged yet. Surface the
+    // thread id + interrupt so the caller can re-POST with confirm to resume.
+    if (result.interrupt) {
+      return NextResponse.json({
+        runId: null,
+        threadId: result.threadId,
+        needsConfirmation: true,
+        interrupt: result.interrupt,
+        intent: result.intent,
+        routedBy: result.routedBy,
+        agentsUsed: result.agentsUsed,
+        text: result.text,
+        sources: result.sources,
+        actions: result.actions,
+        data: result.data,
+        evaluation: result.evaluation,
+        usage: { ...usageTotals, calls: result.usage },
+      })
+    }
 
     const runId = await logAgentRun(
       /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -84,6 +119,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       runId,
+      threadId: result.threadId,
       intent: result.intent,
       routedBy: result.routedBy,
       agentsUsed: result.agentsUsed,

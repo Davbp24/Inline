@@ -28,11 +28,15 @@ async function main() {
   const hasKey = Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY)
   console.log('GOOGLE_GENERATIVE_AI_API_KEY:', hasKey ? 'set' : 'MISSING')
 
+  const stubSupabase = {
+    from: () => ({ select: () => ({ data: [], error: null }) }),
+  } as unknown as AgentContext['supabase']
+
   const route = await routeIntent({
     userPrompt: 'Is this role a fit for me?',
     workspaceId: 'ws-1',
     userId: 'verify-script',
-    supabase: { from: () => ({ select: () => ({ data: [], error: null }) }) } as AgentContext['supabase'],
+    supabase: stubSupabase,
   })
   console.log('Router career_fit check:', route.intent === 'career_fit' ? 'PASS' : `FAIL (${route.intent})`)
 
@@ -47,7 +51,7 @@ async function main() {
     pageContent: 'We are hiring a software engineer intern with TypeScript, React, and API experience. You will build features with our team.',
     workspaceId: 'ws-1',
     userId: 'verify-script',
-    supabase: { from: () => ({ select: () => ({ data: [], error: null }) }) } as AgentContext['supabase'],
+    supabase: stubSupabase,
     intent: 'career_fit',
   }
 
@@ -58,7 +62,7 @@ async function main() {
   console.log('Eval pass:', result.evaluation.pass)
   console.log('Output preview:', result.text.slice(0, 200).replace(/\s+/g, ' ') + '…')
   console.log('\nLive agent pipeline: OK')
-  console.log('Note: Usage dashboard only updates after a signed-in /api/ai/route call persists to agent_runs.')
+  console.log('Note: Analytics time saved KPI updates after a signed-in /api/ai/route call persists to agent_runs.')
 }
 
 main().catch(err => {

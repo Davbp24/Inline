@@ -9,10 +9,11 @@ import {
   PieChart, Pie, Cell, AreaChart, Area,
 } from 'recharts'
 import type { DashboardStats } from '@/lib/types'
+import { formatMinutes } from '@/lib/format-minutes'
 import { cn } from '@/lib/utils'
 import {
   TrendingUp, TrendingDown, BookMarked, Globe, BrainCircuit, Flame,
-  Pencil, Highlighter, Anchor,
+  Pencil, Highlighter, Anchor, Clock,
 } from 'lucide-react'
 
 interface TimeSeries { date: string; count: number; ai: number }
@@ -21,6 +22,7 @@ interface Props {
   timeSeries30: TimeSeries[]
   timeSeries7:  TimeSeries[]
   workspaceId:  string
+  minutesSaved: number
 }
 
 const CHART_COLORS = {
@@ -114,7 +116,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 // ---------------------------------------------------------------------------
 // Main charts component
 // ---------------------------------------------------------------------------
-export default function AnalyticsCharts({ stats, timeSeries30, timeSeries7 }: Props) {
+export default function AnalyticsCharts({ stats, timeSeries30, timeSeries7, minutesSaved }: Props) {
   const [period, setPeriod] = useState<Period>('30d')
 
   const series = period === '7d' ? timeSeries7 : timeSeries30
@@ -155,6 +157,18 @@ export default function AnalyticsCharts({ stats, timeSeries30, timeSeries7 }: Pr
 
   return (
     <div className="space-y-6">
+      <section className="space-y-2">
+        <StatChip
+          label="Time saved (est.)"
+          value={formatMinutes(minutesSaved)}
+          icon={Clock}
+          iconColor="text-emerald-500"
+        />
+        <p className="px-1 text-[11px] text-muted-foreground">
+          Estimate based on typical task length for each agent run, not measured time.
+        </p>
+      </section>
+
       <div id="activity" className="scroll-mt-28">
         <h2 className="text-base font-semibold text-slate-700 dark:text-white">Activity</h2>
         <p className="text-xs text-slate-400 mt-0.5 max-w-2xl dark:text-muted-foreground">

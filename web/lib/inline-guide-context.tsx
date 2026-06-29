@@ -260,6 +260,7 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
       next,
       openChatPanel,
       pause,
+      paused,
       resume,
       skipTour,
       start,

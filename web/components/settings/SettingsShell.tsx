@@ -107,8 +107,8 @@ export default function SettingsShell({
         data-inline-guide="settings-page"
         className="flex w-[248px] shrink-0 flex-col border-r border-border bg-muted/20"
       >
-        <div className="border-b border-border px-4 py-4">
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Settings</h1>
+        <div className="flex h-12 shrink-0 items-center border-b border-border bg-background px-4">
+          <h1 className="text-sm font-semibold tracking-tight text-foreground">Settings</h1>
         </div>
 
         <div className="p-3">
@@ -158,7 +158,7 @@ export default function SettingsShell({
 
       {/* Main settings content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4 md:px-6">
+        <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-2">
             {activeItem && ActiveIcon && (
               <>

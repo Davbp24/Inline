@@ -4,7 +4,7 @@ Inline is a workspace and Chrome extension for capturing, annotating, rewriting,
 
 ## What Is In This Repo
 
-- `web/` - Next.js workspace app, marketing site, dashboard, document editor, library, history, analytics, settings, AI API routes, and the multi-agent AI system (`web/lib/ai/`).
+- `web/` - Next.js workspace app, marketing site, dashboard, document editor, library, history, analytics, settings, AI API routes, and the multi-agent AI system (`web/lib/ai/`) orchestrated with LangGraph on top of the Vercel AI SDK.
 - `backend/` - Express API used by the extension for annotation persistence.
 - `inlineExtension/` - Chrome extension built with React and Vite. It injects the Inline dock, selection tools, AI panels, notes, drawings, handwriting, stamps, search, layers, sharing, and browser-page overlays.
 - `supabase/` - Database migrations for extension persistence, workspace data, RAG/search support, and agent run/usage logging.
@@ -19,38 +19,45 @@ Inline is a workspace and Chrome extension for capturing, annotating, rewriting,
 
 ## Multi-Agent AI Architecture
 
-Inline's AI is a lightweight, provider-agnostic multi-agent system written entirely in TypeScript inside `web/`. A router classifies each request, a specialized agent handles it (reusing the existing RAG pipeline), an evaluator checks the output, and every run is persisted with token/latency metrics so a usage dashboard can surface adoption and value.
+Inline's AI is a provider-agnostic multi-agent system written entirely in TypeScript inside `web/`. Two frameworks split the work:
+
+- **LangGraph (`@langchain/langgraph`)** is the agent-orchestration layer: a compiled `StateGraph` routes each request, runs the matching agent, applies an evaluator guardrail, and can pause on a human-in-the-loop interrupt for state-changing actions. State is checkpointed so a paused run can resume.
+- **Vercel AI SDK (`ai` + `@ai-sdk/*`)** is the model/product layer: every model call inside a graph node goes through the SDK, and the dashboard/extension UIs stream responses with it.
+
+A router classifies each request, a specialized agent handles it (reusing the existing RAG pipeline), the evaluator checks the output, and every completed run is persisted with token/latency metrics for internal logging and the Analytics time-saved KPI.
 
 ```mermaid
-flowchart TB
+flowchart TD
   client["Extension / Dashboard"] --> routeApi["POST /api/ai/route"]
-  routeApi --> router["Router agent (intent)"]
-  router --> research["Research agent"]
-  router --> memory["Memory agent (RAG)"]
-  router --> rewrite["Rewrite agent"]
-  router --> action["Action agent (gated)"]
-  router --> fit["Fit agent (composite)"]
-  research --> evaluator["Evaluator agent"]
-  memory --> evaluator
-  rewrite --> evaluator
-  fit --> evaluator
+  routeApi --> graph["LangGraph StateGraph (checkpointed)"]
+  graph --> router["router node (routeIntent)"]
+  router -->|"read-only intents"| agent["agent node (research / memory / rewrite / fit)"]
+  router -->|"save_memory / action"| approval["approval node (interrupt if not confirmed)"]
+  approval -->|approved| actionNode["action node (gated mutation)"]
+  approval -->|rejected| evaluator
+  agent --> evaluator["evaluator node (guardrail + judge)"]
+  actionNode --> evaluator
   evaluator --> persist["agent_runs + ai_usage_events"]
-  persist --> resp["Response"]
+  persist --> resp["Response (+ threadId)"]
 ```
 
 ### Components
 
-- Provider layer (`web/lib/ai/providers/`): `getModel({ role })` resolves a model across Gemini / OpenAI / Anthropic with a Gemini fallback; every model id is env-overridable.
+- Graph (`web/lib/ai/graph/`): `state.ts` (the `Annotation.Root` state), `nodes.ts` (router / agent / approval / action / evaluator wrappers + conditional edge routers), and `index.ts` (the compiled `StateGraph` with a `MemorySaver` checkpointer and the `runAgentGraph` entry point).
+- Provider layer (`web/lib/ai/providers/`): `getModel({ role })` resolves a Vercel AI SDK model across Gemini / OpenAI / Anthropic with a Gemini fallback; every model id is env-overridable.
 - Router (`web/lib/ai/agents/routerAgent.ts`): explicit intent wins, then a fast LLM classifier, then keyword heuristics.
-- Agents (`web/lib/ai/agents/`): `research`, `memory` (RAG), `rewrite`, `action` (state-changing, confirmation-gated), `fit` (composite role-fit), and `evaluator` (guardrail).
+- Agents (`web/lib/ai/agents/`): `research`, `memory` (RAG), `rewrite`, `action` (state-changing, confirmation-gated), `fit` (composite role-fit), and `evaluator` (guardrail). The graph nodes call these unchanged; `orchestrator.ts` stays as a thin `runAgentPipeline` wrapper over `runAgentGraph` for the automations and scripts.
 - Tools (`web/lib/ai/tools/`): `searchMemories` (RAG), `getRecentNotes`, `saveNote`, `getCurrentPage`, `exportToNotion`.
-- Orchestrator (`web/lib/ai/agents/orchestrator.ts`): route -> run -> evaluate -> aggregate usage.
 
 ### Endpoints
 
-- `POST /api/ai/route` - the coordinator. Body: `{ userPrompt, selectedText?, pageUrl?, pageTitle?, pageContent?, workspaceId?, intent?, confirm?, params?, surface? }`.
+- `POST /api/ai/route` - the coordinator (runs the LangGraph workflow). Body: `{ userPrompt, selectedText?, pageUrl?, pageTitle?, pageContent?, workspaceId?, intent?, confirm?, params?, surface?, threadId? }`. Responses include `threadId`; a paused action returns `{ needsConfirmation: true, threadId, interrupt }`.
 - `POST /api/automation/internship` - the Internship Tracker automation (career-fit + structured extraction + optional Notion export + logged run).
 - `GET/POST/DELETE /api/integrations/notion` - connect / test / disconnect a Notion database.
+
+### Human-in-the-loop and checkpointing
+
+State-changing intents (`save_memory`, `action`) route through an approval node. If the caller did not pass `confirm: true`, the graph calls LangGraph's `interrupt()` and pauses; `/api/ai/route` returns `{ needsConfirmation: true, threadId, interrupt }` and nothing is mutated or logged. Re-POST the same `threadId` with `confirm: true` to approve (or `confirm: false` to reject) and the run resumes from the checkpoint. The legacy one-shot path still works: a request with `confirm: true` runs straight through without interrupting. Checkpointing uses an in-memory `MemorySaver` (per server process); a durable Postgres/Supabase checkpointer - so interrupts survive restarts and multiple instances - is a planned follow-up.
 
 ### RAG (reused)
 
@@ -60,9 +67,9 @@ Agents reuse the existing pipeline in `web/lib/ai/rag/`: `workspace_embeddings` 
 
 `supabase/migrations/2026_06_28_agents.sql` adds `agent_runs`, `ai_usage_events`, `agent_sessions`, `agent_messages`, `integration_connections`, and `automation_runs` - all owner-only via RLS.
 
-### Usage dashboard
+### Analytics time saved
 
-`/app/<workspace>/usage` (sidebar -> Usage) shows runs by agent, token usage, time saved, evaluation pass rate, and runs grouped by activity category.
+`/app/<workspace>/analytics` (sidebar -> Analytics, Charts tab) shows an estimated **Time saved** KPI derived from completed agent runs in `agent_runs`. The legacy `/usage` route redirects to Analytics.
 
 ### Evals
 
@@ -77,7 +84,9 @@ Agents reuse the existing pipeline in `web/lib/ai/rag/`: `workspace_embeddings` 
 
 ### Demo: "Is this role a fit?"
 
-On any job posting, open the extension AI panel and choose "Is this role a fit?". The fit agent extracts the role requirements, the memory agent retrieves your saved background, and the evaluator checks the grounded result - the same flow the Internship Tracker automation runs and logs.
+On any job posting, open the extension AI panel and choose "Is this role a fit?". The request runs through the LangGraph workflow: the fit agent extracts the role requirements, the memory agent retrieves your saved background, and the evaluator checks the grounded result - the same flow the Internship Tracker automation runs and logs.
+
+In short: LangGraph orchestrates a stateful workflow with conditional tool routing and human-in-the-loop review, while the Vercel AI SDK handles model calls and the streaming product UI on top of it.
 
 ## Local Development
 

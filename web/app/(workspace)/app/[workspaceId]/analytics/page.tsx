@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import PageHeader from '@/components/shell/PageHeader'
 import { getWorkspaceName } from '@/lib/workspaces'
 import { resolveWorkspaceId, workspacePath } from '@/lib/workspace-routes'
-import { fetchDashboardStats, fetchCaptureTimeSeries } from '@/lib/data'
+import { fetchDashboardStats, fetchCaptureTimeSeries, fetchAgentMinutesSaved } from '@/lib/data'
 import AnalyticsCharts from '@/components/analytics/AnalyticsCharts'
 import AnalyticsPageClient from '@/components/analytics/AnalyticsPageClient'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,10 +11,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 export const metadata: Metadata = { title: 'Analytics' }
 
 async function AnalyticsData({ workspaceId }: { workspaceId: string }) {
-  const [stats, timeSeries30, timeSeries7] = await Promise.all([
+  const [stats, timeSeries30, timeSeries7, minutesSaved] = await Promise.all([
     fetchDashboardStats(workspaceId),
     fetchCaptureTimeSeries(workspaceId, 30),
     fetchCaptureTimeSeries(workspaceId, 7),
+    fetchAgentMinutesSaved(workspaceId),
   ])
 
   return (
@@ -23,6 +24,7 @@ async function AnalyticsData({ workspaceId }: { workspaceId: string }) {
       timeSeries30={timeSeries30}
       timeSeries7={timeSeries7}
       workspaceId={workspaceId}
+      minutesSaved={minutesSaved}
     />
   )
 }
