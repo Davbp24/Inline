@@ -178,7 +178,7 @@ ${docsContext ? `# Library documents provided by the user\n${docsContext}` : ''}
           const body = (err as { responseBody?: string })?.responseBody ?? ''
           let msg = 'The AI service failed to respond. Please try again shortly.'
           if (status === 429) {
-            msg = 'The AI quota for this workspace is exhausted. Please try again later or check the server AI key billing.'
+            msg = 'Inline AI is busy right now. Please try again in a few minutes.'
           } else if (status === 403) {
             msg = 'The AI provider rejected the request. The server API key may be restricted.'
           } else if (status === 400 && body.includes('API key not valid')) {
@@ -205,7 +205,7 @@ ${docsContext ? `# Library documents provided by the user\n${docsContext}` : ''}
     const status = (err as { statusCode?: number }).statusCode
     if (status === 429) {
       return NextResponse.json(
-        { error: 'AI quota exhausted — please try again later.' },
+        { error: 'Inline AI is busy right now. Please try again in a few minutes.' },
         { status: 429 },
       )
     }

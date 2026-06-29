@@ -22,13 +22,13 @@ import {
   Check, Download, Loader2, AlertTriangle,
   Crown, ArrowRight, Folder, ArchiveRestore,
   UserRound, FolderTree, UsersRound, Bell, Database, Trash2,
-  Palette, MessageCircle, Puzzle,
+  Palette, MessageCircle, Puzzle, Plug, ExternalLink,
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Types & constants
 // ---------------------------------------------------------------------------
-type Tab = 'identity' | 'library' | 'members' | 'notifications' | 'data' | 'danger'
+type Tab = 'identity' | 'library' | 'members' | 'notifications' | 'data' | 'integrations' | 'danger'
 
 const SECTION_DESCRIPTIONS: Record<Tab, string> = {
   identity: 'Customize your workspace name, icon, and accent color.',
@@ -36,6 +36,7 @@ const SECTION_DESCRIPTIONS: Record<Tab, string> = {
   members: 'Manage who has access to this workspace.',
   notifications: 'Choose which workspace events trigger notifications.',
   data: 'Export captures or import data into this workspace.',
+  integrations: 'Connect external tools so agents can export your work.',
   danger: 'Archive or permanently delete this workspace.',
 }
 
@@ -552,6 +553,169 @@ function NotificationsTab() {
 }
 
 // ---------------------------------------------------------------------------
+// Integrations Tab — connect Notion so agents/automations can export work.
+// ---------------------------------------------------------------------------
+function IntegrationsTab({ workspaceId }: { workspaceId: string }) {
+  const [loading, setLoading] = useState(true)
+  const [connected, setConnected] = useState(false)
+  const [notionWorkspace, setNotionWorkspace] = useState<string | null>(null)
+  const [savedDbId, setSavedDbId] = useState<string | null>(null)
+  const [token, setToken] = useState('')
+  const [databaseId, setDatabaseId] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    fetch(`/api/integrations/notion?workspaceId=${encodeURIComponent(workspaceId)}`)
+      .then(r => (r.ok ? r.json() : { connected: false }))
+      .then(d => {
+        if (!active) return
+        setConnected(Boolean(d.connected))
+        setNotionWorkspace(d.workspaceName ?? null)
+        setSavedDbId(d.databaseId ?? null)
+        if (d.databaseId) setDatabaseId(d.databaseId)
+      })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [workspaceId])
+
+  async function handleConnect() {
+    setBusy(true); setError(null)
+    try {
+      const res = await fetch('/api/integrations/notion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId, token: token.trim(), databaseId: databaseId.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Connection failed'); return }
+      setConnected(true)
+      setNotionWorkspace(data.workspaceName ?? null)
+      setSavedDbId(data.databaseId ?? null)
+      setToken('')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch {
+      setError('Connection failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleDisconnect() {
+    setBusy(true); setError(null)
+    try {
+      await fetch(`/api/integrations/notion?workspaceId=${encodeURIComponent(workspaceId)}`, { method: 'DELETE' })
+      setConnected(false)
+      setNotionWorkspace(null)
+      setSavedDbId(null)
+      setDatabaseId('')
+      setToken('')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      <SettingsSection
+        title="Notion"
+        description="Push captures, recaps, and role analyses into a Notion database. Agents and the Internship Tracker use this connection to export structured records."
+      >
+        {loading ? (
+          <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
+          </div>
+        ) : (
+          <>
+            <SettingsRow label="Status">
+              {connected ? (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+                  <Check className="w-3.5 h-3.5" />
+                  Connected{notionWorkspace ? ` to ${notionWorkspace}` : ''}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Plug className="w-3.5 h-3.5" /> Not connected
+                </span>
+              )}
+            </SettingsRow>
+
+            <SettingsRow
+              label="Integration token"
+              hint="Create an internal integration at notion.so/my-integrations, then paste its secret here. Stored server-side."
+            >
+              <Input
+                type="password"
+                value={token}
+                onChange={e => setToken(e.target.value)}
+                placeholder={connected ? '•••••••• (saved)' : 'secret_…'}
+                autoComplete="off"
+              />
+            </SettingsRow>
+
+            <SettingsRow
+              label="Database ID"
+              hint="Share a Notion database with your integration, then paste the database ID from its URL."
+            >
+              <Input
+                value={databaseId}
+                onChange={e => setDatabaseId(e.target.value)}
+                placeholder="e.g. 24f1a2b3c4d5…"
+              />
+            </SettingsRow>
+
+            {error && (
+              <p className="flex items-center gap-1.5 text-xs text-destructive">
+                <AlertTriangle className="w-3.5 h-3.5" /> {error}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <SaveBadge saved={saved} />
+              <div className="flex items-center gap-2 ml-auto">
+                {connected && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="cursor-pointer"
+                    onClick={handleDisconnect}
+                    disabled={busy}
+                  >
+                    Disconnect
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={handleConnect}
+                  disabled={busy || (!token.trim() && !connected) || !databaseId.trim()}
+                >
+                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                  {connected ? 'Update connection' : 'Connect Notion'}
+                </Button>
+              </div>
+            </div>
+
+            <a
+              href="https://developers.notion.com/docs/create-a-notion-integration"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline cursor-pointer"
+            >
+              <ExternalLink className="w-3 h-3" /> How to create a Notion integration
+            </a>
+          </>
+        )}
+      </SettingsSection>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 function WorkspaceSettingsPageInner() {
@@ -567,7 +731,7 @@ function WorkspaceSettingsPageInner() {
 
   useEffect(() => {
     const t = searchParams.get('tab')
-    const valid: Tab[] = ['identity', 'library', 'members', 'notifications', 'data', 'danger']
+    const valid: Tab[] = ['identity', 'library', 'members', 'notifications', 'data', 'integrations', 'danger']
     if (t && valid.includes(t as Tab)) setActiveTab(t as Tab)
   }, [searchParams])
 
@@ -577,6 +741,7 @@ function WorkspaceSettingsPageInner() {
     members:       <MembersTab />,
     notifications: <NotificationsTab />,
     data:          <DataTab workspaceId={workspaceId} />,
+    integrations:  <IntegrationsTab workspaceId={workspaceId} />,
     danger:        <DangerTab workspaceId={workspaceId} workspaceName={workspaceName} />,
   }
 
@@ -604,6 +769,7 @@ function WorkspaceSettingsPageInner() {
       items: [
         { id: 'notifications', label: 'Workspace notifications', icon: Bell },
         { id: 'data', label: 'Export and import', icon: Database },
+        { id: 'integrations', label: 'Integrations', icon: Plug },
       ],
     },
     {

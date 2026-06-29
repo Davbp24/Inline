@@ -1,0 +1,72 @@
+{
+  "router": [
+    { "id": "router-rewrite", "userPrompt": "Rewrite this to sound more professional", "expectedIntent": "rewrite" },
+    { "id": "router-summarize", "userPrompt": "Summarize this article into key points", "expectedIntent": "summarize" },
+    { "id": "router-memory", "userPrompt": "What did I save about Supabase?", "expectedIntent": "ask_context" },
+    { "id": "router-fit", "userPrompt": "Is this role a fit for me?", "expectedIntent": "career_fit" },
+    { "id": "router-save", "userPrompt": "Save this highlight to my captures", "expectedIntent": "save_memory" }
+  ],
+  "agent": [
+    {
+      "id": "rewrite-grammar",
+      "agent": "rewrite",
+      "context": {
+        "userPrompt": "Fix the grammar and make it professional",
+        "selectedText": "we was hoping you can sent the report to us by friday",
+        "params": { "instruction": "Fix grammar and make it professional" }
+      },
+      "assertions": { "minLength": 10, "mustNotContain": ["we was"] }
+    },
+    {
+      "id": "research-summarize",
+      "agent": "research",
+      "intent": "summarize",
+      "context": {
+        "userPrompt": "Summarize this",
+        "pageTitle": "Photosynthesis",
+        "pageContent": "Photosynthesis is the process by which green plants use sunlight to synthesize foods from carbon dioxide and water. It generally involves the green pigment chlorophyll and generates oxygen as a byproduct."
+      },
+      "assertions": { "minLength": 20 }
+    }
+  ],
+  "evaluator": [
+    {
+      "id": "eval-bad-citation",
+      "context": { "userPrompt": "What did I save?" },
+      "result": {
+        "agent": "memory",
+        "text": "You saved several notes about this [3].",
+        "sources": [
+          { "ref": 1, "sourceType": "note", "sourceId": "n1", "pageUrl": null, "pageTitle": "Note", "domain": null, "snippet": "a saved note", "similarity": 0.9 }
+        ]
+      },
+      "expectPass": false
+    },
+    {
+      "id": "eval-clean-answer",
+      "context": { "userPrompt": "Explain this" },
+      "result": { "agent": "research", "text": "Here is a clear, grounded explanation of the topic.", "sources": [] },
+      "expectPass": true
+    },
+    {
+      "id": "eval-unconfirmed-action",
+      "context": { "userPrompt": "Save this", "confirm": false },
+      "result": {
+        "agent": "action",
+        "text": "Saved.",
+        "actions": [{ "type": "save_note", "status": "completed" }]
+      },
+      "expectPass": false
+    },
+    {
+      "id": "eval-confirmed-action",
+      "context": { "userPrompt": "Save this", "confirm": true },
+      "result": {
+        "agent": "action",
+        "text": "Saved to your captures.",
+        "actions": [{ "type": "save_note", "status": "completed" }]
+      },
+      "expectPass": true
+    }
+  ]
+}

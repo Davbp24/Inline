@@ -1,0 +1,76 @@
+{
+  "ranAt": "2026-06-29T01:30:46.078Z",
+  "summary": {
+    "pass": 9,
+    "fail": 0,
+    "skip": 2
+  },
+  "results": [
+    {
+      "id": "router-rewrite",
+      "kind": "router",
+      "status": "pass",
+      "detail": "→ rewrite (keyword)"
+    },
+    {
+      "id": "router-summarize",
+      "kind": "router",
+      "status": "pass",
+      "detail": "→ summarize (keyword)"
+    },
+    {
+      "id": "router-memory",
+      "kind": "router",
+      "status": "pass",
+      "detail": "→ ask_context (keyword)"
+    },
+    {
+      "id": "router-fit",
+      "kind": "router",
+      "status": "pass",
+      "detail": "→ career_fit (keyword)"
+    },
+    {
+      "id": "router-save",
+      "kind": "router",
+      "status": "pass",
+      "detail": "→ save_memory (keyword)"
+    },
+    {
+      "id": "eval-bad-citation",
+      "kind": "evaluator",
+      "status": "pass",
+      "detail": "pass=false (cited nonexistent source(s): 3)"
+    },
+    {
+      "id": "eval-clean-answer",
+      "kind": "evaluator",
+      "status": "pass",
+      "detail": "pass=true (ok)"
+    },
+    {
+      "id": "eval-unconfirmed-action",
+      "kind": "evaluator",
+      "status": "pass",
+      "detail": "pass=false (action completed without confirmation)"
+    },
+    {
+      "id": "eval-confirmed-action",
+      "kind": "evaluator",
+      "status": "pass",
+      "detail": "pass=true (ok)"
+    },
+    {
+      "id": "rewrite-grammar",
+      "kind": "agent",
+      "status": "skip",
+      "detail": "no AI key — skipped"
+    },
+    {
+      "id": "research-summarize",
+      "kind": "agent",
+      "status": "skip",
+      "detail": "no AI key — skipped"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   motion,
@@ -18,9 +18,13 @@ const EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
 const ROTATING_WORDS = ['Memory', 'Highlights', 'Notes', 'Captures', 'Context', 'Answers']
 const WORD_INTERVAL_MS = 4200
+const WIDTH_MS = 0.55
+const FADE_MS = 0.45
 
 function HeroRotatingWord({ paused }: { paused: boolean }) {
   const [index, setIndex] = useState(0)
+  const measureRef = useRef<HTMLSpanElement>(null)
+  const [wordWidth, setWordWidth] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (paused) return
@@ -30,27 +34,63 @@ function HeroRotatingWord({ paused }: { paused: boolean }) {
     return () => window.clearInterval(id)
   }, [paused])
 
-  const word = ROTATING_WORDS[index]
+  const word = ROTATING_WORDS[index]!
+  const displayWord = paused ? ROTATING_WORDS[0]! : word
+
+  const measureWidth = useCallback(() => {
+    const el = measureRef.current
+    if (!el) return
+    const width = el.getBoundingClientRect().width
+    if (width > 0) setWordWidth(width)
+  }, [displayWord])
+
+  useLayoutEffect(() => {
+    measureWidth()
+  }, [measureWidth])
+
+  useEffect(() => {
+    window.addEventListener('resize', measureWidth)
+    return () => window.removeEventListener('resize', measureWidth)
+  }, [measureWidth])
 
   return (
-    <motion.span layout className="inline-block align-baseline" aria-live="polite">
-      {paused ? (
-        <span>{ROTATING_WORDS[0]}</span>
-      ) : (
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={word}
-            layout
-            className="inline-block align-baseline sm:whitespace-nowrap"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: EASE }}
-          >
-            {word}
-          </motion.span>
-        </AnimatePresence>
-      )}
+    <motion.span
+      aria-live="polite"
+      className="relative inline-block align-baseline overflow-hidden whitespace-nowrap"
+      initial={false}
+      animate={wordWidth !== undefined ? { width: wordWidth } : undefined}
+      style={wordWidth === undefined ? { width: 'auto' } : undefined}
+      transition={
+        paused || wordWidth === undefined
+          ? { duration: 0 }
+          : { duration: WIDTH_MS, ease: EASE }
+      }
+    >
+      <span
+        ref={measureRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 whitespace-nowrap opacity-0"
+      >
+        {displayWord}
+      </span>
+      <span className="inline-block text-right whitespace-nowrap">
+        {paused ? (
+          displayWord
+        ) : (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={word}
+              className="inline-block whitespace-nowrap"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: FADE_MS, ease: EASE }}
+            >
+              {word}
+            </motion.span>
+          </AnimatePresence>
+        )}
+      </span>
     </motion.span>
   )
 }
@@ -93,10 +133,12 @@ export default function Hero() {
         <div className="relative min-h-0 max-w-3xl shrink">
           <motion.h1
             {...fade(0.1)}
-            layout
-            className="text-balance text-center text-[2.125rem] font-semibold leading-[1.08] tracking-tight text-[#1C1E26] sm:text-6xl md:text-[4.5rem]"
+            className="text-center text-[2.125rem] font-semibold leading-[1.08] tracking-tight text-[#1C1E26] sm:text-6xl md:text-[4.5rem]"
           >
-            <HeroRotatingWord paused={!!reduce} /> for the web.
+            <span className="inline-flex flex-nowrap items-baseline justify-center gap-x-[0.25em] whitespace-nowrap">
+              <HeroRotatingWord paused={!!reduce} />
+              <span>for the web.</span>
+            </span>
           </motion.h1>
 
           <motion.p

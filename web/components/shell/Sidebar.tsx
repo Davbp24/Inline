@@ -8,7 +8,7 @@ import {
   Search, Plus, UserPlus, Zap, Megaphone, Package, TrendingUp,
   FolderKanban, Lightbulb, Star, X, Check, PanelLeftClose,
   ChevronDown, BarChart2, Folder, FolderPlus, ChevronRight,
-  FileText, FilePlus, GripVertical, RefreshCw,
+  FileText, FilePlus, GripVertical, RefreshCw, Gauge,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
@@ -61,6 +61,7 @@ const FEATURES = [
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'dashboard'), icon: LayoutDashboard, label: 'Home', guideId: 'nav-home' },
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'history'), icon: Clock, label: 'Captures', guideId: 'nav-captures' },
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'analytics'), icon: BarChart2, label: 'Analytics', guideId: 'nav-analytics' },
+  { href: (ws: WorkspaceItem) => workspacePath(ws, 'usage'), icon: Gauge, label: 'Usage', guideId: 'nav-usage' },
   { href: (ws: WorkspaceItem) => workspacePath(ws, 'settings'), icon: Settings, label: 'Settings', guideId: 'nav-settings' },
 ]
 
@@ -446,7 +447,7 @@ function SidebarFolderNode({
 // ---------------------------------------------------------------------------
 // Main Sidebar
 // ---------------------------------------------------------------------------
-export default function Sidebar() {
+export default function Sidebar({ settingsMode = false }: { settingsMode?: boolean }) {
   const router = useRouter()
   const { collapsed, setCollapsed } = useSidebar()
   const [workspaces,         setWorkspaces]         = useState<WorkspaceItem[]>(DEFAULT_WORKSPACES)
@@ -469,6 +470,13 @@ export default function Sidebar() {
   const newSubfolderRef = useRef<HTMLInputElement>(null)
   const pathname     = usePathname()
   const activeWsId   = getActiveWorkspaceId(pathname, workspaces)
+
+  /** On settings pages the app nav stays permanently collapsed beside the settings nav. */
+  useEffect(() => {
+    if (settingsMode) setCollapsed(true)
+  }, [settingsMode, setCollapsed])
+
+  const effectiveCollapsed = settingsMode ? true : collapsed
 
   // Accordion expanded state per section
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -726,27 +734,45 @@ export default function Sidebar() {
   return (
     <>
       <motion.aside
-        animate={{ width: collapsed ? 60 : 228 }}
-        transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-        style={{ willChange: 'width' }}
+        animate={{ width: effectiveCollapsed ? 60 : 228 }}
+        transition={settingsMode ? { duration: 0 } : { duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+        style={{ willChange: settingsMode ? undefined : 'width' }}
         className="relative h-screen flex flex-col bg-[#FDFBF7] border-r border-stone-200/60 overflow-hidden shrink-0 select-none dark:bg-sidebar dark:border-sidebar-border"
       >
         {/* ── Workspace switcher + sidebar collapse ── */}
         <div
           className={cn(
             'flex h-[52px] shrink-0 items-center border-b border-stone-200 dark:border-sidebar-border',
-            collapsed ? 'justify-center px-0' : 'gap-1.5 px-2',
+            effectiveCollapsed ? 'justify-center px-0' : 'gap-1.5 px-2',
           )}
         >
-          {collapsed ? (
-            <button
-              type="button"
-              onClick={() => setCollapsed(false)}
-              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-muted-foreground dark:hover:bg-sidebar-accent dark:hover:text-foreground"
-              title="Expand sidebar"
-            >
-              <PanelLeftClose className="h-4 w-4 rotate-180" />
-            </button>
+          {effectiveCollapsed ? (
+            settingsMode && activeWorkspace ? (
+              <DropdownMenu onOpenChange={open => { if (!open) setCreatingWorkspaceInMenu(false) }}>
+                <DropdownMenuTrigger
+                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md outline-none transition-colors hover:bg-stone-100 dark:hover:bg-sidebar-accent"
+                  aria-label="Switch workspace"
+                >
+                  <WorkspaceIcon ws={activeWorkspace} size="sm" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={6}
+                  className="w-[min(280px,calc(100vw-24px))] rounded-lg border border-border bg-card p-0 shadow-[0_22px_70px_-42px_rgba(28,30,38,0.38)]"
+                >
+                  {workspaceMenuContent}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setCollapsed(false)}
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-muted-foreground dark:hover:bg-sidebar-accent dark:hover:text-foreground"
+                title="Expand sidebar"
+              >
+                <PanelLeftClose className="h-4 w-4 rotate-180" />
+              </button>
+            )
           ) : (
             <>
               {activeWorkspace && (
@@ -770,21 +796,23 @@ export default function Sidebar() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              <button
-                type="button"
-                onClick={() => setCollapsed(true)}
-                className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-muted-foreground dark:hover:bg-sidebar-accent dark:hover:text-foreground"
-                title="Collapse sidebar"
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </button>
+              {!settingsMode && (
+                <button
+                  type="button"
+                  onClick={() => setCollapsed(true)}
+                  className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-muted-foreground dark:hover:bg-sidebar-accent dark:hover:text-foreground"
+                  title="Collapse sidebar"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </button>
+              )}
             </>
           )}
         </div>
 
         {/* ── Search ── */}
-        <div className={cn('px-2 pt-3 pb-1 shrink-0', collapsed && 'flex justify-center')}>
-          {collapsed ? (
+        <div className={cn('px-2 pt-3 pb-1 shrink-0', effectiveCollapsed && 'flex justify-center')}>
+          {effectiveCollapsed ? (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('inline-open-cmd'))}
               className="w-10 h-10 aspect-square rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer dark:hover:bg-sidebar-accent dark:hover:text-foreground"
@@ -811,14 +839,14 @@ export default function Sidebar() {
           {/* Favorites — collapsible */}
           {favoritedWorkspaces.length > 0 && (
             <>
-              <SectionLabel label="Favorites" collapsed={collapsed} expanded={expandedSections.favorites} onToggle={() => toggleSection('favorites')} />
+              <SectionLabel label="Favorites" collapsed={effectiveCollapsed} expanded={expandedSections.favorites} onToggle={() => toggleSection('favorites')} />
               <nav className="flex flex-col gap-0.5 mt-0.5 overflow-hidden transition-[max-height,opacity] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
-                style={{ maxHeight: (!collapsed && expandedSections.favorites) ? 400 : 0, opacity: (!collapsed && expandedSections.favorites) ? 1 : 0 }}>
+                style={{ maxHeight: (!effectiveCollapsed && expandedSections.favorites) ? 400 : 0, opacity: (!effectiveCollapsed && expandedSections.favorites) ? 1 : 0 }}>
                 {favoritedWorkspaces.map(ws => {
                   const Icon = ICON_MAP[ws.icon] ?? Zap
                   return (
                     <NavRow key={`fav-${ws.id}`} href={workspacePath(ws, 'home')} icon={Icon}
-                      label={ws.label} collapsed={collapsed} active={activeWsId === ws.id}
+                      label={ws.label} collapsed={effectiveCollapsed} active={activeWsId === ws.id}
                       dotColor={ws.color} onStar={() => toggleFavorite(ws.id)} starred />
                   )
                 })}
@@ -827,18 +855,18 @@ export default function Sidebar() {
           )}
 
           {/* Features — collapsible */}
-          <SectionLabel label="Features" collapsed={collapsed} expanded={expandedSections.features} onToggle={() => toggleSection('features')} />
+          <SectionLabel label="Features" collapsed={effectiveCollapsed} expanded={expandedSections.features} onToggle={() => toggleSection('features')} />
           <nav
             data-inline-guide="nav-features"
             className="flex flex-col gap-0.5 mt-0.5 overflow-hidden transition-[max-height,opacity] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
-            style={{ maxHeight: (collapsed || expandedSections.features) ? 400 : 0, opacity: (collapsed || expandedSections.features) ? 1 : 0 }}
+            style={{ maxHeight: (effectiveCollapsed || expandedSections.features) ? 400 : 0, opacity: (effectiveCollapsed || expandedSections.features) ? 1 : 0 }}
           >
             {FEATURES.map(item => {
               const href = activeWorkspace ? item.href(activeWorkspace) : '#'
               return (
                 <NavRow key={item.label} href={href} icon={item.icon} label={item.label}
                   guideId={item.guideId}
-                  collapsed={collapsed} active={pathname === href || pathname.startsWith(href + '/')} />
+                  collapsed={effectiveCollapsed} active={pathname === href || pathname.startsWith(href + '/')} />
               )
             })}
           </nav>
@@ -846,12 +874,12 @@ export default function Sidebar() {
           {/* Folders — active workspace only */}
           <SectionLabel
             label="Folders"
-            collapsed={collapsed}
+            collapsed={effectiveCollapsed}
             expanded={expandedSections.folders}
             onToggle={() => toggleSection('folders')}
             guideId="nav-folders"
             action={
-              !collapsed ? (
+              !effectiveCollapsed ? (
                 <button
                   type="button"
                   className="flex h-5 w-5 cursor-pointer items-center justify-center rounded text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-muted-foreground dark:hover:bg-sidebar-accent dark:hover:text-foreground"
@@ -866,11 +894,11 @@ export default function Sidebar() {
           <div
             className="overflow-hidden transition-[max-height,opacity] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
             style={{
-              maxHeight: (collapsed || expandedSections.folders) ? 900 : 0,
-              opacity: (collapsed || expandedSections.folders) ? 1 : 0,
+              maxHeight: (effectiveCollapsed || expandedSections.folders) ? 900 : 0,
+              opacity: (effectiveCollapsed || expandedSections.folders) ? 1 : 0,
             }}
           >
-            {!collapsed && activeRootFolders.map(folder => (
+            {!effectiveCollapsed && activeRootFolders.map(folder => (
               <SidebarFolderNode
                 key={folder.id}
                 folder={folder}
@@ -893,7 +921,7 @@ export default function Sidebar() {
                 ensureFolderOpen={ensureFolderOpen}
               />
             ))}
-            {!collapsed && isAddingActiveFolder && (
+            {!effectiveCollapsed && isAddingActiveFolder && (
               <div className="mt-0.5 flex items-center gap-1 px-1 py-0.5">
                 <Folder className="h-3 w-3 shrink-0 text-stone-300" />
                 <input
@@ -930,7 +958,7 @@ export default function Sidebar() {
         <div className="border-t border-stone-200 px-2 pt-2 pb-2 shrink-0 space-y-0.5 dark:border-sidebar-border">
           <div
             className="overflow-hidden transition-[opacity,max-height] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
-            style={{ maxHeight: collapsed ? 0 : 40, opacity: collapsed ? 0 : 1 }}
+            style={{ maxHeight: effectiveCollapsed ? 0 : 40, opacity: effectiveCollapsed ? 0 : 1 }}
           >
             <button
               className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-xs text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-sidebar-accent"
@@ -941,26 +969,26 @@ export default function Sidebar() {
             </button>
           </div>
 
-          <div className={cn('flex items-center w-full rounded-lg', collapsed ? 'justify-center py-[7px]' : 'gap-2.5 px-2.5 py-[7px]')}>
+          <div className={cn('flex items-center w-full rounded-lg', effectiveCollapsed ? 'justify-center py-[7px]' : 'gap-2.5 px-2.5 py-[7px]')}>
             <Link
               href="/app/account"
-              title={collapsed ? `${userName}\n${userEmail}` : undefined}
+              title={effectiveCollapsed ? `${userName}\n${userEmail}` : undefined}
               className={cn(
                 'flex items-center rounded-lg hover:bg-stone-100 transition-colors cursor-pointer dark:hover:bg-sidebar-accent',
-                collapsed ? 'w-10 h-10 aspect-square justify-center shrink-0' : 'flex-1 gap-2.5 min-w-0 py-0.5',
+                effectiveCollapsed ? 'w-10 h-10 aspect-square justify-center shrink-0' : 'flex-1 gap-2.5 min-w-0 py-0.5',
               )}
             >
-              <div className={cn('bg-[#F0EBE3] border border-stone-300 flex items-center justify-center text-[#37352F] text-[10px] font-bold shrink-0 dark:bg-sidebar-accent dark:border-sidebar-border dark:text-foreground', collapsed ? 'w-10 h-10 aspect-square rounded-md' : 'w-6 h-6 rounded-full')}>
+              <div className={cn('bg-[#F0EBE3] border border-stone-300 flex items-center justify-center text-[#37352F] text-[10px] font-bold shrink-0 dark:bg-sidebar-accent dark:border-sidebar-border dark:text-foreground', effectiveCollapsed ? 'w-10 h-10 aspect-square rounded-md' : 'w-6 h-6 rounded-full')}>
                 {userInitial}
               </div>
-              {!collapsed && (
+              {!effectiveCollapsed && (
               <div className="flex-1 overflow-hidden min-w-0">
                 <p className="font-medium text-stone-700 text-xs truncate leading-tight dark:text-white">{userName}</p>
                 <p className="text-stone-400 truncate text-[10px] leading-tight dark:text-muted-foreground">{userEmail}</p>
               </div>
               )}
             </Link>
-            {!collapsed && (
+            {!effectiveCollapsed && (
             <div
               className="flex items-center gap-0.5 overflow-hidden transition-[opacity,max-width] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
               style={{ maxWidth: 64, opacity: 1 }}

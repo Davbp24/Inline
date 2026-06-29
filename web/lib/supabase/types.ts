@@ -140,6 +140,106 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['spatial_entities']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['spatial_entities']['Insert']>
       }
+      agent_runs: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          intent: string
+          routed_by: string | null
+          agents_used: string[]
+          input: Json
+          output: string | null
+          status: string
+          eval_pass: boolean | null
+          eval_notes: string | null
+          prompt_tokens: number
+          completion_tokens: number
+          latency_ms: number
+          est_cost_usd: number
+          value_category: string | null
+          surface: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['agent_runs']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['agent_runs']['Insert']>
+      }
+      ai_usage_events: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          run_id: string | null
+          agent: string
+          provider: string
+          model: string
+          prompt_tokens: number
+          completion_tokens: number
+          latency_ms: number
+          est_cost_usd: number
+          surface: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['ai_usage_events']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['ai_usage_events']['Insert']>
+      }
+      agent_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          title: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['agent_sessions']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['agent_sessions']['Insert']>
+      }
+      agent_messages: {
+        Row: {
+          id: string
+          user_id: string
+          session_id: string
+          run_id: string | null
+          role: 'user' | 'assistant'
+          content: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['agent_messages']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['agent_messages']['Insert']>
+      }
+      integration_connections: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          provider: string
+          access_token: string | null
+          config: Json
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['integration_connections']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['integration_connections']['Insert']>
+      }
+      automation_runs: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          kind: string
+          status: string
+          input: Json
+          output: Json
+          run_id: string | null
+          value_category: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['automation_runs']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['automation_runs']['Insert']>
+      }
     }
     Functions: {
       match_workspace_embeddings: {

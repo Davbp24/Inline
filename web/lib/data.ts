@@ -337,3 +337,186 @@ export async function fetchExtractionsForNote(noteId: string): Promise<Extractio
     createdAt:  e.created_at,
   }))
 }
+
+// ---------------------------------------------------------------------------
+// Agent usage metrics (multi-agent system)
+// ---------------------------------------------------------------------------
+
+/** Estimated minutes a completed run of each intent saves the user. */
+const MINUTES_SAVED_BY_INTENT: Record<string, number> = {
+  career_fit: 12,
+  research: 5,
+  summarize: 5,
+  ask_context: 3,
+  rewrite: 2,
+  save_memory: 1,
+  action: 1,
+}
+
+export interface AgentUsageStats {
+  totalRuns: number
+  evalPassRate: number
+  totalPromptTokens: number
+  totalCompletionTokens: number
+  minutesSaved: number
+  activeDays: number
+  byAgent: { agent: string; runs: number }[]
+  byIntent: { intent: string; runs: number }[]
+  byValueCategory: { category: string; runs: number; minutesSaved: number }[]
+}
+
+const EMPTY_AGENT_STATS: AgentUsageStats = {
+  totalRuns: 0,
+  evalPassRate: 0,
+  totalPromptTokens: 0,
+  totalCompletionTokens: 0,
+  minutesSaved: 0,
+  activeDays: 0,
+  byAgent: [],
+  byIntent: [],
+  byValueCategory: [],
+}
+
+export async function fetchAgentUsageStats(workspaceId?: string): Promise<AgentUsageStats> {
+  if (!HAS_SUPABASE) return EMPTY_AGENT_STATS
+
+  try {
+    const { createClient } = await import('./supabase/server')
+    const supabase = await createClient()
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const sb = supabase as any
+
+    let runsQ = sb
+      .from('agent_runs')
+      .select('intent, value_category, eval_pass, prompt_tokens, completion_tokens, created_at')
+      .order('created_at', { ascending: false })
+      .limit(2000)
+    if (workspaceId) runsQ = runsQ.or(`workspace_id.eq.${workspaceId},workspace_id.eq.`)
+
+    const { data: runs, error } = await runsQ
+    if (error || !runs) return EMPTY_AGENT_STATS
+
+    type RunRow = {
+      intent: string
+      value_category: string | null
+      eval_pass: boolean | null
+      prompt_tokens: number
+      completion_tokens: number
+      created_at: string
+    }
+    const rows = runs as RunRow[]
+
+    const intentCounts: Record<string, number> = {}
+    const categoryRuns: Record<string, number> = {}
+    const categoryMinutes: Record<string, number> = {}
+    const days = new Set<string>()
+    let totalPromptTokens = 0
+    let totalCompletionTokens = 0
+    let minutesSaved = 0
+    let evalChecked = 0
+    let evalPassed = 0
+
+    for (const r of rows) {
+      intentCounts[r.intent] = (intentCounts[r.intent] ?? 0) + 1
+      totalPromptTokens += r.prompt_tokens ?? 0
+      totalCompletionTokens += r.completion_tokens ?? 0
+      const mins = MINUTES_SAVED_BY_INTENT[r.intent] ?? 2
+      minutesSaved += mins
+      const cat = r.value_category ?? 'general'
+      categoryRuns[cat] = (categoryRuns[cat] ?? 0) + 1
+      categoryMinutes[cat] = (categoryMinutes[cat] ?? 0) + mins
+      if (r.eval_pass !== null) {
+        evalChecked += 1
+        if (r.eval_pass) evalPassed += 1
+      }
+      if (r.created_at) days.add(r.created_at.slice(0, 10))
+    }
+
+    let evQ = sb.from('ai_usage_events').select('agent').limit(5000)
+    if (workspaceId) evQ = evQ.or(`workspace_id.eq.${workspaceId},workspace_id.eq.`)
+    const { data: events } = await evQ
+    const agentCounts: Record<string, number> = {}
+    for (const e of (events ?? []) as { agent: string }[]) {
+      agentCounts[e.agent] = (agentCounts[e.agent] ?? 0) + 1
+    }
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    const sortDesc = (a: { runs: number }, b: { runs: number }) => b.runs - a.runs
+
+    return {
+      totalRuns: rows.length,
+      evalPassRate: evalChecked ? Math.round((evalPassed / evalChecked) * 100) : 0,
+      totalPromptTokens,
+      totalCompletionTokens,
+      minutesSaved,
+      activeDays: days.size,
+      byAgent: Object.entries(agentCounts).map(([agent, runs]) => ({ agent, runs })).sort(sortDesc),
+      byIntent: Object.entries(intentCounts).map(([intent, runs]) => ({ intent, runs })).sort(sortDesc),
+      byValueCategory: Object.entries(categoryRuns)
+        .map(([category, runs]) => ({ category, runs, minutesSaved: categoryMinutes[category] ?? 0 }))
+        .sort(sortDesc),
+    }
+  } catch {
+    return EMPTY_AGENT_STATS
+  }
+}
+
+export interface AgentRunRow {
+  id: string
+  intent: string
+  agentsUsed: string[]
+  evalPass: boolean | null
+  latencyMs: number
+  promptTokens: number
+  completionTokens: number
+  valueCategory: string | null
+  surface: string | null
+  createdAt: string
+}
+
+export async function fetchRecentAgentRuns(workspaceId?: string, limit = 20): Promise<AgentRunRow[]> {
+  if (!HAS_SUPABASE) return []
+
+  try {
+    const { createClient } = await import('./supabase/server')
+    const supabase = await createClient()
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const sb = supabase as any
+    let q = sb
+      .from('agent_runs')
+      .select('id, intent, agents_used, eval_pass, latency_ms, prompt_tokens, completion_tokens, value_category, surface, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (workspaceId) q = q.or(`workspace_id.eq.${workspaceId},workspace_id.eq.`)
+    const { data, error } = await q
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    if (error || !data) return []
+
+    type Row = {
+      id: string
+      intent: string
+      agents_used: string[] | null
+      eval_pass: boolean | null
+      latency_ms: number
+      prompt_tokens: number
+      completion_tokens: number
+      value_category: string | null
+      surface: string | null
+      created_at: string
+    }
+    return (data as Row[]).map(r => ({
+      id: r.id,
+      intent: r.intent,
+      agentsUsed: r.agents_used ?? [],
+      evalPass: r.eval_pass,
+      latencyMs: r.latency_ms ?? 0,
+      promptTokens: r.prompt_tokens ?? 0,
+      completionTokens: r.completion_tokens ?? 0,
+      valueCategory: r.value_category,
+      surface: r.surface,
+      createdAt: r.created_at,
+    }))
+  } catch {
+    return []
+  }
+}

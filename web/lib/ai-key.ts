@@ -1,9 +1,32 @@
-import { createClient as createServerSupabase } from '@/lib/supabase/server'
 import { createClient as createBareSupabase } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
+import type { ModelProvider } from '@/lib/ai/providers/models'
 
+// Note: '@/lib/supabase/server' (which imports next/headers) is loaded lazily
+// inside getSupabaseAndUserFromRequest so this module — and the agent graph
+// that depends on it — can also be imported in plain Node (e.g. the eval
+// harness) without pulling in Next request-only APIs at import time.
+
+/**
+ * Google Gemini key. Kept as the canonical helper used by embeddings and the
+ * existing single-provider AI routes — do not change its signature.
+ */
 export async function getAIApiKey(): Promise<string | null> {
   return process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? null
+}
+
+/** Resolve the API key for any supported provider (multi-provider layer). */
+export async function getProviderApiKey(provider: ModelProvider): Promise<string | null> {
+  switch (provider) {
+    case 'google':
+      return process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? null
+    case 'openai':
+      return process.env.OPENAI_API_KEY ?? null
+    case 'anthropic':
+      return process.env.ANTHROPIC_API_KEY ?? null
+    default:
+      return null
+  }
 }
 
 /**
@@ -34,6 +57,7 @@ export async function getSupabaseAndUserFromRequest(request: Request) {
     }
   }
 
+  const { createClient: createServerSupabase } = await import('@/lib/supabase/server')
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   return { supabase, user: user ?? null }

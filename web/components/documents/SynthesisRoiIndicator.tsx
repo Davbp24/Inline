@@ -40,7 +40,7 @@ export default function SynthesisRoiIndicator({
       <button
         type="button"
         className="flex h-7 w-7 cursor-default items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-        aria-label={`Synthesis ROI: ${formatSynthesisRoiMessage(roi)}`}
+        aria-label={`Time saved: ${formatSynthesisRoiMessage(roi)}`}
       >
         <svg
           width={SIZE}

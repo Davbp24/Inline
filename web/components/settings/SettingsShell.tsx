@@ -101,95 +101,88 @@ export default function SettingsShell({
   const ActiveIcon = activeItem?.icon
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
-      <header
+    <div className="flex h-full min-h-0 flex-1 bg-background">
+      {/* Secondary settings sidebar — sits beside the collapsed app nav */}
+      <aside
         data-inline-guide="settings-page"
-        className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4 md:px-6"
+        className="flex w-[248px] shrink-0 flex-col border-r border-border bg-muted/20"
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <Link
-            href={exitHref}
-            className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-muted-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Settings
-          </Link>
-
-          {activeItem && ActiveIcon && (
-            <>
-              <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
-              <div className="hidden min-w-0 items-center gap-2 sm:flex">
-                <ActiveIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="truncate text-sm font-medium text-foreground">{activeItem.label}</span>
-              </div>
-            </>
-          )}
+        <div className="border-b border-border px-4 py-4">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Settings</h1>
         </div>
 
-        <Link
-          href={helpHref}
-          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Help
-          <HelpCircle className="h-4 w-4" />
-        </Link>
-      </header>
+        <div className="p-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Search settings"
+              className="h-9 border-border bg-background pl-8 text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-primary/30 dark:border-sidebar-border dark:bg-secondary/50"
+            />
+          </div>
+        </div>
 
-      <div className="flex min-h-0 flex-1">
-        <aside className="flex w-[248px] shrink-0 flex-col border-r border-border bg-muted/20">
-          <div className="p-3">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={q}
-                onChange={e => setQ(e.target.value)}
-                placeholder="Search settings"
-                className="h-9 border-border bg-background pl-8 text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-primary/30 dark:border-sidebar-border dark:bg-secondary/50"
-              />
+        <nav className="scrollbar-minimal flex-1 space-y-6 overflow-y-auto px-2 pb-4">
+          {filtered.map(group => (
+            <div key={group.label}>
+              <p className="mb-1 px-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                {group.label}
+              </p>
+              <ul className="space-y-0.5">
+                {group.items.map(item => (
+                  <li key={item.id}>
+                    <NavItem
+                      item={item}
+                      active={!item.href && activeId === item.id}
+                      onSelect={onSelect}
+                    />
+                  </li>
+                ))}
+              </ul>
             </div>
+          ))}
+        </nav>
+
+        <div className="shrink-0 space-y-1 border-t border-border p-3">
+          <Link
+            href={exitHref}
+            className="inline-flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            Back to workspace
+          </Link>
+          {footer}
+        </div>
+      </aside>
+
+      {/* Main settings content */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4 md:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            {activeItem && ActiveIcon && (
+              <>
+                <ActiveIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="truncate text-sm font-medium text-foreground">{activeItem.label}</span>
+              </>
+            )}
           </div>
 
-          <nav className="scrollbar-minimal flex-1 space-y-6 overflow-y-auto px-2 py-4">
-            {filtered.map(group => (
-              <div key={group.label}>
-                <p className="mb-1 px-2 text-[11px] font-medium text-muted-foreground">
-                  {group.label}
-                </p>
-                <ul className="space-y-0.5">
-                  {group.items.map(item => (
-                    <li key={item.id}>
-                      <NavItem
-                        item={item}
-                        active={!item.href && activeId === item.id}
-                        onSelect={onSelect}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
-
-          {footer && (
-            <div className="shrink-0 space-y-1 border-t border-border p-3">
-              {footer}
-            </div>
-          )}
-        </aside>
+          <Link
+            href={helpHref}
+            className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Help
+            <HelpCircle className="h-4 w-4" />
+          </Link>
+        </header>
 
         <main className="scrollbar-minimal min-w-0 flex-1 overflow-y-auto bg-background">
           <div className="mx-auto w-full max-w-3xl px-6 py-8 md:px-10 md:py-10">
-            {activeItem && (
-              <div className="mb-8 border-b border-border pb-6">
-                <h1 className="text-xl font-semibold tracking-tight text-foreground">
-                  {activeItem.label}
-                </h1>
-                {activeDescription && (
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                    {activeDescription}
-                  </p>
-                )}
-              </div>
+            {activeItem && activeDescription && (
+              <p className="mb-8 text-sm leading-relaxed text-muted-foreground">
+                {activeDescription}
+              </p>
             )}
 
             {children}

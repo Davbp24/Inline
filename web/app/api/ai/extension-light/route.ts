@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const status = (err as { statusCode?: number }).statusCode
     if (status === 429) {
       return NextResponse.json(
-        { error: 'AI quota exhausted — add credits at https://ai.studio/projects or use a new API key.' },
+        { error: 'Inline AI is busy right now. Please try again in a few minutes.' },
         { status: 429 },
       )
     }

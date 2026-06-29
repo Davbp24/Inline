@@ -37,6 +37,12 @@ const GActions = () => (
     <path d="M9 11l2 2 4-4M4 6h.01M4 12h.01M4 18h.01M9 18h11M9 6h11" />
   </svg>
 )
+const GFit = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2" />
+    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M9 13l2 2 4-4" />
+  </svg>
+)
 
 const QUICK_ACTIONS: { label: string; desc: string; task: string; instruction?: string; icon: React.ReactNode }[] = [
   { label: 'Summarize', desc: 'Key points', task: 'summarize', icon: <GSummarize /> },
@@ -67,6 +73,9 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
   const [recapState, setRecapState] = useState<'idle' | 'loading' | 'done' | 'empty' | 'error'>('idle')
   const [pageMeta, setPageMeta] = useState({ title: '', domain: '' })
   const [copied, setCopied] = useState(false)
+  // When true, render the result as plain formatted text (agent answers like
+  // "fit analysis") instead of a selection diff.
+  const [plainResult, setPlainResult] = useState(false)
 
   useEffect(() => {
     setPageMeta({ title: document.title || 'Untitled page', domain: window.location.hostname })
@@ -111,12 +120,63 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
     }
   }, [])
 
+  const runFitAnalysis = useCallback(async () => {
+    setLoading(true)
+    setAiBusy(true)
+    setResult(null)
+    setCopied(false)
+    setPlainResult(true)
+    setLastTask('career fit')
+    setLastInstruction(undefined)
+    try {
+      const { apiBaseUrl, accessToken } = await loadSettings()
+      const workspaceId = await new Promise<string>(resolve => {
+        chrome.storage.local.get(['inlineActiveWorkspaceId'], r => {
+          resolve(typeof r.inlineActiveWorkspaceId === 'string' && r.inlineActiveWorkspaceId
+            ? r.inlineActiveWorkspaceId : '')
+        })
+      })
+      if (!accessToken) {
+        setResult('Sign in and open the Inline dashboard once to sync your session, then try the fit analysis again.')
+        return
+      }
+      const pageText = (document.body?.innerText ?? '').slice(0, 16000)
+      const h: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` }
+      const res = await fetchViaBackground(`${apiBaseUrl}/api/ai/route`, {
+        method: 'POST',
+        headers: h,
+        body: JSON.stringify({
+          intent: 'career_fit',
+          userPrompt: 'Is this role a fit for me, and what should I do next?',
+          selectedText: hasSelection ? selectedText.slice(0, 16000) : undefined,
+          pageContent: pageText,
+          pageTitle: document.title || '',
+          pageUrl: window.location.href,
+          workspaceId,
+          surface: 'extension',
+        }),
+      })
+      if (res.ok) {
+        const j = await res.json<{ text?: string }>()
+        setResult(j.text ?? 'No analysis returned.')
+      } else {
+        setResult('Fit analysis failed. Make sure you are signed in and the AI server is configured.')
+      }
+    } catch {
+      setResult('Could not reach the AI server.')
+    } finally {
+      setLoading(false)
+      setAiBusy(false)
+    }
+  }, [hasSelection, selectedText])
+
   const runTask = useCallback(async (task: string, instruction?: string) => {
     if (hasSelection) wrapSelectionWithHighlight(task)
     setLoading(true)
     setAiBusy(true)
     setResult(null)
     setCopied(false)
+    setPlainResult(false)
     setLastTask(task)
     setLastInstruction(instruction)
     try {
@@ -291,6 +351,13 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
           <div>
             <SectionLabel>Page tools</SectionLabel>
             <ActionTile
+              icon={<GFit />}
+              label="Is this role a fit?"
+              desc="Multi-agent: extract role, match your saved background"
+              onClick={() => void runFitAnalysis()}
+            />
+            <div style={{ height: 8 }} />
+            <ActionTile
               icon={recapState === 'loading' ? <Spinner size={15} /> : <IGlobe />}
               label={recapState === 'loading' ? 'Generating recap...' : 'Page recap'}
               desc="Save a clean summary to your library"
@@ -335,7 +402,7 @@ export default function AI({ selectedText, originalRange, onClose }: AIProps) {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: C.textMuted, fontSize: 14, fontStyle: 'italic' }}>
               <Spinner size={16} /> Putting together the best answer — one moment, Inline…
             </span>
-          ) : result && hasSelection ? (
+          ) : result && hasSelection && !plainResult ? (
             <BlockDiffView original={selectedText} updated={result} />
           ) : result ? (
             <FormattedAiText text={result} style={{ fontSize: 13.5, lineHeight: 1.55 }} />

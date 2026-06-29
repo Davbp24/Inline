@@ -20,19 +20,19 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
   const { rightPanelOpen } = useSidebar()
   const pathname = usePathname()
   const onDocumentEditor = isDocumentEditorPath(pathname)
-  const onStandaloneSettings = isStandaloneSettingsPath(pathname)
-  const showWorkspaceChrome = !onStandaloneSettings
+  const onSettings = isStandaloneSettingsPath(pathname)
+  const showSidePanels = !onDocumentEditor && !onSettings
 
   return (
     <ChatPanelProvider>
       <InlineGuideProvider>
       <div className="flex h-screen overflow-hidden bg-background">
-        {showWorkspaceChrome && <Sidebar />}
+        <Sidebar settingsMode={onSettings} />
         <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentEditorChrome />
           <main
             className={
-              onStandaloneSettings
+              onSettings
                 ? 'min-h-0 flex-1 min-w-0 overflow-hidden'
                 : 'scrollbar-minimal min-h-0 flex-1 min-w-0 overflow-y-auto'
             }
@@ -41,14 +41,14 @@ export default function WorkspaceShell({ children }: { children: React.ReactNode
           </main>
         </div>
 
-        {showWorkspaceChrome && (
+        {showSidePanels && (
           <AnimatePresence mode="sync">
-            {rightPanelOpen && !onDocumentEditor && <RightContextPanel key="right-panel" />}
+            {rightPanelOpen && <RightContextPanel key="right-panel" />}
           </AnimatePresence>
         )}
 
-        {showWorkspaceChrome && <CommandPalette />}
-        {showWorkspaceChrome && <WorkspaceChatPanel />}
+        {!onSettings && <CommandPalette />}
+        {showSidePanels && <WorkspaceChatPanel />}
         <InlineGuideOverlay />
         <InlineGuideResumeChip />
         <ExtensionAuthSync />
