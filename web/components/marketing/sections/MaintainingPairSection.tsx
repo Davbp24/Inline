@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { Reveal } from '@/components/marketing/primitives/Reveal'
+import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
 import RecapStatusCardAnimated from '@/components/marketing/productMocks/RecapStatusCardAnimated'
 import ExtensionRefreshRoutineMockAnimated from '@/components/marketing/productMocks/ExtensionRefreshRoutineMockAnimated'
-import { mkt } from '@/components/marketing/marketingSurfaces'
+import { launchSectionRhythm, mkt } from '@/components/marketing/marketingSurfaces'
 import { cn } from '@/lib/utils'
 
 function PairCard({
@@ -21,7 +21,7 @@ function PairCard({
   bottomColor?: string
 }) {
   return (
-    <article className="relative flex h-full min-h-[480px] flex-col rounded-[1.75rem] border border-[#E8DFD4] sm:min-h-[520px]">
+    <article className="relative flex h-full min-h-[480px] flex-col rounded-[1.75rem] border border-[#E8DFD4]/70 sm:min-h-[520px]">
       <div
         className="pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem]"
         aria-hidden
@@ -55,23 +55,21 @@ function PairCard({
 
 export default function MaintainingPairSection() {
   return (
-    <section className="bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
+    <section className={`bg-[#FDFBF7] ${launchSectionRhythm}`}>
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
-        <Reveal className="text-center">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
-            Briefs that update themselves as you read
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Every highlight feeds back into your page recap — so synthesis happens while you research,
-            not after you&apos;ve forgotten why you cared.
-          </p>
-        </Reveal>
+        <SectionHeading
+          launchStyle
+          align="center"
+          eyebrow="Live synthesis"
+          title="Briefs that update as you read."
+          lede="Every highlight feeds your recap — synthesis happens while you research."
+        />
 
-        <div className="mt-14 grid items-stretch gap-5 lg:grid-cols-2">
-          <Reveal className="h-full">
+        <div className="mt-14 grid items-stretch gap-5 lg:grid-cols-2 lg:mt-20">
+          <Reveal variant="launch" product delay={0.1} className="h-full">
             <PairCard
               title="Self-updating recap"
-              description="New highlights and notes flow into your brief automatically — the summary always reflects what you actually captured."
+              description="New highlights flow into your brief automatically."
               bottomColor={mkt.burntRed}
               visualContainerClassName="pt-5 sm:pt-6"
               visualClassName="translate-y-1 sm:translate-y-2"
@@ -80,10 +78,10 @@ export default function MaintainingPairSection() {
             </PairCard>
           </Reveal>
 
-          <Reveal delay={0.08} className="h-full">
+          <Reveal variant="launch" product delay={0.22} className="h-full">
             <PairCard
               title="You approve what saves"
-              description="Review suggested recap changes before they land in your workspace — you stay in control of what compounds."
+              description="Review changes before they land in your workspace."
               visualClassName="translate-y-0 sm:translate-y-1"
             >
               <ExtensionRefreshRoutineMockAnimated className="w-full" />

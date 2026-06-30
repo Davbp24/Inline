@@ -1,14 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { FileSearch } from 'lucide-react'
-import { Reveal } from '@/components/marketing/primitives/Reveal'
+import { LaunchBeat, Reveal } from '@/components/marketing/primitives/Reveal'
 import WorkspaceChatMock, {
   type WorkspaceChatScenario,
 } from '@/components/marketing/productMocks/WorkspaceChatMock'
 import { DEMO_BRIDGE_SOURCES, DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
 import { ProductVisualRing } from '@/components/marketing/primitives/ProductVisualRing'
 import { formatDisplayTitle } from '@/lib/utils'
+import {
+  launchEyebrow,
+  launchHeadline,
+  launchSectionRhythm,
+} from '@/components/marketing/marketingSurfaces'
 
 const SCENARIOS: { id: string; label: string; scenario: WorkspaceChatScenario }[] = [
   {
@@ -49,56 +53,58 @@ export default function AiSearchTabsSection() {
   const scenario = SCENARIOS.find(s => s.id === active)?.scenario ?? SCENARIOS[0]!.scenario
 
   return (
-    <section id="rag" className="scroll-mt-24 bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
+    <section
+      id="rag"
+      className={`scroll-mt-24 bg-gradient-to-b from-[#FAF5EE] to-[#FDFBF7] ${launchSectionRhythm}`}
+    >
       <div className="mx-auto max-w-6xl px-6 text-center lg:px-10">
-        <Reveal>
-          <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card">
-            <FileSearch className="h-5 w-5 text-foreground" aria-hidden />
-          </div>
-          <h2 className="text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
-            Answers that cite your captures — not the internet
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Ask in plain language. Every response points back to the highlights and notes that
-            grounded it — so you can trust what you read.
-          </p>
-        </Reveal>
+        <LaunchBeat>
+          <Reveal variant="launch">
+            <p className={launchEyebrow}>AI search</p>
+            <h2 className={`mx-auto mt-4 max-w-2xl ${launchHeadline}`}>
+              Answers from your captures.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-stone-600 md:text-lg">
+              Ask in plain language — every response cites the highlights that grounded it.
+            </p>
+          </Reveal>
 
-        <Reveal delay={0.06} className="mt-8 flex justify-center -mx-1 px-1">
-          <div
-            className="scrollbar-minimal inline-flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-full border border-border bg-muted p-1.5"
-            role="tablist"
-            aria-label="Search scenarios"
-          >
-            {SCENARIOS.map(s => (
-              <button
-                key={s.id}
-                type="button"
-                role="tab"
-                aria-selected={active === s.id}
-                onClick={() => setActive(s.id)}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                  active === s.id
-                    ? 'bg-card text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {formatDisplayTitle(s.label)}
-              </button>
-            ))}
-          </div>
-        </Reveal>
+          <Reveal variant="launch" delay={0.08} className="mt-10 flex justify-center -mx-1 px-1">
+            <div
+              className="scrollbar-minimal inline-flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-full border border-border/70 bg-muted/80 p-1.5 backdrop-blur-sm"
+              role="tablist"
+              aria-label="Search scenarios"
+            >
+              {SCENARIOS.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active === s.id}
+                  onClick={() => setActive(s.id)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                    active === s.id
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {formatDisplayTitle(s.label)}
+                </button>
+              ))}
+            </div>
+          </Reveal>
 
-        <Reveal delay={0.1} className="mt-10 text-left">
-          <ProductVisualRing tone="burntOrange">
-            <WorkspaceChatMock
-              variant="panel"
-              scenario={scenario}
-              sessionTitle="Reading session"
-              elevated={false}
-            />
-          </ProductVisualRing>
-        </Reveal>
+          <Reveal variant="launch" product delay={0.16} className="mt-12 text-left md:mt-14">
+            <ProductVisualRing tone="burntOrange">
+              <WorkspaceChatMock
+                variant="panel"
+                scenario={scenario}
+                sessionTitle="Reading session"
+                elevated={false}
+              />
+            </ProductVisualRing>
+          </Reveal>
+        </LaunchBeat>
       </div>
     </section>
   )

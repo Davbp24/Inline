@@ -312,10 +312,9 @@ html:has([data-marketing-layout]) {
   overflow-y: hidden;
 }
 
-/* Inline guide — crisp spotlight targets */
+/* Inline guide — spotlight targets (stay below overlay; hole is drawn by the scrim) */
 [data-inline-guide-active] {
   position: relative;
-  z-index: 62 !important;
   isolation: isolate;
 }
 
@@ -353,15 +352,34 @@ html:has([data-marketing-layout]) {
   box-shadow: 0 0 0 1px hsl(var(--border));
 }
 
+[data-inline-guide-active][data-inline-guide="document-editor"] {
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.45);
+}
+
 [data-inline-guide-active][data-inline-guide="nav-folders"] span {
   color: hsl(var(--foreground)) !important;
 }
 
-header[data-inline-guide-active][data-inline-guide="settings-page"] {
-  z-index: 62 !important;
-  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.12);
+[data-inline-guide-active][data-inline-guide="settings-page"] {
+  background-color: hsl(var(--card));
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1px hsl(var(--border)), 0 4px 24px rgba(15, 23, 42, 0.12);
+}
+
+[data-inline-guide-active][data-inline-guide="nav-home"] {
+  background-color: hsl(var(--card));
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 1px hsl(var(--border)), 0 8px 28px rgba(15, 23, 42, 0.1);
 }
 
 [data-inline-guide-active][data-inline-guide="ask-inline"] {
   box-shadow: 0 8px 28px rgba(15, 23, 42, 0.14);
+}
+
+@media (min-width: 1024px) {
+  .hero-capture-canvas--split {
+    mask-image: radial-gradient(55% 65% at 58% 50%, black 30%, transparent 88%);
+    -webkit-mask-image: radial-gradient(55% 65% at 58% 50%, black 30%, transparent 88%);
+  }
 }

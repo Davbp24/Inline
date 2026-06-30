@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { ChevronRight, Lock } from 'lucide-react'
-import { Reveal } from '@/components/marketing/primitives/Reveal'
+import { Lock } from 'lucide-react'
+import { Reveal, SectionHeading } from '@/components/marketing/primitives/Reveal'
 import { SectionLink } from '@/components/marketing/SectionLink'
 import { SourceCardRow } from '@/components/shell/SourceCard'
 import WorkspaceChatMock from '@/components/marketing/productMocks/WorkspaceChatMock'
@@ -12,14 +12,13 @@ import {
   DEMO_WORKSPACE_ID,
 } from '@/components/marketing/productMocks/sampleData'
 import { cn } from '@/lib/utils'
-import { mktBtnGhost } from '@/components/marketing/marketingSurfaces'
+import { launchSectionRhythm, mktBtnTextLink } from '@/components/marketing/marketingSurfaces'
 
 const DOMAINS = DEMO_TOP_DOMAINS
 
 const SOURCE_CARD_WIDTH =
   '[--source-card-mobile-width:min(11rem,calc(100vw-6rem))] [&_.scrollbar-minimal>*]:w-[var(--source-card-mobile-width)] md:[&_.scrollbar-minimal>*]:w-40'
 
-/** White product mock — inset to match tan frame padding on every card. */
 const MOCK_SHELL_INNER =
   'flex w-full max-h-full flex-col overflow-x-hidden overflow-y-auto rounded-t-2xl border border-b-0 border-border bg-card px-2.5 pt-5 pb-3 sm:px-3 sm:pt-6 sm:pb-3.5'
 
@@ -31,7 +30,6 @@ const CARD_HEIGHT = {
 
 type CardHeight = keyof typeof CARD_HEIGHT
 
-/** White mock anchored to the bottom of the tan frame with a tiered height. */
 function mockInsetShell(height: CardHeight, children: ReactNode) {
   return (
     <div className="flex w-full shrink-0 flex-col px-3">
@@ -40,8 +38,8 @@ function mockInsetShell(height: CardHeight, children: ReactNode) {
   )
 }
 
-/** Tan outer frame — same height for every card in the row. */
-const ARTICLE_SHELL = 'flex h-full min-h-[420px] w-full flex-col overflow-hidden rounded-[1.75rem] border border-[#E8DFD4] bg-[#F5EDE3] sm:min-h-[460px]'
+const ARTICLE_SHELL =
+  'flex h-full min-h-[420px] w-full flex-col overflow-hidden rounded-[1.75rem] border border-[#E8DFD4]/70 bg-[#F5EDE3]/80 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset] sm:min-h-[460px]'
 
 const CARDS: {
   label: string
@@ -55,7 +53,7 @@ const CARDS: {
   {
     label: 'Source citations',
     labelColor: 'text-[#2563EB]',
-    title: 'Citations from your captures — not the open web',
+    title: 'Citations from your captures',
     cta: 'See citations',
     href: '/#rag',
     height: 'medium',
@@ -155,30 +153,21 @@ const CARDS: {
 
 export default function CitedAnswersSection() {
   return (
-    <section className="bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
+    <section className={`bg-[#FDFBF7] ${launchSectionRhythm}`}>
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
-        <Reveal className="text-center">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
-            Every answer points back to a source you saved
-          </h2>
-        </Reveal>
+        <SectionHeading
+          launchStyle
+          align="center"
+          eyebrow="Source-backed"
+          title="Every answer has a source."
+        />
 
-        <Reveal delay={0.06} className="mt-8 flex justify-center">
-          <SectionLink
-            href="/#rag"
-            className={cn('gap-1', mktBtnGhost)}
-          >
-            Explore AI search
-            <ChevronRight className="h-4 w-4" aria-hidden />
-          </SectionLink>
-        </Reveal>
-
-        <Reveal delay={0.08} className="mt-8">
+        <Reveal variant="launch" delay={0.08} className="mt-8 flex justify-center">
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
             {DOMAINS.map(domain => (
               <span
                 key={domain}
-                className="rounded-lg border border-border bg-card px-2 py-1 text-[10px] font-medium text-muted-foreground sm:px-3 sm:py-1.5 sm:text-xs"
+                className="rounded-lg border border-border/60 bg-card/80 px-2 py-1 text-[10px] font-medium text-muted-foreground sm:px-3 sm:py-1.5 sm:text-xs"
               >
                 {domain}
               </span>
@@ -186,21 +175,17 @@ export default function CitedAnswersSection() {
           </div>
         </Reveal>
 
-        <div className="mt-14 grid min-w-0 gap-5 xl:grid-cols-3 xl:items-stretch">
+        <div className="mt-20 grid min-w-0 gap-6 xl:grid-cols-3 xl:items-stretch">
           {CARDS.map((card, i) => (
-            <Reveal key={card.label} delay={0.1 + i * 0.04} className="flex min-h-0 min-w-0 h-full">
+            <Reveal key={card.label} variant="launch" delay={i * 0.15} className="flex h-full min-h-0 min-w-0">
               <article className={ARTICLE_SHELL}>
                 <div className="flex shrink-0 flex-col items-center px-6 pb-4 pt-8 text-center md:px-7 md:pt-9">
                   <p className={cn('text-sm font-semibold', card.labelColor)}>{card.label}</p>
                   <h3 className="mt-3 max-w-[16rem] text-balance text-lg font-semibold leading-snug tracking-tight text-[#1C1E26] sm:text-xl">
                     {card.title}
                   </h3>
-                  <SectionLink
-                    href={card.href}
-                    className={cn('mt-5 gap-1', mktBtnGhost)}
-                  >
+                  <SectionLink href={card.href} className={cn('mt-5', mktBtnTextLink)}>
                     {card.cta}
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
                   </SectionLink>
                 </div>
 

@@ -385,7 +385,15 @@ export default function FolderDocumentEditor({ content, onChange, className, rea
     : []
   const slashGroups = [...new Set(filteredSlash.map(c => c.section))]
 
-  if (!editor) return null
+  if (!editor) {
+    return (
+      <div
+        className={cn('relative folder-document-editor min-h-[280px]', className)}
+        data-inline-guide="document-editor"
+        aria-busy="true"
+      />
+    )
+  }
 
   if (readOnly) {
     return (

@@ -1,13 +1,12 @@
 import { cn } from '@/lib/utils'
+import { product } from '@/components/marketing/marketingSurfaces'
 
 const TB = {
-  bg: '#FFFFFF',
-  border: '#d6d3d1',
+  bg: 'rgba(255, 255, 255, 0.92)',
+  border: 'rgba(255, 255, 255, 0.75)',
   divider: 'rgba(28, 30, 38, 0.09)',
-  shadow:
-    '0 14px 40px -8px rgba(28, 30, 38, 0.34), 0 6px 18px -4px rgba(28, 30, 38, 0.2)',
   text: '#78716c',
-  radius: 10,
+  radius: 12,
   radiusInner: 8,
   highlightSwatch: 'rgba(250, 204, 21, 0.45)',
 } as const
@@ -52,7 +51,9 @@ export default function ExtensionSelectionToolbarMock({ className }: ExtensionSe
         border: `1px solid ${TB.border}`,
         borderRadius: TB.radius,
         padding: '5px 6px',
-        boxShadow: TB.shadow,
+        boxShadow: product.elevatedToolbarShadow,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
       }}
     >
       <TextPill>

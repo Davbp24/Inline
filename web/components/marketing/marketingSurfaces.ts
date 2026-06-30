@@ -87,6 +87,15 @@ export const product = {
   send: '#2f80ed',
   hover: '#13151B',
   panelShadow: '0 22px 70px -42px rgba(28, 30, 38, 0.38)',
+  /** Elevated product chrome — layered inset highlight + soft falloff */
+  elevatedPanelShadow:
+    '0 1px 0 rgba(255,255,255,0.92) inset, 0 32px 64px -28px rgba(28,30,38,0.36), 0 12px 24px -8px rgba(28,30,38,0.14)',
+  elevatedToolbarShadow:
+    '0 1px 0 rgba(255,255,255,0.95) inset, 0 20px 50px -16px rgba(28,30,38,0.34), 0 8px 16px -6px rgba(28,30,38,0.15)',
+  elevatedDockShadow:
+    '0 1px 0 rgba(255,255,255,0.88) inset, 0 16px 40px -12px rgba(28,30,38,0.3)',
+  elevatedSceneShadow:
+    '0 1px 0 rgba(255,255,255,0.55) inset, 0 40px 100px -32px rgba(28,30,38,0.28), 0 16px 40px -16px rgba(28,30,38,0.12)',
   toolbarShadow:
     '0 14px 40px -8px rgba(28, 30, 38, 0.34), 0 6px 18px -4px rgba(28, 30, 38, 0.2)',
   /** Floating Ask Inline pill — softer than toolbar chrome */
@@ -162,6 +171,32 @@ export const mktBtnGhost =
 
 export const mktEyebrow =
   'text-xs font-semibold uppercase tracking-[0.18em] text-[#78716c]'
+
+/** Product launch pacing — hero + first sections */
+export const launch = {
+  ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+  durationHero: 0.9,
+  durationReveal: 0.7,
+} as const
+
+export const launchDisplay =
+  'text-[3.25rem] font-semibold leading-[1.02] tracking-[-0.03em] text-[#1C1E26] sm:text-[3.5rem] md:text-[4.5rem] lg:text-[5.25rem]'
+
+export const launchHeadline =
+  'text-balance text-3xl font-semibold leading-[1.06] tracking-[-0.025em] text-[#1C1E26] md:text-[3.25rem] lg:text-[3.75rem]'
+
+export const launchEyebrow =
+  'text-xs font-medium uppercase tracking-[0.2em] text-stone-500'
+
+export const launchSectionRhythm = 'py-24 md:py-32 lg:py-40'
+
+export const launchBeat = 'flex min-h-[85svh] flex-col justify-center'
+
+export const launchBeatProduct = 'flex min-h-[90svh] flex-col justify-center'
+
+/** Hero secondary action — text link, not equal-weight pill */
+export const mktBtnTextLink =
+  'inline-flex items-center text-sm font-medium text-stone-600 underline-offset-4 transition-colors hover:text-[#1C1E26] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B83C4]'
 
 export const mktPanelMock =
   'overflow-hidden rounded-xl border border-[#d6d3d1] bg-white'

@@ -3,7 +3,7 @@
 .folder-document-editor .ProseMirror {
   /* Bullet & numbered lists: marker beside text, not stacked */
   --list-indent: 1.5rem;
-  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, 'Segoe UI', sans-serif);
   color: #1c1e26;
   font-size: 1.0625rem;
   line-height: 1.65;

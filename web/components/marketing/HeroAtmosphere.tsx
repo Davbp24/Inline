@@ -99,12 +99,21 @@ export default function HeroAtmosphere() {
         <rect width="100%" height="100%" filter="url(#hero-frost-grain-fine)" />
       </svg>
 
-      {/* Gentle center lift for headline legibility — not a white wash */}
+      {/* Gentle lift for headline legibility — shifted up for copy-first hero */}
       <div
         className="absolute inset-0 opacity-[0.35]"
         style={{
           background:
-            'radial-gradient(ellipse 72% 58% at 50% 46%, rgba(253, 251, 247, 0.55) 0%, transparent 68%)',
+            'radial-gradient(ellipse 72% 58% at 50% 38%, rgba(253, 251, 247, 0.55) 0%, transparent 68%)',
+        }}
+      />
+
+      {/* Right-column lift for split-layout keycap cluster */}
+      <div
+        className="absolute inset-0 opacity-[0.22]"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 70% at 72% 50%, rgba(253, 251, 247, 0.45) 0%, transparent 68%)',
         }}
       />
     </div>

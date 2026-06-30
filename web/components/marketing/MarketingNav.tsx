@@ -39,12 +39,20 @@ function InlineWordmark({ onDark }: { onDark: boolean }) {
 export default function MarketingNav() {
   // Cream hero is the default homepage; only use light nav text on explicit dark heroes.
   const [pastHero, setPastHero] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [heroIsDark, setHeroIsDark] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   useLayoutEffect(() => {
     const hero = document.querySelector<HTMLElement>('main [data-hero]')
     setHeroIsDark(hero?.getAttribute('data-hero-dark') === 'true')
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
@@ -84,19 +92,26 @@ export default function MarketingNav() {
 
   const onDark = heroIsDark && !pastHero && !mobileOpen
 
+  const showNavGlass = scrolled || mobileOpen
+
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-300',
-        pastHero || mobileOpen
+        'fixed top-0 left-0 right-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-500',
+        showNavGlass
           ? 'border-b border-[#E8DFD4] bg-[#FDFBF7]/94 backdrop-blur-md'
-          : 'border-b border-transparent bg-transparent',
+          : 'border-b border-transparent bg-transparent backdrop-blur-none',
       )}
     >
       <nav className="mx-auto grid w-full max-w-7xl grid-cols-[1fr_auto] items-center gap-4 px-6 py-3.5 lg:grid-cols-[1fr_auto_1fr] lg:px-10">
         <InlineWordmark onDark={onDark} />
 
-        <ul className="hidden items-center justify-center gap-2 justify-self-center lg:flex">
+        <ul
+          className={cn(
+            'hidden items-center justify-center gap-2 justify-self-center transition-opacity duration-500 lg:flex',
+            !pastHero && !mobileOpen && !onDark && 'opacity-55 hover:opacity-100',
+          )}
+        >
           {NAV_LINKS.map(link => (
             <li key={link.href}>
               <SectionLink

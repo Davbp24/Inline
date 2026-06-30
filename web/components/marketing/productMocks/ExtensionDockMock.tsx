@@ -1,4 +1,5 @@
 import InlineBrandGlyph from '@/components/marketing/InlineBrandGlyph'
+import { product } from '@/components/marketing/marketingSurfaces'
 import {
   IconAi,
   IconDraw,
@@ -43,25 +44,23 @@ export default function ExtensionDockMock({
       )}
     >
       <div
-        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[13px] border border-[rgba(17,24,39,0.18)]"
-        style={{
-          background: 'linear-gradient(145deg, #24386D 0%, #0B1735 58%, #071021 100%)',
-        }}
+        className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[13px] border border-white/20 bg-[#0B1735] shadow-[0_8px_20px_-8px_rgba(11,23,53,0.55)]"
       >
         <InlineBrandGlyph tile={false} />
       </div>
       <div
         className={cn(
-          'flex gap-0.5 rounded-[17px] border border-border bg-card p-1.5',
+          'flex gap-0.5 rounded-[17px] border border-white/70 bg-white/90 p-1.5 backdrop-blur-xl',
           isHorizontal ? 'flex-row' : 'flex-col',
         )}
+        style={{ boxShadow: product.elevatedDockShadow }}
       >
         {DOCK_TOOLS.map((tool, i) => (
           <div
             key={tool.id}
             className={cn(
               'flex h-[34px] w-[34px] items-center justify-center rounded-[11px] text-muted-foreground transition-colors duration-300',
-              i === activeIndex && 'bg-muted text-foreground ring-1 ring-[#a8a29e]',
+              i === activeIndex && 'bg-white text-foreground shadow-sm ring-1 ring-black/[0.06]',
             )}
           >
             {tool.icon}

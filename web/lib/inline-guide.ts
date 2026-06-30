@@ -101,6 +101,7 @@ export const GUIDE_STEPS: GuideStep[] = GUIDE_STEPS_COPY.map(row => {
     case 'auto-recap':
       step.target = 'document-editor'
       step.navigateToGuideDoc = true
+      step.lightScrim = true
       break
     case 'ask-inline':
       step.target = 'ask-inline'
@@ -109,8 +110,9 @@ export const GUIDE_STEPS: GuideStep[] = GUIDE_STEPS_COPY.map(row => {
       step.suggestedPrompt = GUIDE_SUGGESTED_CHAT_PROMPT
       break
     case 'finish':
-      step.centerCard = true
+      step.target = 'nav-home'
       step.route = 'dashboard'
+      step.lightScrim = true
       break
   }
   return step

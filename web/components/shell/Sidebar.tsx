@@ -45,6 +45,7 @@ import {
   collectSubtreeFolderIds,
 } from '@/lib/workspace-folders'
 import ThemeToggle from '@/components/shell/ThemeToggle'
+import { useInlineGuideOptional } from '@/lib/inline-guide-context'
 
 // ---------------------------------------------------------------------------
 // Types & constants
@@ -485,6 +486,10 @@ export default function Sidebar({ settingsMode = false }: { settingsMode?: boole
     setExpandedSections(p => ({ ...p, [key]: !p[key] }))
   }
 
+  const guide = useInlineGuideOptional()
+  const guideOnFolders = Boolean(guide?.active && !guide.paused && guide.step?.id === 'folders')
+  const foldersExpanded = expandedSections.folders || guideOnFolders
+
   const activeWorkspace = workspaces.find(ws => ws.id === activeWsId) ?? workspaces[0]
 
   function switchWorkspace(wsId: string) {
@@ -871,12 +876,12 @@ export default function Sidebar({ settingsMode = false }: { settingsMode?: boole
           </nav>
 
           {/* Folders — active workspace only */}
+          <div data-inline-guide="nav-folders">
           <SectionLabel
             label="Folders"
             collapsed={effectiveCollapsed}
-            expanded={expandedSections.folders}
+            expanded={foldersExpanded}
             onToggle={() => toggleSection('folders')}
-            guideId="nav-folders"
             action={
               !effectiveCollapsed ? (
                 <button
@@ -893,8 +898,8 @@ export default function Sidebar({ settingsMode = false }: { settingsMode?: boole
           <div
             className="overflow-hidden transition-[max-height,opacity] duration-[220ms] ease-[cubic-bezier(.4,0,.2,1)]"
             style={{
-              maxHeight: (effectiveCollapsed || expandedSections.folders) ? 900 : 0,
-              opacity: (effectiveCollapsed || expandedSections.folders) ? 1 : 0,
+              maxHeight: (effectiveCollapsed || foldersExpanded) ? 900 : 0,
+              opacity: (effectiveCollapsed || foldersExpanded) ? 1 : 0,
             }}
           >
             {!effectiveCollapsed && activeRootFolders.map(folder => (
@@ -950,6 +955,7 @@ export default function Sidebar({ settingsMode = false }: { settingsMode?: boole
                 </button>
               </div>
             )}
+          </div>
           </div>
         </div>
 

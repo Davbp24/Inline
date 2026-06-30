@@ -103,10 +103,11 @@ export default function SettingsShell({
   return (
     <div className="flex h-full min-h-0 flex-1 bg-background">
       {/* Secondary settings sidebar — sits beside the collapsed app nav */}
-      <aside
-        data-inline-guide="settings-page"
-        className="flex w-[248px] shrink-0 flex-col border-r border-border bg-muted/20"
-      >
+      <aside className="flex w-[248px] shrink-0 flex-col border-r border-border bg-muted/20">
+        <div
+          data-inline-guide="settings-page"
+          className="flex min-h-0 flex-1 flex-col"
+        >
         <div className="flex h-12 shrink-0 items-center border-b border-border bg-background px-4">
           <h1 className="text-sm font-semibold tracking-tight text-foreground">Settings</h1>
         </div>
@@ -143,6 +144,7 @@ export default function SettingsShell({
             </div>
           ))}
         </nav>
+        </div>
 
         <div className="shrink-0 space-y-1 border-t border-border p-3">
           <Link

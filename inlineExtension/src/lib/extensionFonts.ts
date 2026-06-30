@@ -3,7 +3,7 @@
  * Loaded via CDN so popup + shadow-DOM surfaces share one stack.
  */
 export const FONT =
-  "'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" as const
+  "'Geist', ui-sans-serif, system-ui, 'Segoe UI', sans-serif" as const
 
 const GEIST_BASE =
   'https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans'

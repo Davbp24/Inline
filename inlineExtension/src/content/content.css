@@ -5,7 +5,7 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(17, 24, 39, 0.12);
-  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Geist', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
   user-select: none;
   transition: border-color 0.15s, transform 0.1s;
   box-shadow: none;
@@ -212,7 +212,7 @@
   cursor: pointer;
   transition: background 0.15s, width 0.2s ease;
   box-shadow: none;
-  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Geist', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
 }
 
 .launcher-add:hover {

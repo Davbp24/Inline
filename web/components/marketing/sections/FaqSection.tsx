@@ -1,11 +1,11 @@
 import { Plus } from 'lucide-react'
 import { Reveal } from '@/components/marketing/primitives/Reveal'
 import { cn } from '@/lib/utils'
-
-/**
- * #faq — native <details>/<summary> accordion: keyboard accessible, no JS,
- * works with reduced motion by default.
- */
+import {
+  launchEyebrow,
+  launchHeadline,
+  launchSectionRhythm,
+} from '@/components/marketing/marketingSurfaces'
 
 const FAQS: { q: string; a: string }[] = [
   {
@@ -40,23 +40,24 @@ const FAQS: { q: string; a: string }[] = [
 
 export default function FaqSection() {
   return (
-    <section id="faq" className="scroll-mt-24 bg-[#FDFBF7] py-16 sm:py-20 md:py-28 lg:py-32">
+    <section
+      id="faq"
+      className={`scroll-mt-24 bg-gradient-to-b from-[#FDFBF7] to-[#FAF5EE] ${launchSectionRhythm}`}
+    >
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
-        <Reveal className="text-center">
-          <p className="text-sm font-semibold text-[#78716c]">FAQ</p>
-          <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-[#1C1E26] md:text-[2.75rem] md:leading-[1.1]">
-            Questions, answered plainly
-          </h2>
+        <Reveal variant="launch" className="text-center">
+          <p className={launchEyebrow}>FAQ</p>
+          <h2 className={`mt-4 ${launchHeadline}`}>Questions, answered plainly.</h2>
         </Reveal>
 
-        <Reveal className="mt-10 sm:mt-12" delay={0.08}>
+        <Reveal variant="launch" className="mt-10 sm:mt-12" delay={0.08}>
           <div>
             {FAQS.map((f, i) => (
               <details
                 key={f.q}
                 className={cn(
                   'group transition-colors open:bg-[#FAF5EE]/60',
-                  i > 0 && 'border-t border-[#E8DFD4]',
+                  i > 0 && 'border-t border-[#E8DFD4]/60',
                 )}
               >
                 <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden">
@@ -64,7 +65,7 @@ export default function FaqSection() {
                     {f.q}
                   </span>
                   <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E8DFD4] bg-[#FAF5EE]/60 text-[#78716c] transition-all group-open:rotate-45 group-open:border-[#d6d3d1] group-open:bg-[#FAF5EE]"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#E8DFD4]/70 bg-[#FAF5EE]/60 text-[#78716c] transition-all group-open:rotate-45 group-open:border-[#d6d3d1] group-open:bg-[#FAF5EE]"
                     aria-hidden
                   >
                     <Plus className="h-4 w-4" strokeWidth={2} />

@@ -22,6 +22,7 @@ import { InlineChatIcon } from '@/components/ui/inline-chat-icon'
 import AiFeedbackBar from '@/components/ai/AiFeedbackBar'
 import { cn, formatDisplayTitle } from '@/lib/utils'
 import { useChatPanel } from '@/lib/chat-panel-context'
+import { useInlineGuideOptional } from '@/lib/inline-guide-context'
 import { loadFolderDocuments } from '@/lib/workspace-library'
 import { normalizeInlineVoiceId } from '@/lib/inlineVoicePresets'
 import {
@@ -224,6 +225,8 @@ export default function WorkspaceChatPanel() {
   const hideOnAnalytics = pathname.includes('/analytics')
   const wsId = getWsId(pathname)
   const { open, setOpen, toggle, dockLeading, documentChatMode, chatHost } = useChatPanel()
+  const guide = useInlineGuideOptional()
+  const guideChatPreview = Boolean(guide?.active && guide?.chatPreview && open)
   const usesMetaShortcut = useUsesMetaShortcut()
   const isDashboard = /\/dashboard$/.test(pathname)
 
@@ -496,7 +499,11 @@ export default function WorkspaceChatPanel() {
     <>
     <div
       data-chat-panel
-      className="fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 items-end gap-2.5 pb-5"
+      data-guide-chat-preview={guideChatPreview ? '' : undefined}
+      className={cn(
+        'fixed bottom-0 left-1/2 flex -translate-x-1/2 items-end gap-2.5 pb-5',
+        guideChatPreview ? 'z-[102]' : 'z-50',
+      )}
     >
       {dockLeading}
       <AnimatePresence mode="wait" initial={false}>
@@ -504,7 +511,10 @@ export default function WorkspaceChatPanel() {
           <motion.div
             key="chat-panel"
             {...panelMotion}
-            className="flex w-[min(760px,calc(100vw-48px))] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_22px_70px_-42px_rgba(28,30,38,0.38)]"
+            className={cn(
+              'flex w-[min(760px,calc(100vw-48px))] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_22px_70px_-42px_rgba(28,30,38,0.38)]',
+              guideChatPreview && 'ring-2 ring-primary/40',
+            )}
             style={{
               height: 'min(720px, calc(100vh - 96px))',
               willChange: 'transform, opacity',

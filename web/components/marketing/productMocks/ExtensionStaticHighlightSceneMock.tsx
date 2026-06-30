@@ -2,6 +2,7 @@ import ExtensionAskPanelMock from '@/components/marketing/productMocks/Extension
 import ExtensionDockMock from '@/components/marketing/productMocks/ExtensionDockMock'
 import ExtensionSelectionToolbarMock from '@/components/marketing/productMocks/ExtensionSelectionToolbarMock'
 import { DEMO_DOMAIN } from '@/components/marketing/productMocks/sampleData'
+import { mkt, product } from '@/components/marketing/marketingSurfaces'
 import { cn } from '@/lib/utils'
 
 const PAGE_LINES = [
@@ -35,42 +36,51 @@ export default function ExtensionStaticHighlightSceneMock({
   return (
     <div
       className={cn(
-        'relative flex flex-col rounded-2xl border border-[#E8DFD4] bg-[#F5EDE3] p-4',
+        'relative flex flex-col overflow-hidden rounded-[1.75rem]',
         className,
       )}
       aria-label="Extension preview: highlighting selected text"
     >
-      <div className="rounded-xl border border-border/50 bg-card/70 px-3 py-2.5 shadow-sm">
-        <p className="truncate text-[10px] text-muted-foreground">{DEMO_DOMAIN}</p>
-        <div className="mt-1.5 space-y-1">
-          {PAGE_LINES.map((line, index) => (
-            index === 2 ? (
-              <HighlightLine key={line} />
-            ) : (
-              <p key={line} className="text-[11px] leading-[18px] text-foreground/40">
-                {line}
-              </p>
-            )
-          ))}
-        </div>
-        <div className="mt-3 flex justify-center">
-          <ExtensionSelectionToolbarMock />
-        </div>
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="h-[62%]" style={{ backgroundColor: mkt.tan }} />
+        <div className="h-[38%]" style={{ backgroundColor: product.brand }} />
       </div>
 
-      <div className="mt-4 flex flex-col items-center gap-3">
-        <ExtensionAskPanelMock
-          compact
-          elevated={false}
-          className="w-full max-w-[342px]"
-          badgeShape={badgeShape}
-        />
-        <ExtensionDockMock
-          activeIndex={2}
-          orientation="horizontal"
-          showNotebook={false}
-          className="shrink-0"
-        />
+      <div className="relative z-10 p-4">
+        <div className="rounded-xl border border-white/70 bg-white/82 px-3 py-2.5 shadow-[0_8px_24px_-12px_rgba(28,30,38,0.18)] backdrop-blur-xl">
+          <p className="truncate text-[10px] font-medium tracking-wide text-muted-foreground/90">
+            {DEMO_DOMAIN}
+          </p>
+          <div className="mt-1.5 space-y-1">
+            {PAGE_LINES.map((line, index) => (
+              index === 2 ? (
+                <HighlightLine key={line} />
+              ) : (
+                <p key={line} className="text-[11px] leading-[18px] text-foreground/40">
+                  {line}
+                </p>
+              )
+            ))}
+          </div>
+          <div className="mt-3 flex justify-center">
+            <ExtensionSelectionToolbarMock />
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col items-center gap-3">
+          <ExtensionAskPanelMock
+            compact
+            elevated
+            className="w-full max-w-[342px]"
+            badgeShape={badgeShape}
+          />
+          <ExtensionDockMock
+            activeIndex={2}
+            orientation="horizontal"
+            showNotebook={false}
+            className="shrink-0"
+          />
+        </div>
       </div>
     </div>
   )

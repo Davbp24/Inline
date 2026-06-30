@@ -145,30 +145,30 @@ export default function ExtensionDockSceneHighlightAnimated({
   }, [reduceMotion])
 
   const PAGE_CHROME_OFFSET = 30
-
   const toolbarTop = PAGE_CHROME_OFFSET + scene.line * (LINE_LEADING_PX + LINE_GAP_PX) - 36
 
   return (
     <div
       className={cn(
-        'relative flex min-h-[280px] flex-col rounded-2xl border border-[#E8DFD4] sm:min-h-[320px] md:min-h-[360px]',
+        'relative flex min-h-[280px] flex-col overflow-hidden rounded-[1.75rem] sm:min-h-[320px] md:min-h-[360px]',
         className,
       )}
       aria-live="polite"
       aria-label={scene.label}
     >
-      <div
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
-        aria-hidden
-      >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem]" aria-hidden>
         <div className="h-[68%]" style={{ backgroundColor: mkt.tan }} />
         <div className="h-[32%]" style={{ backgroundColor: product.brand }} />
       </div>
 
       <div className="relative z-10 flex flex-[2] flex-col p-4 pb-2 sm:p-5 sm:pb-3 md:p-6 md:pb-4">
         <div className="relative">
-          <div className="rounded-lg border border-border/50 bg-white px-3 py-2.5 shadow-sm">
-            <p className="truncate text-[10px] text-muted-foreground">{DEMO_DOMAIN}</p>
+          <div
+            className="rounded-xl border border-white/70 bg-white/82 px-3 py-2.5 shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_8px_24px_-12px_rgba(28,30,38,0.18)] backdrop-blur-xl"
+          >
+            <p className="truncate text-[10px] font-medium tracking-wide text-muted-foreground/90">
+              {DEMO_DOMAIN}
+            </p>
             <div className="mt-1.5 space-y-1" style={{ gap: LINE_GAP_PX }}>
               {PAGE_LINES.map((line, lineIndex) => (
                 <PageLine
@@ -203,9 +203,14 @@ export default function ExtensionDockSceneHighlightAnimated({
         </div>
       </div>
 
-      <div className="relative z-10 -mt-10 flex min-h-0 flex-1 flex-col items-center justify-start px-4 pb-4 pt-0 sm:-mt-14 sm:flex-row sm:items-end sm:justify-end sm:gap-4 sm:px-5 sm:pb-5 md:-mt-16 md:px-6 md:pb-6">
-        <ExtensionAskPanelMock compact className="w-full max-w-[342px]" badgeShape={badgeShape} />
-        <ExtensionDockMock activeIndex={2} className="shrink-0" />
+      <div className="relative z-10 -mt-10 flex min-h-0 flex-1 flex-col items-center justify-start px-4 pb-4 pt-0 sm:-mt-14 sm:flex-row sm:items-end sm:justify-end sm:gap-5 sm:px-5 sm:pb-5 md:-mt-16 md:px-6 md:pb-6">
+        <ExtensionAskPanelMock
+          compact
+          elevated
+          className="w-full max-w-[342px] sm:-translate-y-1"
+          badgeShape={badgeShape}
+        />
+        <ExtensionDockMock activeIndex={2} className="shrink-0 sm:translate-y-0.5" />
       </div>
     </div>
   )

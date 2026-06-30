@@ -103,7 +103,6 @@ export default function WorkspaceChatMock({
         <div
           className={cn(
             'flex shrink-0 items-center justify-between gap-2 px-4 py-2.5 sm:px-5',
-            !compactPanel && 'border-b border-border/60',
             compactPanel ? 'min-h-11' : 'min-h-12 flex-wrap py-2 sm:h-14 sm:flex-nowrap',
           )}
         >

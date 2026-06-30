@@ -12,9 +12,14 @@ import {
 import HeroCaptureGrid from '@/components/marketing/HeroCaptureGrid'
 import HeroAtmosphere from '@/components/marketing/HeroAtmosphere'
 import { SectionLink } from '@/components/marketing/SectionLink'
-import { mktBtnPrimaryLg, mktBtnSecondaryHeroLg } from '@/components/marketing/marketingSurfaces'
-
-const EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
+import { cn } from '@/lib/utils'
+import {
+  launch,
+  launchDisplay,
+  launchEyebrow,
+  mktBtnPrimaryLg,
+  mktBtnTextLink,
+} from '@/components/marketing/marketingSurfaces'
 
 const ROTATING_WORDS = ['Memory', 'Highlights', 'Notes', 'Captures', 'Context', 'Answers']
 const WORD_INTERVAL_MS = 4200
@@ -63,7 +68,7 @@ function HeroRotatingWord({ paused }: { paused: boolean }) {
       transition={
         paused || wordWidth === undefined
           ? { duration: 0 }
-          : { duration: WIDTH_MS, ease: EASE }
+          : { duration: WIDTH_MS, ease: launch.ease }
       }
     >
       <span
@@ -84,7 +89,7 @@ function HeroRotatingWord({ paused }: { paused: boolean }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: FADE_MS, ease: EASE }}
+              transition={{ duration: FADE_MS, ease: launch.ease }}
             >
               {word}
             </motion.span>
@@ -92,6 +97,57 @@ function HeroRotatingWord({ paused }: { paused: boolean }) {
         )}
       </span>
     </motion.span>
+  )
+}
+
+function HeroCopy({
+  fade,
+  reduce,
+  align = 'center',
+}: {
+  fade: (delay?: number) => Record<string, unknown>
+  reduce: boolean | null
+  align?: 'center' | 'left'
+}) {
+  const isLeft = align === 'left'
+
+  return (
+    <div className={`relative min-h-0 ${isLeft ? 'text-left' : 'text-center'}`}>
+      <motion.p {...fade(0)} className={cn(launchEyebrow, 'text-stone-600')}>
+        Introducing Inline
+      </motion.p>
+
+      <motion.h1
+        {...fade(0.12)}
+        className={`mt-5 ${launchDisplay}`}
+      >
+        <span
+          className={`inline-flex flex-nowrap items-baseline gap-x-[0.25em] whitespace-nowrap ${isLeft ? 'justify-start' : 'justify-center'}`}
+        >
+          <HeroRotatingWord paused={!!reduce} />
+          <span>for the web.</span>
+        </span>
+      </motion.h1>
+
+      <motion.p
+        {...fade(0.24)}
+        className={`mt-5 max-w-md text-pretty text-base leading-relaxed text-stone-700 sm:text-lg ${isLeft ? '' : 'mx-auto'}`}
+      >
+        Capture, search, and remember everything you read online.
+      </motion.p>
+
+      <motion.div
+        {...fade(0.36)}
+        className={`mt-8 flex flex-col gap-4 sm:flex-row sm:items-center ${isLeft ? 'justify-start' : 'items-center justify-center'}`}
+      >
+        <Link href="/install" className={`w-full sm:w-auto ${mktBtnPrimaryLg}`}>
+          Add to Chrome
+        </Link>
+        <SectionLink href="/#product" className={cn(mktBtnTextLink, 'text-stone-700')}>
+          See how it works
+        </SectionLink>
+      </motion.div>
+    </div>
   )
 }
 
@@ -103,14 +159,15 @@ export default function Hero() {
     offset: ['start start', 'end start'],
   })
   const contentY = useTransform(scrollYProgress, [0, 1], [0, -16])
+  const keycapOpacity = useTransform(scrollYProgress, [0, 0.85, 1], [1, 0.55, 0.3])
 
   const fade = (delay = 0) =>
     reduce
       ? {}
       : {
-          initial: { opacity: 0, y: 16 },
+          initial: { opacity: 0, y: 20 },
           animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.55, delay, ease: EASE },
+          transition: { duration: launch.durationHero, delay, ease: launch.ease },
         }
 
   return (
@@ -122,40 +179,29 @@ export default function Hero() {
     >
       <HeroAtmosphere />
 
+      {/* Desktop exponential keycap area — absolute, fades on scroll */}
+      <motion.div
+        style={{ opacity: reduce ? 1 : keycapOpacity }}
+        className="pointer-events-none absolute inset-0 z-5 hidden lg:block"
+      >
+        <HeroCaptureGrid layout="exponential" />
+      </motion.div>
+
       <motion.div
         style={{ y: reduce ? 0 : contentY }}
-        className="relative z-10 mx-auto flex h-full min-h-0 w-full max-w-4xl flex-col items-center justify-start px-5 pt-20 pb-12 text-center sm:px-8 sm:pt-28 sm:pb-20 lg:px-10 lg:pt-32 lg:pb-24"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col px-5 pt-20 pb-12 sm:px-8 sm:pt-28 sm:pb-20 lg:min-h-[calc(100svh-5rem)] lg:justify-center lg:px-10 lg:pt-32 lg:pb-24"
       >
-        <motion.div {...fade(0)} className="mt-4 w-full min-h-0 shrink-0 sm:mt-6">
-          <HeroCaptureGrid />
-        </motion.div>
-
-        <div className="relative min-h-0 max-w-3xl shrink">
-          <motion.h1
-            {...fade(0.1)}
-            className="text-center text-[2.125rem] font-semibold leading-[1.08] tracking-tight text-[#1C1E26] sm:text-6xl md:text-[4.5rem]"
-          >
-            <span className="inline-flex flex-nowrap items-baseline justify-center gap-x-[0.25em] whitespace-nowrap">
-              <HeroRotatingWord paused={!!reduce} />
-              <span>for the web.</span>
-            </span>
-          </motion.h1>
-
-          <motion.p
-            {...fade(0.18)}
-            className="mx-auto mt-4 max-w-lg text-pretty text-base leading-relaxed text-stone-600 sm:text-[1.05rem]"
-          >
-            Capture highlights, notes, and answers on any page—then search them anytime.
-          </motion.p>
-
-          <motion.div {...fade(0.26)} className="mt-7 flex w-full max-w-sm flex-col justify-center gap-3 sm:max-w-none sm:flex-row">
-            <Link href="/install" className={`w-full sm:w-auto ${mktBtnPrimaryLg}`}>
-              Add to Chrome
-            </Link>
-            <SectionLink href="/#product" className={`w-full sm:w-auto ${mktBtnSecondaryHeroLg}`}>
-              See how it works
-            </SectionLink>
+        {/* Mobile / tablet — stacked layout */}
+        <div className="flex w-full flex-col items-center lg:hidden">
+          <HeroCopy fade={fade} reduce={reduce} align="center" />
+          <motion.div {...fade(0.48)} className="mt-8 w-full min-h-0 shrink-0 sm:mt-10">
+            <HeroCaptureGrid layout="stacked" />
           </motion.div>
+        </div>
+
+        {/* Desktop — left-aligned copy */}
+        <div className="hidden w-full max-w-xl lg:block">
+          <HeroCopy fade={fade} reduce={reduce} align="left" />
         </div>
       </motion.div>
     </section>

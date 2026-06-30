@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -30,6 +31,7 @@ import { useChatPanel } from '@/lib/chat-panel-context'
 type InlineGuideContextValue = {
   active: boolean
   paused: boolean
+  chatPreview: boolean
   stepIndex: number
   step: GuideStep | undefined
   workspaceId: string
@@ -69,12 +71,14 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const workspaceId = resolveWorkspaceIdFromBrowserPath(pathname)
   const { collapsed, setCollapsed } = useSidebar()
-  const { setOpen: setChatOpen } = useChatPanel()
+  const { setOpen: setChatOpen, open: chatOpen } = useChatPanel()
 
   const [active, setActive] = useState(false)
   const [paused, setPaused] = useState(false)
+  const [chatPreview, setChatPreview] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [hydrated, setHydrated] = useState(false)
+  const prevPathnameRef = useRef(pathname)
 
   const step = guideStepByIndex(stepIndex)
 
@@ -96,6 +100,7 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
     resetGuide(workspaceId)
     setStepIndex(0)
     setPaused(false)
+    setChatPreview(false)
     setActive(true)
     router.push(workspacePath(workspaceId, 'dashboard'))
   }, [router, workspaceId])
@@ -112,7 +117,9 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
     if (state.guideCompleted || state.guidePaused) return
 
     const idx = state.guideStepIndex ?? 0
-    if (idx === 0 && !isDashboardPath(pathname)) return
+    const onDashboard = isDashboardPath(pathname)
+    const inProgress = idx > 0
+    if (!inProgress && !(idx === 0 && onDashboard)) return
 
     setActive(true)
     setPaused(false)
@@ -130,15 +137,24 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
   }, [active, paused, pathname, step, stepIndex, workspaceId])
 
   useEffect(() => {
-    if (!hydrated || step?.id !== 'ask-inline') return
-    const state = loadGuideState(workspaceId)
-    if (!state.guidePaused) return
-    if (isDashboardPath(pathname)) {
-      setPaused(false)
-      setActive(true)
-      patchGuideState(workspaceId, { guidePaused: false })
+    if (!hydrated || step?.id !== 'ask-inline') {
+      prevPathnameRef.current = pathname
+      return
     }
+    const state = loadGuideState(workspaceId)
+    const wasDashboard = isDashboardPath(prevPathnameRef.current)
+    const onDashboard = isDashboardPath(pathname)
+    prevPathnameRef.current = pathname
+    if (!state.guidePaused || !onDashboard || wasDashboard) return
+    setPaused(false)
+    setActive(true)
+    patchGuideState(workspaceId, { guidePaused: false })
   }, [hydrated, pathname, step?.id, workspaceId])
+
+  useEffect(() => {
+    if (step?.id !== 'ask-inline' || !chatPreview || chatOpen) return
+    setChatPreview(false)
+  }, [chatOpen, chatPreview, step?.id])
 
   useEffect(() => {
     if (!active || paused || !step?.target) return
@@ -164,20 +180,35 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
       const askStep = guideStepByIndex(skipTo)
       if (askStep) {
         setChatOpen(false)
+        setChatPreview(false)
         navigateForStep(askStep)
       }
       setStepIndex(nextIdx)
-      patchGuideState(workspaceId, { guideStepIndex: nextIdx })
+      setActive(true)
+      setPaused(false)
+      patchGuideState(workspaceId, { guideStepIndex: nextIdx, guidePaused: false })
       return
     }
 
+    const currentStep = guideStepByIndex(stepIndex)
+    if (currentStep?.id === 'ask-inline' && targetStep.id !== 'ask-inline') {
+      setChatOpen(false)
+    }
     if (targetStep.id === 'ask-inline') {
       setChatOpen(false)
+      setChatPreview(false)
+    } else {
+      setChatPreview(false)
+    }
+    if (targetStep.id === 'folders' || targetStep.id === 'finish') {
+      setCollapsed(false)
     }
     navigateForStep(targetStep)
     setStepIndex(clamped)
-    patchGuideState(workspaceId, { guideStepIndex: clamped })
-  }, [navigateForStep, setChatOpen, workspaceId])
+    setActive(true)
+    setPaused(false)
+    patchGuideState(workspaceId, { guideStepIndex: clamped, guidePaused: false })
+  }, [navigateForStep, setChatOpen, setCollapsed, stepIndex, workspaceId])
 
   const next = useCallback(() => {
     const current = guideStepByIndex(stepIndex)
@@ -185,6 +216,8 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
       completeGuide(workspaceId)
       setActive(false)
       setPaused(false)
+      setChatPreview(false)
+      setChatOpen(false)
       router.push(workspacePath(workspaceId, 'dashboard'))
       return
     }
@@ -193,16 +226,12 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
     if (nextIndex >= GUIDE_STEPS.length) {
       completeGuide(workspaceId)
       setActive(false)
+      setChatPreview(false)
       return
     }
 
     goToStep(nextIndex)
-  }, [goToStep, router, stepIndex, workspaceId])
-
-  useEffect(() => {
-    if (!active || paused || step?.id !== 'ask-inline') return
-    setChatOpen(false)
-  }, [active, paused, setChatOpen, step?.id])
+  }, [goToStep, router, setChatOpen, stepIndex, workspaceId])
 
   const back = useCallback(() => {
     if (stepIndex > 0) goToStep(stepIndex - 1)
@@ -211,6 +240,7 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
   const pause = useCallback(() => {
     setPaused(true)
     setActive(false)
+    setChatPreview(false)
     patchGuideState(workspaceId, { guidePaused: true, guideStepIndex: stepIndex })
   }, [stepIndex, workspaceId])
 
@@ -219,8 +249,11 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
     setActive(true)
     patchGuideState(workspaceId, { guidePaused: false, guideStepIndex: stepIndex })
     const current = guideStepByIndex(stepIndex)
-    if (current) navigateForStep(current)
-  }, [navigateForStep, stepIndex, workspaceId])
+    if (current) {
+      if (current.id === 'ask-inline') setChatOpen(false)
+      navigateForStep(current)
+    }
+  }, [navigateForStep, setChatOpen, stepIndex, workspaceId])
 
   const skipTour = useCallback(() => {
     pause()
@@ -230,16 +263,19 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
     completeGuide(workspaceId)
     setPaused(false)
     setActive(false)
+    setChatPreview(false)
   }, [workspaceId])
 
   const openChatPanel = useCallback(() => {
     setChatOpen(true)
+    setChatPreview(true)
   }, [setChatOpen])
 
   const value = useMemo(
     () => ({
       active,
       paused,
+      chatPreview,
       stepIndex,
       step,
       workspaceId,
@@ -256,6 +292,7 @@ export function InlineGuideProvider({ children }: { children: ReactNode }) {
     [
       active,
       back,
+      chatPreview,
       dismissGuide,
       next,
       openChatPanel,

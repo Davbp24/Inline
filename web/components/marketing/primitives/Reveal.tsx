@@ -2,6 +2,8 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+import { launch, launchEyebrow } from '@/components/marketing/marketingSurfaces'
 
 export const MARKETING_EASE: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
@@ -15,31 +17,67 @@ export function Reveal({
   y = 18,
   className,
   as = 'div',
+  variant = 'default',
+  product = false,
 }: {
   children: ReactNode
   delay?: number
   y?: number
   className?: string
   as?: 'div' | 'section' | 'li' | 'span'
+  variant?: 'default' | 'launch'
+  /** Launch variant only — deeper scale for product frames */
+  product?: boolean
 }) {
   const reduce = useReducedMotion()
   const Tag = motion[as]
+  const isLaunch = variant === 'launch'
 
   if (reduce) {
     const Static = as
     return <Static className={className}>{children}</Static>
   }
 
+  const initialScale = isLaunch && product ? 0.92 : isLaunch ? 0.97 : 1
+
   return (
     <Tag
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: isLaunch ? 24 : y, scale: initialScale }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.55, delay, ease: MARKETING_EASE }}
+      transition={{
+        duration: isLaunch ? launch.durationReveal : 0.55,
+        delay,
+        ease: isLaunch ? launch.ease : MARKETING_EASE,
+      }}
       className={className}
     >
       {children}
     </Tag>
+  )
+}
+
+/** Full-viewport launch beat — vertically centered content block */
+export function LaunchBeat({
+  children,
+  className,
+  product = false,
+}: {
+  children: ReactNode
+  className?: string
+  /** Taller beat for product reveal sections */
+  product?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col justify-center',
+        product ? 'min-h-[90svh]' : 'min-h-[85svh]',
+        className,
+      )}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -50,26 +88,36 @@ export function SectionHeading({
   lede,
   align = 'center',
   onDark = false,
+  launchStyle = false,
 }: {
   eyebrow: string
   title: string
   lede?: string
   align?: 'center' | 'left'
   onDark?: boolean
+  launchStyle?: boolean
 }) {
   return (
-    <Reveal className={align === 'center' ? 'text-center' : 'text-left'}>
+    <Reveal variant={launchStyle ? 'launch' : 'default'} className={align === 'center' ? 'text-center' : 'text-left'}>
       <p
-        className={`text-xs font-semibold uppercase tracking-[0.14em] mb-3 ${
-          onDark ? 'text-[#8AACDB]' : 'text-[#4B83C4]'
-        }`}
+        className={cn(
+          launchStyle ? `mb-4 ${launchEyebrow}` : `text-xs font-semibold uppercase tracking-[0.14em] mb-3 ${
+            onDark ? 'text-[#8AACDB]' : 'text-[#4B83C4]'
+          }`,
+        )}
       >
         {eyebrow}
       </p>
       <h2
-        className={`text-3xl md:text-[2.6rem] font-semibold tracking-tight leading-[1.12] ${
-          onDark ? 'text-white' : 'text-[#1C1E26]'
-        }`}
+        className={
+          launchStyle
+            ? `text-balance text-3xl font-semibold leading-[1.06] tracking-[-0.025em] md:text-[3.25rem] lg:text-[3.75rem] ${
+                onDark ? 'text-white' : 'text-[#1C1E26]'
+              }`
+            : `text-3xl md:text-[2.6rem] font-semibold tracking-tight leading-[1.12] ${
+                onDark ? 'text-white' : 'text-[#1C1E26]'
+              }`
+        }
       >
         {title}
       </h2>

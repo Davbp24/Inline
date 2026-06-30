@@ -13,10 +13,13 @@ const TRANSITION_S = 0.45
 const STEPS = [
   {
     id: 'stale',
-    recapText: 'Summary of the opening section and how the author frames the topic.',
+    recapText:
+      'Summary of the opening section and how the author frames the topic.',
     footer: 'Last updated 4 days ago',
-    pageText: 'The introduction sets up the main argument and defines a few key terms.',
-    showCapture: false,
+    pageLead: 'The introduction sets up the main argument and defines a few key terms.',
+    pageHighlight: 'Opening paragraphs preview what comes later in the piece.',
+    highlightActive: false,
+    note: 'Skim the recap before you add highlights from the page.',
   },
   {
     id: 'fresh',
@@ -25,8 +28,8 @@ const STEPS = [
     footer: 'Last updated today',
     pageLead: 'The author argues the central point in the second section.',
     pageHighlight: 'Your highlight calls out the example that backs it up.',
+    highlightActive: true,
     note: 'Worth comparing with the related article you saved last week.',
-    showCapture: true,
   },
 ] as const
 
@@ -101,57 +104,44 @@ export default function RecapStatusCardAnimated({ className }: RecapStatusCardAn
 
       <div className="relative mt-3 min-h-[3.25rem] overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
-          {current.showCapture ? (
-            <motion.p
-              key="fresh-page"
-              className="text-sm leading-relaxed text-foreground"
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+          <motion.p
+            key={`${current.id}-page`}
+            className="text-sm leading-relaxed text-foreground"
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+            transition={transition}
+          >
+            {current.pageLead}{' '}
+            <motion.span
+              className="rounded-sm px-0.5"
+              initial={false}
+              animate={{
+                backgroundColor: current.highlightActive
+                  ? 'rgba(250, 204, 21, 0.45)'
+                  : 'rgba(250, 204, 21, 0)',
+              }}
               transition={transition}
             >
-              {current.pageLead}{' '}
-              <motion.span
-                className="rounded-sm px-0.5"
-                initial={reduceMotion ? false : { backgroundColor: 'rgba(250, 204, 21, 0)' }}
-                animate={{ backgroundColor: 'rgba(250, 204, 21, 0.45)' }}
-                transition={transition}
-              >
-                {current.pageHighlight}
-              </motion.span>
-            </motion.p>
-          ) : (
-            <motion.p
-              key="stale-page"
-              className="text-sm leading-relaxed text-foreground"
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
-              transition={transition}
-            >
-              {current.pageText}
-            </motion.p>
-          )}
+              {current.pageHighlight}
+            </motion.span>
+          </motion.p>
         </AnimatePresence>
       </div>
 
       <div className="relative mt-3 min-h-[3.25rem]">
-        <AnimatePresence initial={false} mode="wait">
-          {current.showCapture ? (
-            <motion.div
-              key="note"
-              className="flex items-start gap-2 rounded-lg border border-[#E8DFD4] bg-[#FAF5EE] px-2.5 py-2"
-              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: 4 }}
-              transition={transition}
-            >
-              <StickyNote className="mt-0.5 h-3 w-3 shrink-0 text-[#78716c]" aria-hidden />
-              <p className="text-xs leading-snug text-foreground">{current.note}</p>
-            </motion.div>
-          ) : (
-            <motion.div key="empty" className="h-[3.25rem]" aria-hidden />
-          )}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={`${current.id}-note`}
+            className="flex items-start gap-2 rounded-lg border border-[#E8DFD4] bg-[#FAF5EE] px-2.5 py-2"
+            initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: 4 }}
+            transition={transition}
+          >
+            <StickyNote className="mt-0.5 h-3 w-3 shrink-0 text-[#78716c]" aria-hidden />
+            <p className="text-xs leading-snug text-foreground">{current.note}</p>
+          </motion.div>
         </AnimatePresence>
       </div>
     </div>

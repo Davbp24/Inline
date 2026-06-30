@@ -12,7 +12,7 @@ html {
 }
 
 body {
-  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Geist', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
   font-size: 14px;
   color: #1c1e26;
   background: #ffffff;

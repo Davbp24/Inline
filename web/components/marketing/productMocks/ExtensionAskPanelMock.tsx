@@ -32,20 +32,20 @@ export default function ExtensionAskPanelMock({
   return (
     <div
       className={cn(
-        'flex w-full max-w-[342px] flex-col overflow-hidden rounded-[14px] border border-border bg-card font-sans',
+        'flex w-full max-w-[342px] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/90 font-sans backdrop-blur-xl',
         compact && 'min-h-[360px]',
         className,
       )}
-      style={elevated ? { boxShadow: product.panelShadow } : undefined}
+      style={elevated ? { boxShadow: product.elevatedPanelShadow } : undefined}
     >
-      <header className="flex min-h-14 items-center justify-between bg-card px-4 pl-5">
+      <header className="flex min-h-14 items-center justify-between border-b border-black/[0.04] bg-white/75 px-4 pl-5 backdrop-blur-md">
         <div className="flex min-w-0 flex-1 items-center gap-2.5">
           <InlineChatIcon size="md" variant="badge" badgeShape={badgeShape} />
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium tracking-tight text-foreground">Ask</p>
+            <p className="truncate text-sm font-semibold tracking-tight text-foreground">Ask</p>
             <p className="truncate text-xs text-muted-foreground">Working with this page</p>
           </div>
-          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+          <span className="shrink-0 rounded-full border border-black/[0.04] bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
             Page
           </span>
         </div>
@@ -59,7 +59,7 @@ export default function ExtensionAskPanelMock({
       </header>
 
       <div className={cn('flex flex-col gap-4', compact ? 'flex-1 p-4' : 'p-5')}>
-        <div className="rounded-[10px] border border-border bg-card p-3">
+        <div className="rounded-xl border border-black/[0.05] bg-white/60 p-3 shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
@@ -76,9 +76,10 @@ export default function ExtensionAskPanelMock({
 
         <div
           className={cn(
-            'overflow-hidden rounded-[10px] border border-[rgba(28,30,38,0.25)] bg-card shadow-[0_0_0_3px_rgba(75,131,196,0.10)]',
+            'overflow-hidden rounded-xl border border-[rgba(28,30,38,0.12)] bg-white/85',
             compact && 'mt-auto',
           )}
+          style={{ boxShadow: product.inputGlow }}
         >
           <div className={cn('flex flex-col px-3 py-2', compact ? 'min-h-[96px]' : 'min-h-[78px]')}>
             <p className="text-sm text-muted-foreground">Ask about this page…</p>
